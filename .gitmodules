@@ -1,0 +1,15 @@
+[submodule "signals"]
+	path = signals
+	url = ../signals
+[submodule "HelloSignals"]
+	path = HelloSignals
+	url = ../HelloSignals
+[submodule "vcpkg"]
+	path = vcpkg
+	url = https://github.com/microsoft/vcpkg
+[submodule "bin2dash"]
+	path = bin2dash
+	url = ../EncodingEncapsulation
+[submodule "sub"]
+	path = sub
+	url = ../signals-unity-bridge
