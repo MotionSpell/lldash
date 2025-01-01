@@ -13,3 +13,6 @@
 [submodule "sub"]
 	path = sub
 	url = ../signals-unity-bridge
+[submodule "evanescent"]
+	path = evanescent
+	url = ../evanescent

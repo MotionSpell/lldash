@@ -13,6 +13,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(LLDASH_UMBRELLA_BUILD ON)
 
 find_package(PkgConfig REQUIRED)
+find_package(openssl REQUIRED)
 find_package(SDL2 REQUIRED)
 find_package(libjpeg-turbo REQUIRED)
 find_package(CURL REQUIRED)
@@ -43,6 +44,7 @@ if (NOT TARGET gpac::gpac)
 endif()
 
 # Add all the source subdirectories
+add_subdirectory(evanescent)
 add_subdirectory(signals)
 add_subdirectory(HelloSignals)
 add_subdirectory(bin2dash)
