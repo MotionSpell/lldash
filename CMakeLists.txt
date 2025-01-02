@@ -7,13 +7,34 @@ set(CMAKE_MODULE_PATH
 	${CMAKE_MODULE_PATH}
 	)
     
+# Include macros that help with installing
 include(SignalsMacros)
 
-    # Set the C++ standard
+# Set the C++ standard
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+#
+# Note that this umbrella project is intended for building executables and dynamic libraries that will
+# be packaged all together, in isolation from the rest of the system, *not* for building and installing into
+# the normal places. We copy all the needed dynamic libraries into our $prefix installation directory, which
+# is generally not what you want to do for a system-wide installation.
+#
+# Some options we want for everything.
+# On MacOS, we want to use the RPATH to find libraries.
+set(CMAKE_MACOSX_RPATH ON)
+# On rpath-supporting systems (MacOS, Linux) we keep the dynamic libraries in ../lib
+if (CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+    set(CMAKE_INSTALL_RPATH "@loader_path/../lib")
+elseif (CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    set(CMAKE_INSTALL_RPATH "\$ORIGIN/../lib")
+endif()
+
+# Some submodules can also be built independenty. This variable signals that we are now
+# building the lldash umbrella project.
 set(LLDASH_UMBRELLA_BUILD ON)
 
+# Find some packages that we need all over the place. We do this early, so any problems appear early.
 find_package(PkgConfig REQUIRED)
 find_package(openssl REQUIRED)
 find_package(SDL2 REQUIRED)
