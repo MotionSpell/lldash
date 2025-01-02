@@ -6,6 +6,8 @@ set(CMAKE_MODULE_PATH
 	${CMAKE_CURRENT_LIST_DIR}/signals/CMakeFiles
 	${CMAKE_MODULE_PATH}
 	)
+    
+include(SignalsMacros)
 
     # Set the C++ standard
 set(CMAKE_CXX_STANDARD 14)
