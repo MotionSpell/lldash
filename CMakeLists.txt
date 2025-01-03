@@ -69,6 +69,5 @@ endif()
 # Add all the source subdirectories
 add_subdirectory(evanescent)
 add_subdirectory(signals)
-add_subdirectory(HelloSignals)
 add_subdirectory(bin2dash)
 add_subdirectory(sub)
