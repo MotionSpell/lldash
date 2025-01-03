@@ -36,7 +36,7 @@ set(LLDASH_UMBRELLA_BUILD ON)
 
 # Find some packages that we need all over the place. We do this early, so any problems appear early.
 find_package(PkgConfig REQUIRED)
-find_package(openssl REQUIRED)
+find_package(OpenSSL REQUIRED)
 find_package(SDL2 REQUIRED)
 find_package(libjpeg-turbo REQUIRED)
 find_package(CURL REQUIRED)
