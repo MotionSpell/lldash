@@ -71,3 +71,29 @@ add_subdirectory(evanescent)
 add_subdirectory(signals)
 add_subdirectory(bin2dash)
 add_subdirectory(sub)
+
+# And create the installer
+set(CPACK_GENERATOR TGZ)
+set(CPACK_PACKAGE_VENDOR "Motion Spell, CWI DIS Group")
+set(CPACK_PACKAGE_CONTACT "Jack.Jansen@cwi.nl")
+set(CPACK_PACKAGE_VERSION ${PROJECT_VERSION})
+#set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE.txt")
+#set(CPACK_RESOURCE_FILE_README "${CMAKE_CURRENT_SOURCE_DIR}/readme.md")
+#set(CPACK_RESOURCE_FILE_WELCOME "${CMAKE_CURRENT_SOURCE_DIR}/readme.md")
+set(CPACK_OUTPUT_FILE_PREFIX "${CMAKE_CURRENT_BINARY_DIR}/package")
+set(CPACK_PACKAGE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+string(TOLOWER ${CMAKE_SYSTEM_PROCESSOR} _arch)
+string(TOLOWER ${CMAKE_SYSTEM_NAME} _sys)
+string(TOLOWER ${PROJECT_NAME} _project_lower)
+set(CPACK_PACKAGE_FILE_NAME "${_project_lower}-${_sys}-${_arch}-${CPACK_PACKAGE_VERSION}")
+set(CPACK_SOURCE_PACKAGE_FILE_NAME "${_project_lower}-${CPACK_PACKAGE_VERSION}")
+#
+## not .gitignore as its regex syntax is distinct
+#file(READ ${CMAKE_CURRENT_LIST_DIR}/.cpack_ignore _cpack_ignore)
+#string(REGEX REPLACE "\n" ";" _cpack_ignore ${_cpack_ignore})
+#set(CPACK_SOURCE_IGNORE_FILES "${_cpack_ignore};vcpkg/buildtrees;vcpkg/packages;vcpkg/downloads")
+#
+#install(FILES ${CPACK_RESOURCE_FILE_README} ${CPACK_RESOURCE_FILE_LICENSE}
+#  DESTINATION share/docs/${PROJECT_NAME})
+
+include(CPack)
