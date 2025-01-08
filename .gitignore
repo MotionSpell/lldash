@@ -5,7 +5,7 @@
 *.suo
 *.user
 *.sln.docstates
-
+.cachedgitversion.txt
 # Build results
 
 [Dd]ebug/

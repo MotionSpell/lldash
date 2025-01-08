@@ -1,12 +1,28 @@
 cmake_minimum_required(VERSION 3.28)
 
-project(lldash VERSION 1.0)
 # Add extension directories (for things like Find<package>)
 set(CMAKE_MODULE_PATH
-	${CMAKE_CURRENT_LIST_DIR}/signals/CMakeFiles
-	${CMAKE_MODULE_PATH}
+${CMAKE_CURRENT_LIST_DIR}/CMakeFiles
+${CMAKE_CURRENT_LIST_DIR}/signals/CMakeFiles
+${CMAKE_MODULE_PATH}
 	)
-    
+
+# Get version from git if not specified on the command line
+if(NOT LLDASH_VERSION)
+	include(GetGitVersion)
+	get_git_version(VERSION_VAR LLDASH_VERSION)
+endif()
+if(LLDASH_VERSION)
+	message(STATUS "LLDASH_VERSION=${LLDASH_VERSION}")
+	add_compile_definitions(LLDASH_VERSION=${LLDASH_VERSION})
+	set(ENV{LLDASH_VERSION} ${LLDASH_VERSION})
+	# Remove patch from version before we pass it to the project VERSION argument (it doesn't understand)
+	string(REGEX REPLACE "\\+.*" "" LLDASH_BASE_VERSION ${LLDASH_VERSION})
+endif()
+
+
+project(lldash VERSION ${LLDASH_BASE_VERSION})
+
 # Include macros that help with installing
 include(SignalsMacros)
 
@@ -76,7 +92,7 @@ add_subdirectory(sub)
 set(CPACK_GENERATOR TGZ)
 set(CPACK_PACKAGE_VENDOR "Motion Spell, CWI DIS Group")
 set(CPACK_PACKAGE_CONTACT "Jack.Jansen@cwi.nl")
-set(CPACK_PACKAGE_VERSION ${PROJECT_VERSION})
+set(CPACK_PACKAGE_VERSION ${LLDASH_BASE_VERSION})
 #set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE.txt")
 #set(CPACK_RESOURCE_FILE_README "${CMAKE_CURRENT_SOURCE_DIR}/readme.md")
 #set(CPACK_RESOURCE_FILE_WELCOME "${CMAKE_CURRENT_SOURCE_DIR}/readme.md")
@@ -85,8 +101,8 @@ set(CPACK_PACKAGE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 string(TOLOWER ${CMAKE_SYSTEM_PROCESSOR} _arch)
 string(TOLOWER ${CMAKE_SYSTEM_NAME} _sys)
 string(TOLOWER ${PROJECT_NAME} _project_lower)
-set(CPACK_PACKAGE_FILE_NAME "${_project_lower}-${_sys}-${_arch}-${CPACK_PACKAGE_VERSION}")
-set(CPACK_SOURCE_PACKAGE_FILE_NAME "${_project_lower}-${CPACK_PACKAGE_VERSION}")
+set(CPACK_PACKAGE_FILE_NAME "${_project_lower}-${_sys}-${_arch}-${LLDASH_VERSION}")
+set(CPACK_SOURCE_PACKAGE_FILE_NAME "${_project_lower}-${LLDASH_VERSION}-source")
 #
 ## not .gitignore as its regex syntax is distinct
 #file(READ ${CMAKE_CURRENT_LIST_DIR}/.cpack_ignore _cpack_ignore)
