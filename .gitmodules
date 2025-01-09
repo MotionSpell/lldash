@@ -1,15 +1,19 @@
 [submodule "signals"]
 	path = signals
 	url = ../signals
+	branch = cmake-build
 [submodule "vcpkg"]
 	path = vcpkg
 	url = https://github.com/microsoft/vcpkg
 [submodule "bin2dash"]
 	path = bin2dash
 	url = ../EncodingEncapsulation
+	branch = cmake-build
 [submodule "sub"]
 	path = sub
 	url = ../signals-unity-bridge
+	branch = cmake-build
 [submodule "evanescent"]
 	path = evanescent
 	url = ../evanescent
+	branch = cmake-build
