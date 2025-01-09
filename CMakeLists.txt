@@ -41,9 +41,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_MACOSX_RPATH ON)
 # On rpath-supporting systems (MacOS, Linux) we keep the dynamic libraries in ../lib
 if (CMAKE_SYSTEM_NAME STREQUAL "Darwin")
-    set(CMAKE_INSTALL_RPATH "@loader_path/../lib")
+    set(CMAKE_INSTALL_RPATH "@loader_path;@loader_path/../lib")
 elseif (CMAKE_SYSTEM_NAME STREQUAL "Linux")
-    set(CMAKE_INSTALL_RPATH "\$ORIGIN/../lib")
+    set(CMAKE_INSTALL_RPATH "\$ORIGIN;\$ORIGIN/../lib")
 endif()
 
 # Some submodules can also be built independenty. This variable signals that we are now
