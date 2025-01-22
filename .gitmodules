@@ -1,23 +1,23 @@
 [submodule "signals"]
 	path = signals
-	url = ../signals
+	url = https://github.com/MotionSpell/signals.git
 	branch = cmake-build
 	update = rebase
 [submodule "vcpkg"]
 	path = vcpkg
 	url = https://github.com/microsoft/vcpkg
-[submodule "bin2dash"]
-	path = bin2dash
-	url = ../EncodingEncapsulation
+[submodule "lldash-srd-packager"]
+	path = lldash-srd-packager
+	url = git@github.com:MotionSpell/lldash-srd-packager.git
 	branch = cmake-build
 	update = rebase
-[submodule "sub"]
-	path = sub
-	url = ../signals-unity-bridge
+[submodule "lldash-playout"]
+	path = lldash-playout
+	url = git@github.com:MotionSpell/lldash-playout.git
 	branch = cmake-build
 	update = rebase
-[submodule "evanescent"]
-	path = evanescent
-	url = ../evanescent
+[submodule "lldash-relay"]
+	path = lldash-relay
+	url = git@github.com:MotionSpell/lldash-relay.git
 	branch = cmake-build
 	update = rebase
