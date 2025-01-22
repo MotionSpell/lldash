@@ -7,7 +7,7 @@ preset=$1
 # Update repo
 git fetch --recurse-submodules
 git pull
-git submodule update --remote evanescent signals bin2dash sub
+git submodule update --remote lldash-relay signals lldash-srd-packager lldash-playout
 rm -rf build installed
 cmake --preset $preset
 cmake --build --preset $preset
