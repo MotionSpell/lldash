@@ -83,10 +83,10 @@ if (NOT TARGET gpac::gpac)
 endif()
 
 # Add all the source subdirectories
-add_subdirectory(evanescent)
+add_subdirectory(lldash-relay)
 add_subdirectory(signals)
-add_subdirectory(bin2dash)
-add_subdirectory(sub)
+add_subdirectory(lldash-srd-packager)
+add_subdirectory(lldash-playout)
 
 # And create the installer
 set(CPACK_GENERATOR TGZ)
