@@ -4,7 +4,6 @@ Umbrella repository for Motion Spell/CWI Low Latency DASH
 
 **Table of Contents** 
 
-- [lldash](#lldash)
 - [Introduction](#introduction)
 - [Components](#components)
 - [Build](#build)
@@ -12,10 +11,6 @@ Umbrella repository for Motion Spell/CWI Low Latency DASH
 - [Contributing](#contributing)
 - [License](#license)
 
-
-# lldash
-
-Umbrella repository for Motion Spell/CWI Low Latency DASH
 
 # Introduction
 
