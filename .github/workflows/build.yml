@@ -5,9 +5,10 @@ on: [push]
 jobs:
                
   build-macos:
-    if: ${{ false }}
     name: build-macos
     runs-on: macos-latest
+    env: 
+      VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
@@ -26,18 +27,18 @@ jobs:
         script: |
           core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
           core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
-
-    - name: Build & Test
-      uses: ashutoshvarma/action-cmake-build@master
+    - name: Install CMake
+      uses: lukka/get-cmake@latest
+    
+    - name: Setup vcpkg
+      uses: lukka/run-vcpkg@v11
+        
+    - name: CMake configure, build vcpkg packages, build & test
+      uses: lukka/run-cmake@v10
       with:
-        build-dir: ${{ github.workspace }}/build
-        configure-options: --preset mac-production -Wno-dev 
-        build-options: --preset mac-production
-        run-test: true
-        install-build: true
-        install-options: --prefix ${{ github.workspace }}/installed
-      env: 
-        VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
+        configurePreset: mac-production
+        buildPreset: mac-production
+        testPreset: mac-production
 
     - name: Create installer
       shell: bash
@@ -72,6 +73,7 @@ jobs:
 
                
   build-linux:
+    if: ${{ false }}
     name: build-linux
     runs-on: ubuntu-latest
     steps:
