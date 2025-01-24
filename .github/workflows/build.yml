@@ -92,7 +92,10 @@ jobs:
         script: |
           core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
           core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
-
+    - name: Install build-time dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y nasm
     - name: Build & Test
       uses: ashutoshvarma/action-cmake-build@master
       with:
