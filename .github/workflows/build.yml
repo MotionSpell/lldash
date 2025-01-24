@@ -48,8 +48,8 @@ jobs:
       shell: bash
       run: |
         mkdir -p build vcpkg/buildtrees
-        tar cvfz build.tgz build
-        tar cvfz vckpg-buildtrees.tgz vcpkg/buildtrees
+        tar cfz build.tgz build
+        tar cfz vcpkg-buildtrees.tgz vcpkg/buildtrees
         ls -l
     - name: On failure, Upload build folder
       if: ${{ failure() }}
