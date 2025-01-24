@@ -43,16 +43,25 @@ jobs:
       run: |
         cpack --preset mac-production
         ls -l build/package
-    - name: On failure, Capture build folder as artifact
+    - name: On failure, Capture build folders as artifact
       if: ${{ failure() }}
       shell: bash
-      run: tar cfz build.tgz build
+      run: |
+        mkdir -p build vcpkg/buildtrees
+        tar cfz build.tgz build
+        tar cfz vckpg-buildtrees.tgz vcpkg/buildtrees
     - name: On failure, Upload build folder
       if: ${{ failure() }}
       uses: actions/upload-artifact@v4
       with:
         name: lldash-darwin-arm64-build-folder
         path: build.tgz
+    - name: On failure, Upload build folder
+      if: ${{ failure() }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: lldash-darwin-arm64-vcpkg-buildtrees-folder
+        path: vcpkg-buildtrees.tgz
     - name: Upload installer folder
       uses: actions/upload-artifact@v4
       with:
