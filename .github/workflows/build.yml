@@ -48,15 +48,16 @@ jobs:
       shell: bash
       run: |
         mkdir -p build vcpkg/buildtrees
-        tar cfz build.tgz build
-        tar cfz vckpg-buildtrees.tgz vcpkg/buildtrees
+        tar cvfz build.tgz build
+        tar cvfz vckpg-buildtrees.tgz vcpkg/buildtrees
+        ls -l
     - name: On failure, Upload build folder
       if: ${{ failure() }}
       uses: actions/upload-artifact@v4
       with:
         name: lldash-darwin-arm64-build-folder
         path: build.tgz
-    - name: On failure, Upload build folder
+    - name: On failure, Upload vcpkg buildtrees folder
       if: ${{ failure() }}
       uses: actions/upload-artifact@v4
       with:
