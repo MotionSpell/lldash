@@ -95,7 +95,7 @@ jobs:
     - name: Install build-time dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y nasm
+        sudo apt-get install -y nasm autoconf automake libtool pkg-config
     - name: Build & Test
       uses: ashutoshvarma/action-cmake-build@master
       with:
