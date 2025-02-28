@@ -15,6 +15,8 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
+      with:
+        submodules: recursive  
 
     - name: Set up environment variables
       run: |
@@ -70,6 +72,40 @@ jobs:
               sudo apt-get install -y libtool && \
               libtoolize --copy --force
 
+    - name: Install CWIPC dependencies
+      run: |
+        sudo apt-get install -y \
+          libpcl-dev \
+          libglfw3-dev \
+          libturbojpeg0-dev \
+          libopencv-dev \
+          python3-dev \
+          python3-pip 
+    - name: Build CWIPC
+      run: |
+        cd cwipc
+        git lfs install
+        git lfs pull
+        cmake -B build -DCMAKE_BUILD_TYPE=Release
+        cmake --build build --parallel $(nproc)
+        sudo cmake --install build
+
+    - name: Setup CWIPC Test
+      run: |
+        cd cwipc_test
+        
+        git lfs install
+        
+        git lfs pull -I "Samples/loot-110K-4tiles/**"
+        
+        # Check 
+        if [ ! -d "Samples/loot-110K-4tiles" ] || [ $(ls -A Samples/loot-110K-4tiles | wc -l) -eq 0 ]; then
+          echo "Error: No sample files found in cwipc_test/Samples/loot-110K-4tiles"
+          exit 1
+        fi
+        
+        echo "Found $(ls -A Samples/loot-110K-4tiles | wc -l) sample files in Samples/loot-110K-4tiles directory"
+        
     - name: Configure CMake
       run: |
         cd ${{ env.BUILD_DIR }} && \
@@ -82,9 +118,12 @@ jobs:
 
     - name: Prepare test environment
       run: |
-        cd ${{ env.BUILD_DIR }} && \
+        cd ${{ env.BUILD_DIR }}
+        mkdir -p build/lib/data
         cp build/bin/unittests.exe build/lib/
+        cp -r signals/data/* build/lib/data/
 
     - name: Run tests
       run: |
-        ${{ env.BUILD_DIR }}/build/lib/unittests.exe
+        cd ${{ env.BUILD_DIR }}/build/lib && \
+        ./unittests.exe
