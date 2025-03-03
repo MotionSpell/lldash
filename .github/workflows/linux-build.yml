@@ -16,8 +16,8 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
       with:
-        submodules: recursive  
-
+        submodules: 'recursive'
+        fetch-depth: 0  
     - name: Set up environment variables
       run: |
         echo "SIGNALS_REPO=https://github.com/MotionSpell/signals.git" >> $GITHUB_ENV
@@ -84,28 +84,36 @@ jobs:
     - name: Build CWIPC
       run: |
         cd cwipc
+        git submodule update --init --recursive        
         git lfs install
         git lfs pull
         cmake -B build -DCMAKE_BUILD_TYPE=Release
         cmake --build build --parallel $(nproc)
         sudo cmake --install build
 
-    - name: Setup CWIPC Test
+    - name: Install pipeline test dependencies and verify CWIPC
       run: |
-        cd cwipc_test
+        sudo apt-get update
+        sudo apt-get install -y bc
+        python3 -m pip install requests 
         
-        git lfs install
+        # Find installed CWIPC libraries
+        echo "CWIPC libraries installed:"
+        find /usr/local -name "libcwipc*" || echo "No CWIPC libraries found"
         
-        git lfs pull -I "Samples/loot-110K-4tiles/**"
+        # Install wheels directly to system Python
+        echo "Installing CWIPC Python wheels:"
+        find /usr/local/share/cwipc/python/ -name "*.whl" -exec sudo pip3 install {} \; || echo "No wheels found"
         
-        # Check 
-        if [ ! -d "Samples/loot-110K-4tiles" ] || [ $(ls -A Samples/loot-110K-4tiles | wc -l) -eq 0 ]; then
-          echo "Error: No sample files found in cwipc_test/Samples/loot-110K-4tiles"
-          exit 1
-        fi
+        # Add library path to system
+        echo "/usr/local/lib" | sudo tee /etc/ld.so.conf.d/cwipc.conf
+        sudo ldconfig
         
-        echo "Found $(ls -A Samples/loot-110K-4tiles | wc -l) sample files in Samples/loot-110K-4tiles directory"
-        
+        # Test if CWIPC is working
+        echo "Testing cwipc_forward:"
+        which cwipc_forward || echo "cwipc_forward not in PATH"
+
+
     - name: Configure CMake
       run: |
         cd ${{ env.BUILD_DIR }} && \
@@ -116,14 +124,17 @@ jobs:
         cd ${{ env.BUILD_DIR }} && \
         cmake --build build --preset linux-production --parallel $(nproc)
 
-    - name: Prepare test environment
+   
+    - name: Run integration tests
       run: |
         cd ${{ env.BUILD_DIR }}
-        mkdir -p build/lib/data
-        cp build/bin/unittests.exe build/lib/
-        cp -r signals/data/* build/lib/data/
-
-    - name: Run tests
-      run: |
-        cd ${{ env.BUILD_DIR }}/build/lib && \
-        ./unittests.exe
+        
+        # Make script executable
+        chmod +x scripts/run-piepline-test.sh
+        
+        # Show environment
+        echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
+        echo "PYTHONPATH=$PYTHONPATH"
+        
+        # Run the pipeline test
+        ./scripts/run-piepline-test.sh
