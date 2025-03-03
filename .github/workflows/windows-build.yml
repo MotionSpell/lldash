@@ -1,0 +1,158 @@
+name: Windows Build
+
+on:
+  push:
+    branches:
+      - 1-cicd
+  pull_request:
+    branches:
+      - 1-cicd
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        submodules: 'recursive'
+        fetch-depth: 0
+
+    - name: Install correct Python version
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+    - name: Set up environment variables
+      run: |
+        echo "BUILD_DIR=$env:GITHUB_WORKSPACE" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+        echo "VCPKG_DEFAULT_TRIPLET=x64-windows" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+      shell: pwsh
+
+    - name: Export GitHub Actions cache environment variables for vcpkg
+      uses: actions/github-script@v6
+      with:
+        script: |
+          core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
+          core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
+
+    - name: Create 3rdparty directory structure
+      shell: pwsh
+      run: |
+        $thirdpartydir="$((Get-Item .).FullName)\3rdparty"
+        mkdir $thirdpartydir
+
+    - name: Initialize vcpkg
+      run: |
+        git submodule update --init --recursive
+
+    - name: Bootstrap vcpkg
+      shell: pwsh
+      run: |
+        .\vcpkg\bootstrap-vcpkg.bat
+
+    - name: Install vcpkg packages for CWIPC
+      shell: pwsh
+      run: |
+        # Install base dependencies
+        .\vcpkg\vcpkg.exe install --triplet x64-windows --classic eigen3 libjpeg-turbo libusb pcl[visualization] glfw3
+      env: 
+        VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
+
+    - name: Install additional dependencies
+      shell: pwsh
+      run: |
+        pip install numpy requests
+
+    - name: Build CWIPC
+      shell: pwsh
+      run: |
+        # Navigate to CWIPC directory
+        cd cwipc
+        
+        # Create build directory
+        mkdir -p build
+        cd build
+        
+        # Configure CWIPC
+        cmake .. -G "Visual Studio 17 2022" -A x64 `
+          -DCMAKE_TOOLCHAIN_FILE="${{ github.workspace }}\vcpkg\scripts\buildsystems\vcpkg.cmake" `
+          -DCMAKE_BUILD_TYPE=Release `
+          -DBUILD_SHARED_LIBS=ON `
+          -DCWIPC_WITH_PYTHON=ON
+        
+        # Build CWIPC
+        cmake --build . --config Release --parallel 4
+        
+        # Install CWIPC
+        cmake --install . --config Release --prefix "${{ github.workspace }}/cwipc/install"
+        
+        # Add to PATH
+        echo "${{ github.workspace }}\cwipc\install\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+    - name: Install CWIPC Python modules
+      shell: cmd
+      run: |
+        call ${{ github.workspace }}\cwipc\cwipc_util\python\cwipc_pymodules_install.bat
+
+    - name: Verify CWIPC installation
+      shell: cmd
+      run: |
+        echo "CWIPC libraries installed:"
+        dir ${{ github.workspace }}\cwipc\install\bin
+        
+        echo "Testing Python bindings:"
+        python -c "import cwipc; print('CWIPC Python bindings installed successfully')" || echo "CWIPC Python bindings not found"
+        
+        echo "Testing executables:"
+        where cwipc_view.exe || where cwipc_view || echo "cwipc_view not found in PATH"
+        where cwipc_forward.exe || where cwipc_forward || echo "cwipc_forward not found in PATH"
+
+    - name: Configure LLDASH project
+      working-directory: ${{ env.BUILD_DIR }}
+      shell: pwsh
+      run: |
+        cmake --preset mingw-production `
+          -DCMAKE_TOOLCHAIN_FILE="${{ github.workspace }}\vcpkg\scripts\buildsystems\vcpkg.cmake" `
+          -DCWIPC_DIR="${{ github.workspace }}\cwipc\install\lib\cmake" `
+          -DCMAKE_PREFIX_PATH="${{ github.workspace }}\cwipc\install"
+
+    - name: Build LLDASH project
+      working-directory: ${{ env.BUILD_DIR }}
+      shell: pwsh
+      run: |
+        cmake --build build --preset mingw-production --config Release --parallel 4
+
+    - name: Run integration tests
+      working-directory: ${{ env.BUILD_DIR }}
+      shell: cmd
+      run: |
+        set PATH=%PATH%;${{ github.workspace }}\cwipc\install\bin
+        echo "Running integration tests..."
+        cd ${{ env.BUILD_DIR }}
+        
+        echo "Checking for executable names:"
+        dir ${{ env.BUILD_DIR }}\build\bin\*.exe
+        
+        if exist scripts\run-piepline-test.bat (
+          scripts\run-piepline-test.bat
+        ) else (
+          echo "Creating run-piepline-test.bat..."
+          echo @echo off > scripts\run-piepline-test.bat
+          echo set PATH=%PATH%;${{ github.workspace }}\cwipc\install\bin >> scripts\run-piepline-test.bat
+          echo ${{ env.BUILD_DIR }}\build\bin\evanescent.exe --port 9000 ^& cwipc_forward.exe --synthetic --nodrop --bin2dash http://127.0.0.1:9000/ >> scripts\run-piepline-test.bat
+          scripts\run-piepline-test.bat
+        )
+
+    - name: Upload logs on failure
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-logs
+        path: |
+          ${{ env.BUILD_DIR }}/build/CMakeFiles/CMakeOutput.log
+          ${{ env.BUILD_DIR }}/build/CMakeFiles/CMakeError.log
+          ${{ env.BUILD_DIR }}/cwipc/build/CMakeFiles/*.log
+          ${{ env.BUILD_DIR }}/vcpkg/buildtrees/**/*.log
+        retention-days: 5
