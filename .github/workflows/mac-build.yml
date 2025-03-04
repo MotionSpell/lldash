@@ -51,53 +51,12 @@ jobs:
         brew tap cwi-dis/cwipc
         HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1 HOMEBREW_VERBOSE=1 brew install cwipc
 
-    - name: Manually link CWIPC binaries
-      run: |
-        # Manually link CWIPC binaries
-        ln -s /opt/homebrew/Cellar/cwipc/7.6.0/bin/cwipc_forward /usr/local/bin/cwipc_forward
-        ln -s /opt/homebrew/Cellar/cwipc/7.6.0/bin/cwipc_view /usr/local/bin/cwipc_view
-
     - name: Verify CWIPC installation
       run: |
         # Verify that CWIPC is installed correctly
-        cwipc_view --version || echo "cwipc_view not found in PATH"
-        
-        # Create a virtual environment for Python
-        python3 -m venv cwipc_venv
-        source cwipc_venv/bin/activate
-        
-        # Install CWIPC Python modules using the script from the repository
-        chmod +x ${{ github.workspace }}/cwipc/cwipc_util/python/cwipc_pymodules_install.sh
-        ${{ github.workspace }}/cwipc/cwipc_util/python/cwipc_pymodules_install.sh || echo "CWIPC Python modules installation failed"
-        
-        # Verify Python bindings
-        python3 -c "import cwipc; print('CWIPC Python bindings installed correctly')" || echo "CWIPC Python bindings not found"
-        
-        # Verify if cwipc_forward and cwipc_view are installed
         which cwipc_forward || echo "cwipc_forward not found in PATH"
         which cwipc_view || echo "cwipc_view not found in PATH"
-
-    - name: Install pipeline test dependencies and verify CWIPC
-      run: |
-        brew install bc
-        python3 -m pip install requests 
         
-        # Find installed CWIPC libraries
-        echo "CWIPC libraries installed:"
-        find /usr/local -name "libcwipc*" || echo "No CWIPC libraries found"
-        
-        # Install wheels directly to system Python
-        echo "Installing CWIPC Python wheels:"
-        find /usr/local/share/cwipc/python/ -name "*.whl" -exec sudo pip3 install {} \; || echo "No wheels found"
-        
-        # Add library path to system
-        echo "/usr/local/lib" | sudo tee /etc/ld.so.conf.d/cwipc.conf
-        sudo ldconfig
-        
-        # Test if CWIPC is working
-        echo "Testing cwipc_forward:"
-        which cwipc_forward || echo "cwipc_forward not in PATH"
-
     - name: Configure CMake
       run: |
         cd ${{ env.BUILD_DIR }} && \
@@ -107,6 +66,11 @@ jobs:
       run: |
         cd ${{ env.BUILD_DIR }} && \
         cmake --build build --preset mac-production  --parallel $(sysctl -n hw.logicalcpu)
+
+    - name: Verify build outputs
+      run: |
+        echo "Verifying build outputs..."
+        ls -l ${{ env.BUILD_DIR }}/build/bin
 
     - name: Run integration tests
       run: |
@@ -123,7 +87,6 @@ jobs:
         ./scripts/run-piepline-test.sh
 
     - name: Upload logs on failure
-      if: failure()
       uses: actions/upload-artifact@v4
       with:
         name: build-logs
@@ -131,4 +94,6 @@ jobs:
           ${{ env.BUILD_DIR }}/build/CMakeFiles/CMakeOutput.log
           ${{ env.BUILD_DIR }}/build/CMakeFiles/CMakeError.log
           ${{ env.BUILD_DIR }}/vcpkg/buildtrees/**/*.log
+          ${{ env.BUILD_DIR }}/logs/*.log
+
         retention-days: 5
