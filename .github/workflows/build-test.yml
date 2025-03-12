@@ -121,14 +121,14 @@ jobs:
         cd ${{ env.BUILD_DIR }}
         
         # Make script executable
-        chmod +x scripts/run-piepline-test.sh
+        chmod +x scripts/run-pipeline-test.sh
         
         # Show environment
         echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
         echo "PYTHONPATH=$PYTHONPATH"
         
         # Run the pipeline test
-        ./scripts/run-piepline-test.sh
+        ./scripts/run-pipeline-test.sh
     
     - name: Upload all logs
       if: always()  # for debug purposes  
@@ -201,14 +201,14 @@ jobs:
         cd ${{ env.BUILD_DIR }}
         
         # Make script executable
-        chmod +x scripts/run-piepline-test.sh
+        chmod +x scripts/run-pipeline-test.sh
         
         # Show environment
         echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
         echo "PYTHONPATH=$PYTHONPATH"
         
         # Run the pipeline test
-        ./scripts/run-piepline-test.sh
+        ./scripts/run-pipeline-test.sh
 
     - name: Upload all logs
       if: always()  # Upload logs even if the test fails for debug purposes
