@@ -3,10 +3,10 @@ name: Windows Build
 on:
   push:
     branches:
-      - 1-cicd
+      - test-mac-build
   pull_request:
     branches:
-      - 1-cicd
+      - test-mac-build
 
 jobs:
   build:
@@ -14,16 +14,28 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
       with:
         submodules: 'recursive'
         fetch-depth: 0
+
+    - name: Install correct Python version
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
 
     - name: Set up environment variables
       run: |
         echo "BUILD_DIR=$env:GITHUB_WORKSPACE" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
         echo "VCPKG_DEFAULT_TRIPLET=x64-mingw-dynamic" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
       shell: pwsh
+
+    - name: Export GitHub Actions cache environment variables for vcpkg
+      uses: actions/github-script@v6
+      with:
+        script: |
+          core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
+          core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
 
     - name: Setup MSYS2
       uses: msys2/setup-msys2@v2
@@ -32,8 +44,8 @@ jobs:
         install: >-
           git
           make
-          curl         
-        msystem: MINGW64  
+          curl
+        msystem: MINGW64
 
     - name: Set MSYS2 path
       run: |
@@ -45,61 +57,114 @@ jobs:
     - name: Update MSYS2 and install dependencies
       run: |
         C:\msys64\usr\bin\bash.exe -c "pacman -Syu --noconfirm"
-        C:\msys64\usr\bin\bash.exe -c "pacman -S --noconfirm mingw-w64-x86_64-toolchain mingw-w64-x86_64-cmake mingw-w64-x86_64-ninja mingw-w64-x86_64-pkg-config mingw-w64-x86_64-nasm mingw-w64-x86_64-yasm mingw-w64-x86_64-autotools mingw-w64-x86_64-gcc git make curl mingw-w64-x86_64-libtool mingw-w64-x86_64-python3 mingw-w64-x86_64-ca-certificates mingw-w64-x86_64-astyle mingw-w64-x86_64-python-pip"
+        C:\msys64\usr\bin\bash.exe -c "pacman -S --noconfirm mingw-w64-x86_64-toolchain mingw-w64-x86_64-cmake mingw-w64-x86_64-ninja mingw-w64-x86_64-pkg-config mingw-w64-x86_64-nasm mingw-w64-x86_64-yasm mingw-w64-x86_64-autotools mingw-w64-x86_64-gcc git make curl mingw-w64-x86_64-libtool mingw-w64-x86_64-python3 mingw-w64-x86_64-ca-certificates"
       shell: cmd
 
-    - name: Setup vcpkg
+    - name: Create 3rdparty directory structure
+      shell: pwsh
+      run: |
+        $thirdpartydir="$((Get-Item .).FullName)\3rdparty"
+        mkdir $thirdpartydir
+
+    - name: Check MSYS2 runtime and toolchain version
+      run: |
+        C:\msys64\usr\bin\bash.exe -c "gcc --version"
+        C:\msys64\usr\bin\bash.exe -c "nasm --version"
+        C:\msys64\usr\bin\bash.exe -c "yasm --version"
+      shell: cmd
+
+    - name: Bootstrap vcpkg
       run: |
         git submodule update --init --recursive
-        git -C .\vcpkg pull origin master
         .\vcpkg\bootstrap-vcpkg.bat
       shell: cmd
 
-    - name: Download and install CWIPC
+    # Build CWIPC using pre-built binaries or fast build approach
+    - name: Check for pre-built CWIPC
+      id: check-cwipc
       run: |
-        curl -L -o cwipc-installer.exe https://github.com/cwi-dis/cwipc/releases/download/v7.6.3/cwipc-win1064-v7.6.3.exe    
-        cwipc-installer.exe /S     
-        echo "C:\Program Files (x86)\cwipc\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append        
-        pip install requests numpy
-      shell: cmd
+        # Check if CWIPC binaries are already available in cache or artifacts
+        # Set found=true if found, otherwise found=false
+        echo "found=false" >> $env:GITHUB_OUTPUT
+      shell: pwsh
 
-    - name: Verify CWIPC installation
+    - name: Install CWIPC dependencies with vcpkg
+      if: steps.check-cwipc.outputs.found != 'true'
+      shell: bash
       run: |
-        # Test if CWIPC is installed correctly
-        where cwipc_forward.exe || echo "cwipc_forward.exe not found in PATH"
-        
-        # Run cwipc_check to verify all dependencies
-        cwipc_check || echo "CWIPC check failed"
-        
-        # Verify Python bindings
-        python -c "import cwipc; print('CWIPC Python bindings installed correctly')" || echo "CWIPC Python bindings not found"
-      shell: cmd
+        ./vcpkg/vcpkg install --triplet x64-mingw-dynamic eigen3 libjpeg-turbo libusb pcl[visualization] glfw3
+      env:
+        VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
 
-    - name: Configure CMake
+    - name: Build CWIPC (optimized)
+      if: steps.check-cwipc.outputs.found != 'true'
+      shell: bash
+      run: |
+        # Use minimal build options for CWIPC to speed up the process
+        cd cwipc
+        mkdir -p build
+        cd build
+        cmake .. -G "MinGW Makefiles" \
+          -DCMAKE_TOOLCHAIN_FILE="${GITHUB_WORKSPACE}/vcpkg/scripts/buildsystems/vcpkg.cmake" \
+          -DCMAKE_BUILD_TYPE=Release \
+          -DBUILD_SHARED_LIBS=ON \
+          -DCWIPC_WITH_PYTHON=ON \
+          -DCWIPC_SKIP_TESTS=ON \
+          -DCWIPC_SKIP_DOCS=ON
+        cmake --build . --parallel 4
+        cmake --install . --prefix "${GITHUB_WORKSPACE}/cwipc/install"
+        
+        # Add to PATH
+        echo "${GITHUB_WORKSPACE}/cwipc/install/bin" >> $GITHUB_PATH
+
+    - name: Install CWIPC Python modules
+      if: steps.check-cwipc.outputs.found != 'true'
+      shell: cmd
+      run: |
+        call %GITHUB_WORKSPACE%\cwipc\cwipc_util\python\cwipc_pymodules_install.bat
+
+    - name: Configure LLDASH project
       working-directory: ${{ env.BUILD_DIR }}
       run: |
         cmake --preset mingw-production
       shell: bash
 
-    - name: Build the project
+    - name: Build LLDASH project
       working-directory: ${{ env.BUILD_DIR }}
       run: cmake --build build --preset mingw-production --parallel $(nproc)
       shell: bash
 
     - name: Run integration tests
+      working-directory: ${{ env.BUILD_DIR }}
+      shell: pwsh
       run: |
+        echo "Setting up environment for tests..."
+        $env:PATH += ";${{ github.workspace }}\cwipc\install\bin;${{ github.workspace }}\build\bin"
+        
+        echo "Checking for executables in PATH:"
+        $exes = @("evanescent.exe", "cwipc_forward.exe", "cwipc_view.exe")
+        foreach ($exe in $exes) {
+            $exePath = (Get-Command $exe -ErrorAction SilentlyContinue).Path
+            if ($exePath) {
+                Write-Host "Found $exe at: $exePath"
+            } else {
+                Write-Host "WARNING: $exe not found in PATH"
+            }
+        }
+        
+        echo "Running pipeline integration test..."
         cd ${{ env.BUILD_DIR }}
-        
-        # Make script executable
-        chmod +x scripts/run-piepline-test.sh
-        
-        # Show environment
-        echo "PATH=%PATH%"
-        echo "PYTHONPATH=%PYTHONPATH%"
-        
-        # Run the pipeline test
-        C:\msys64\usr\bin\bash.exe -c "${{ env.BUILD_DIR }}/scripts/run-piepline-test.sh"
-      shell: cmd
+        .\scripts\run-pipeline-test.ps1
+      
+    - name: Upload test logs
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: windows-test-logs
+        path: |
+          ${{ env.BUILD_DIR }}/logs/**/*
+          ${{ env.BUILD_DIR }}/logs/*
+        retention-days: 5
 
     - name: Upload logs on failure
       if: failure()
@@ -109,5 +174,6 @@ jobs:
         path: |
           ${{ env.BUILD_DIR }}/build/CMakeFiles/CMakeOutput.log
           ${{ env.BUILD_DIR }}/build/CMakeFiles/CMakeError.log
+          ${{ env.BUILD_DIR }}/cwipc/build/CMakeFiles/*.log
           ${{ env.BUILD_DIR }}/vcpkg/buildtrees/**/*.log
         retention-days: 5
