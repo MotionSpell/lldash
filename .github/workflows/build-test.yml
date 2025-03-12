@@ -1,0 +1,219 @@
+name: Build and Test
+
+on:
+  push:
+    branches:
+      - test-mac-build
+  pull_request:
+    branches:
+      - test-mac-build
+
+jobs:
+  linux-build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        submodules: 'recursive'
+        fetch-depth: 0  
+    
+    - name: Set up environment variables
+      run: |
+        echo "SIGNALS_REPO=https://github.com/MotionSpell/signals.git" >> $GITHUB_ENV
+        echo "BUILD_DIR=${{ github.workspace }}" >> $GITHUB_ENV
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update && \
+        sudo apt-get install -y --no-install-recommends \
+        tzdata \
+        zip \
+        unzip \
+        curl \
+        tar \
+        git \
+        ca-certificates \
+        linux-libc-dev \
+        build-essential \
+        pkg-config \
+        yasm \
+        nasm \
+        autoconf \
+        automake \
+        autoconf-archive \
+        autotools-dev \
+        python3 \
+        python3-jinja2 \
+        gcc \
+        g++ \
+        make \
+        libtool \
+        libtool-bin \
+        astyle \
+        bc
+
+    - name: Install CMake and Ninja
+      run: |
+        chmod +x ./scripts/install_cmake.sh && \
+        ./scripts/install_cmake.sh /opt/ninja /opt/cmake
+
+    - name: Initialize vcpkg submodule
+      run: |
+        git submodule update --init --recursive
+
+    - name: Bootstrap vcpkg
+      run: |
+        ./vcpkg/bootstrap-vcpkg.sh
+
+    - name: Fix for libcrypto build
+      run: |
+        sudo apt-get update && \
+              sudo apt-get autoremove -y libtool && \
+              sudo apt-get install -y libtool && \
+              libtoolize --copy --force
+
+    - name: Install CWIPC dependencies
+      run: |
+        sudo apt-get install -y \
+          libpcl-dev \
+          libglfw3-dev \
+          libturbojpeg0-dev \
+          libopencv-dev \
+          python3-dev \
+          python3-pip 
+    
+    - name: Build CWIPC
+      run: |
+        cd cwipc
+        git submodule update --init --recursive        
+        git lfs install
+        git lfs pull
+        cmake -B build -DCMAKE_BUILD_TYPE=Release
+        cmake --build build --parallel $(nproc)
+        sudo cmake --install build
+
+    - name: Install pipeline test dependencies
+      run: |
+        python3 -m pip install requests 
+        
+        # Add library path to system
+        echo "/usr/local/lib" | sudo tee /etc/ld.so.conf.d/cwipc.conf
+        sudo ldconfig
+        
+        # Install wheels directly to system Python
+        echo "Installing CWIPC Python wheels:"
+        find /usr/local/share/cwipc/python/ -name "*.whl" -exec sudo pip3 install {} \; || echo "No wheels found"
+
+    - name: Configure CMake
+      run: |
+        cd ${{ env.BUILD_DIR }} && \
+        cmake --preset linux-production
+
+    - name: Build the project
+      run: |
+        cd ${{ env.BUILD_DIR }} && \
+        cmake --build build --preset linux-production --parallel $(nproc)
+
+    - name: Run integration tests
+      run: |
+        cd ${{ env.BUILD_DIR }}
+        
+        # Make script executable
+        chmod +x scripts/run-piepline-test.sh
+        
+        # Show environment
+        echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
+        echo "PYTHONPATH=$PYTHONPATH"
+        
+        # Run the pipeline test
+        ./scripts/run-piepline-test.sh
+    
+    - name: Upload all logs
+      if: always()  # for debug purposes  
+      uses: actions/upload-artifact@v4
+      with:
+        name: linux-test-logs
+        path: ${{ env.BUILD_DIR }}/logs/**/*
+        retention-days: 5
+
+  macos-build:
+    runs-on: macos-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        submodules: true
+        fetch-depth: 0
+
+    - name: Set up environment variables
+      run: |
+        echo "BUILD_DIR=${{ github.workspace }}" >> $GITHUB_ENV
+
+    - name: Install dependencies
+      run: |
+        brew update && \
+        brew install \
+          cmake \
+          ninja \
+          pkg-config \
+          yasm \
+          nasm \
+          autoconf \
+          automake \
+          libtool \
+          python3 \
+          astyle
+
+    - name: Initialize vcpkg submodule
+      run: |
+        git submodule update --init --recursive
+      
+    - name: Bootstrap vcpkg
+      run: |
+        ./vcpkg/bootstrap-vcpkg.sh
+
+    - name: Install CWIPC via Homebrew
+      run: |
+        brew tap cwi-dis/cwipc
+        HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1 HOMEBREW_VERBOSE=1 brew install cwipc
+
+    - name: Verify CWIPC installation
+      run: |
+        # Verify that CWIPC is installed correctly
+        which cwipc_forward || echo "cwipc_forward not found in PATH"
+        which cwipc_view || echo "cwipc_view not found in PATH"
+        
+    - name: Configure CMake
+      run: |
+        cd ${{ env.BUILD_DIR }} && \
+        cmake --preset mac-production
+
+    - name: Build the project
+      run: |
+        cd ${{ env.BUILD_DIR }} && \
+        cmake --build build --preset mac-production --parallel $(sysctl -n hw.logicalcpu)
+
+    - name: Run integration tests
+      run: |
+        cd ${{ env.BUILD_DIR }}
+        
+        # Make script executable
+        chmod +x scripts/run-piepline-test.sh
+        
+        # Show environment
+        echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
+        echo "PYTHONPATH=$PYTHONPATH"
+        
+        # Run the pipeline test
+        ./scripts/run-piepline-test.sh
+
+    - name: Upload all logs
+      if: always()  # Upload logs even if the test fails for debug purposes
+      uses: actions/upload-artifact@v4
+      with:
+        name: mac-test-logs
+        path: ${{ env.BUILD_DIR }}/logs/**/*
+        retention-days: 5
