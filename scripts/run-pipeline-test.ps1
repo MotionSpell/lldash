@@ -44,6 +44,8 @@ $ServerScript = Join-Path $LogDir "server_runner.ps1"
 @"
 Set-Location "$BuildDir"
 `$env:PYTHONUNBUFFERED = "1"
+`$env:SIGNALS_SMD_PATH = "$BuildDir\build\bin"
+`$env:PATH = "$BuildDir\build\bin;$BuildDir\cwipc\install\bin;$BuildDir\build\vcpkg_installed\x64-mingw-dynamic\bin;$BuildDir\build\vcpkg_installed\x64-mingw-dynamic\lib;C:\msys64\mingw64\bin;`$env:PATH"
 & cwipc_forward.exe --verbose --synthetic --nodrop --bin2dash http://127.0.0.1:9000/ *> "$ServerOutput" 2>&1
 "@ | Out-File -FilePath $ServerScript -Encoding utf8
 
@@ -51,6 +53,8 @@ $ClientScript = Join-Path $LogDir "client_runner.ps1"
 @"
 Set-Location "$BuildDir"
 `$env:PYTHONUNBUFFERED = "1"
+`$env:SIGNALS_SMD_PATH = "$BuildDir\build\bin"
+`$env:PATH = "$BuildDir\build\bin;$BuildDir\cwipc\install\bin;$BuildDir\build\vcpkg_installed\x64-mingw-dynamic\bin;$BuildDir\build\vcpkg_installed\x64-mingw-dynamic\lib;C:\msys64\mingw64\bin;`$env:PATH"
 & cwipc_view.exe --retimestamp --verbose --nodisplay --sub http://127.0.0.1:9000/bin2dashSink.mpd *> "$ClientOutput" 2>&1
 "@ | Out-File -FilePath $ClientScript -Encoding utf8
 
