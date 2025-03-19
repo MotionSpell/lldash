@@ -3,10 +3,10 @@ name: Build and Test
 on:
   push:
     branches:
-      - test-mac-build
+      - master
   pull_request:
     branches:
-      - test-mac-build
+      - master
 
 jobs:
   linux-build:

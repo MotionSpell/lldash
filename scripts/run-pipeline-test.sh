@@ -1,5 +1,5 @@
 #!/bin/bash
-# Pipeline test script for lldash - streamlined version
+# Pipeline test script for lldash - streamlined version mac + linux
 
 # Kill processes on exit
 trap 'kill $(jobs -p) 2>/dev/null || true' EXIT
@@ -176,10 +176,10 @@ else
 fi
 
 
-#Create a more comprehensive log directory structure
+#Create log directory 
 mkdir -p $LOG_DIR/{server,client,evanescent,system}
 
-# Copy basic logs to structured directories
+# Copy logs 
 cp $SERVER_OUTPUT $LOG_DIR/server/full_output.log
 cp $CLIENT_OUTPUT $LOG_DIR/client/full_output.log
 cp $EVANESCENT_OUTPUT $LOG_DIR/evanescent/full_output.log

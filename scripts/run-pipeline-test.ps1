@@ -1,4 +1,4 @@
-﻿# this script provide a test pipeline with evanescent server, cwipc_forward, and cwipc_view
+﻿# this script provide a test pipeline with evanescent server, cwipc_forward, and cwipc_view for windows
 
 # Stop on errors
 $ErrorActionPreference = "Stop"
@@ -20,7 +20,7 @@ $BuildDir = $PWD
 Write-Host "============== PIPELINE TEST ==============" -ForegroundColor Cyan
 Write-Host "BUILD_DIR is set to $BuildDir"
 
-# Kill any existing processes that might interfere (silently)
+# Kill any existing processes that might interfere 
 Stop-Process -Name "evanescent" -Force -ErrorAction SilentlyContinue
 Stop-Process -Name "cwipc_forward" -Force -ErrorAction SilentlyContinue
 Stop-Process -Name "cwipc_view" -Force -ErrorAction SilentlyContinue
@@ -37,7 +37,6 @@ if (-not (Test-Path $EvanescentPath)) {
 $EvanescentScript = Join-Path $LogDir "evanescent_runner.ps1"
 @"
 Set-Location "$BuildDir"
-# Direct redirection is better for CI/CD
 & "$EvanescentPath" --port 9000 *> "$EvanescentOutput" 2>&1
 "@ | Out-File -FilePath $EvanescentScript -Encoding utf8
 
@@ -45,7 +44,6 @@ $ServerScript = Join-Path $LogDir "server_runner.ps1"
 @"
 Set-Location "$BuildDir"
 `$env:PYTHONUNBUFFERED = "1"
-# Direct redirection is better for CI/CD
 & cwipc_forward.exe --verbose --synthetic --nodrop --bin2dash http://127.0.0.1:9000/ *> "$ServerOutput" 2>&1
 "@ | Out-File -FilePath $ServerScript -Encoding utf8
 
@@ -53,7 +51,6 @@ $ClientScript = Join-Path $LogDir "client_runner.ps1"
 @"
 Set-Location "$BuildDir"
 `$env:PYTHONUNBUFFERED = "1"
-# Direct redirection is better for CI/CD
 & cwipc_view.exe --retimestamp --verbose --nodisplay --sub http://127.0.0.1:9000/bin2dashSink.mpd *> "$ClientOutput" 2>&1
 "@ | Out-File -FilePath $ClientScript -Encoding utf8
 
@@ -206,7 +203,7 @@ for ($i = $TestDuration; $i -gt 0; $i--) {
 Write-Host ""
 Write-Host "Test duration completed." -ForegroundColor Yellow
 
-# Stop the processes (silently)
+# Stop the processes
 Stop-Process -Name "cwipc_view" -Force -ErrorAction SilentlyContinue
 Stop-Process -Name "cwipc_forward" -Force -ErrorAction SilentlyContinue
 Stop-Process -Name "evanescent" -Force -ErrorAction SilentlyContinue
@@ -461,10 +458,10 @@ Write-Host "- Data integrity rate: $PacketRatio"
 
 Write-Host "==========================================" -ForegroundColor Cyan
 
-# Cleanup temp files (silently)
+# Cleanup temp files 
 Remove-Item -Path $EvanescentScript -Force -ErrorAction SilentlyContinue
 Remove-Item -Path $ServerScript -Force -ErrorAction SilentlyContinue
 Remove-Item -Path $ClientScript -Force -ErrorAction SilentlyContinue
 
-# Return appropriate exit code for CI systems
+# Return appropriate exit code
 if ($TestFailed) { exit 1 } else { exit 0 }
