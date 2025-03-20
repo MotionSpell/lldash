@@ -421,4 +421,203 @@ jobs:
       run: cmake --build build --preset mingw-production --parallel $(nproc)
       shell: bash
 
-    
+    - name: Analyze library dependencies and fix paths
+      working-directory: ${{ env.BUILD_DIR }}
+      shell: pwsh
+      run: |
+        Write-Host "===== ANALYZING LIBRARY DEPENDENCIES =====" -ForegroundColor Cyan
+        
+        # Function to analyze DLL dependencies
+        function Get-DllDependencies {
+            param(
+                [Parameter(Mandatory=$true)]
+                [string]$FilePath
+            )
+            
+            if (-not (Test-Path $FilePath)) {
+                Write-Host "File not found: $FilePath" -ForegroundColor Red
+                return
+            }
+            
+            Write-Host "Analyzing dependencies for: $FilePath" -ForegroundColor Yellow
+            
+            # Use objdump from MSYS2/MinGW to list dependencies
+            $output = & "C:\msys64\mingw64\bin\objdump.exe" -p $FilePath | Select-String "DLL Name"
+            
+            $missingDeps = @()
+            Write-Host "Dependencies:" -ForegroundColor Green
+            $output | ForEach-Object {
+                $dllName = $_.ToString().Trim() -replace "DLL Name: ", ""
+                Write-Host "  - $dllName"
+                
+                # Skip Windows system DLLs
+                if ($dllName -match "^(ntdll|KERNEL32|KERNELBASE|msvcrt|bcrypt|ADVAPI32|RPCRT4|CRYPT32|ucrtbase|WS2_32|USER32|GDI32|ole32|SHELL32|SHLWAPI)\.dll$") {
+                    Write-Host "    🔵 System DLL" -ForegroundColor Blue
+                    return
+                }
+                
+                # Try to locate each dependency
+                $found = $false
+                $searchPaths = @(
+                    "${{ github.workspace }}\build\bin",
+                    "${{ github.workspace }}\cwipc\install\bin",
+                    "${{ github.workspace }}\build\vcpkg_installed\x64-mingw-dynamic\bin",
+                    "${{ github.workspace }}\build\vcpkg_installed\x64-mingw-dynamic\lib",
+                    "C:\msys64\mingw64\bin"
+                )
+                
+                $foundPath = ""
+                foreach ($path in $searchPaths) {
+                    $fullPath = Join-Path $path $dllName
+                    if (Test-Path $fullPath) {
+                        $foundPath = $fullPath
+                        $found = $true
+                        Write-Host "    ✅ Found at: $fullPath" -ForegroundColor Green
+                        break
+                    }
+                }
+                
+                if (-not $found) {
+                    Write-Host "    ❌ NOT FOUND in search paths" -ForegroundColor Red
+                    $missingDeps += $dllName
+                } else {
+                    # Copy dependency to build/bin to ensure it's available
+                    $targetPath = Join-Path "${{ github.workspace }}\build\bin" $dllName
+                    if ((-not (Test-Path $targetPath)) -and $foundPath -ne $targetPath) {
+                        Copy-Item $foundPath $targetPath
+                        Write-Host "    📋 Copied to build/bin directory" -ForegroundColor Cyan
+                    }
+                }
+            }
+            
+            return $missingDeps
+        }
+        
+        # Collect all missing dependencies
+        $missingDependencies = @()
+        
+        # Check key libraries
+        $libraries = @(
+            "${{ github.workspace }}\build\bin\bin2dash.so",
+            "${{ github.workspace }}\build\bin\signals-unity-bridge.so"
+        )
+        
+        foreach ($lib in $libraries) {
+            $missingDeps = Get-DllDependencies -FilePath $lib
+            $missingDependencies += $missingDeps
+            Write-Host ""
+        }
+        
+        # Analyze missing dependencies (if any)
+        if ($missingDependencies.Count -gt 0) {
+            Write-Host "⚠️ Missing dependencies:" -ForegroundColor Yellow
+            $missingDependencies | Sort-Object -Unique | ForEach-Object {
+                Write-Host "  - $_" -ForegroundColor Red
+            }
+            
+            # Search for missing dependencies in the MSYS2 environment
+            Write-Host "Searching MSYS2 for missing packages..." -ForegroundColor Cyan
+            foreach ($dep in ($missingDependencies | Sort-Object -Unique)) {
+                $output = & "C:\msys64\usr\bin\pacman.exe" -Fy $dep 2>$null
+                if ($output) {
+                    Write-Host "Found package for $dep in pacman database" -ForegroundColor Green
+                    $output | Out-String | Write-Host
+                }
+            }
+        } else {
+            Write-Host "✅ All dependencies found!" -ForegroundColor Green
+        }
+        
+        # Copy required MSYS2 runtime DLLs to ensure they're available
+        Write-Host "Copying MSYS2 runtime libraries to build/bin..." -ForegroundColor Cyan
+        $msys2RuntimeDlls = @(
+            "libgcc_s_seh-1.dll",
+            "libwinpthread-1.dll",
+            "libstdc++-6.dll"
+        )
+        
+        foreach ($dll in $msys2RuntimeDlls) {
+            $sourcePath = "C:\msys64\mingw64\bin\$dll"
+            $targetPath = "${{ github.workspace }}\build\bin\$dll"
+            
+            if (Test-Path $sourcePath) {
+                Copy-Item -Path $sourcePath -Destination $targetPath -Force
+                Write-Host "Copied $dll to build/bin" -ForegroundColor Green
+            } else {
+                Write-Host "⚠️ Could not find $dll in MSYS2" -ForegroundColor Yellow
+            }
+        }
+        
+        # Copy vcpkg dependencies
+        Write-Host "Copying vcpkg libraries to build/bin..." -ForegroundColor Cyan
+        $vcpkgBinDir = "${{ github.workspace }}\build\vcpkg_installed\x64-mingw-dynamic\bin"
+        if (Test-Path $vcpkgBinDir) {
+            $dllCount = 0
+            foreach ($dll in (Get-ChildItem -Path $vcpkgBinDir -Filter "*.dll")) {
+                $targetPath = Join-Path "${{ github.workspace }}\build\bin" $dll.Name
+                if (-not (Test-Path $targetPath)) {
+                    Copy-Item $dll.FullName $targetPath -Force
+                    $dllCount++
+                }
+            }
+            Write-Host "✅ Copied $dllCount DLLs from vcpkg to build/bin" -ForegroundColor Green
+        } else {
+            Write-Host "❌ vcpkg bin directory not found: $vcpkgBinDir" -ForegroundColor Red
+        }
+        
+        # Ensure SIGNALS_SMD_PATH is properly set
+        $env:SIGNALS_SMD_PATH = "${{ github.workspace }}\build\bin"
+        Write-Host "SIGNALS_SMD_PATH set to: $env:SIGNALS_SMD_PATH" -ForegroundColor Cyan
+        
+        # List DLLs in build/bin after copying
+        Write-Host "Contents of build/bin after copying dependencies:" -ForegroundColor Yellow
+        Get-ChildItem -Path "${{ github.workspace }}\build\bin\*.dll" | 
+            Where-Object { $_.Name -match "^(lib|msys-|libgcc|libwin|libstdc)" } |
+            Sort-Object Name | 
+            Format-Table Name, Length, LastWriteTime
+
+    - name: Run integration tests
+      working-directory: ${{ env.BUILD_DIR }}
+      shell: pwsh
+      run: |
+        echo "Setting up environment for tests..."
+        
+        $env:PATH = "${{ github.workspace }}\build\bin;${{ github.workspace }}\cwipc\install\bin;${{ github.workspace }}\build\vcpkg_installed\x64-mingw-dynamic\bin;${{ github.workspace }}\build\vcpkg_installed\x64-mingw-dynamic\lib;C:\msys64\mingw64\bin;$env:PATH"
+        
+        #set Python environment variables
+        $env:PYTHONUNBUFFERED = "1"
+
+        $env:SIGNALS_SMD_PATH = "${{ github.workspace }}\build\bin"
+                
+        echo "Checking for executables in PATH:"
+        $exes = @("evanescent.exe", "cwipc_forward.exe", "cwipc_view.exe")
+        foreach ($exe in $exes) {
+            $exePath = (Get-Command $exe -ErrorAction SilentlyContinue).Path
+            if ($exePath) {
+                Write-Host "Found $exe at: $exePath"
+            } else {
+                Write-Host "WARNING: $exe not found in PATH"
+            }
+        }
+
+        
+        echo "Running pipeline integration test..."
+        $scriptPath = Join-Path ${{ env.BUILD_DIR }} "scripts\run-pipeline-test.ps1"
+        
+        if (Test-Path $scriptPath) {
+            & $scriptPath
+        } else {
+            Write-Host "ERROR: Could not find pipeline test script at $scriptPath"
+            exit 1
+        }
+
+    - name: Upload test logs
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: windows-test-logs
+        path: |
+          ${{ env.BUILD_DIR }}/logs/**/*
+          ${{ env.BUILD_DIR }}/logs/*
+        retention-days: 5
+
