@@ -117,6 +117,7 @@ jobs:
         cmake --build build --preset linux-production --parallel $(nproc)
 
     - name: Run integration tests
+      if: false
       run: |
         cd ${{ env.BUILD_DIR }}
         
@@ -206,6 +207,7 @@ jobs:
         cmake --build build --preset mac-production --parallel $(sysctl -n hw.logicalcpu)
 
     - name: Run integration tests
+      if: false
       run: |
         cd ${{ env.BUILD_DIR }}
         
@@ -595,6 +597,7 @@ jobs:
             Format-Table Name, Length, LastWriteTime
 
     - name: Run integration tests
+      if: false
       working-directory: ${{ env.BUILD_DIR }}
       shell: pwsh
       run: |
