@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - master
+    tags:
+      - v*
+      - exp*
   pull_request:
     branches:
       - master
@@ -641,4 +644,50 @@ jobs:
           ${{ env.BUILD_DIR }}/logs/**/*
           ${{ env.BUILD_DIR }}/logs/*
         retention-days: 5
-
+    - name: Create package
+      run: cpack --preset mingw-production
+  
+    - name: Upload package
+      uses: actions/upload-artifact@v4
+      with:
+        name: lldash-windows-x86_64
+        path: build/package/lldash-*.tar.gz
+  
+  create-release:
+    if: startsWith(github.ref, 'refs/tags/')
+    needs:
+      - linux-build
+      - macos-build
+      - windows-build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
+      - name: Create Assets folder
+        run: mkdir -p ${{ github.workspace }}/Assets
+      - name: Download Linux package
+        uses: actions/download-artifact@v4
+        with:
+          name: lldash-linux-x86_64
+          path: ${{ github.workspace }}/Assets
+      - name: Download MacOS package
+        uses: actions/download-artifact@v4
+        with:
+          name: lldash-mac-x86_64
+          path: ${{ github.workspace }}/Assets
+      - name: Download Windows package
+        uses: actions/download-artifact@v4
+        with:
+          name: lldash-windows-x86_64
+          path: ${{ github.workspace }}/Assets
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ github.workspace }}/Assets/*
+          body: |
+            Release for ${{ github.ref }}
+          generate_release_notes: true
+          draft: true
+          prerelease: true
