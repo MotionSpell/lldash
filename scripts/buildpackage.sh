@@ -9,8 +9,9 @@ git fetch --recurse-submodules
 git pull
 git submodule update --remote lldash-relay signals lldash-srd-packager lldash-playout
 rm -rf build installed
+./vcpkg/bootstrap-vcpkg.sh
 cmake --preset $preset
 cmake --build --preset $preset
-cmake --install --preset $preset
+cmake --install
 cpack --preset $preset
 realpath build/package/*
