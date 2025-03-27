@@ -340,6 +340,13 @@ jobs:
       with:
         submodules: 'recursive'
         fetch-depth: 0
+        fetch-tags: true
+
+    - name: Get all tags
+      run: |
+            git show-ref --tags
+            git log -40
+            git describe
 
     - name: Install correct Python version
       uses: actions/setup-python@v5
