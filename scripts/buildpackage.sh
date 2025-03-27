@@ -12,6 +12,6 @@ rm -rf build installed
 ./vcpkg/bootstrap-vcpkg.sh
 cmake --preset $preset
 cmake --build --preset $preset
-cmake --install
+cmake --install build
 cpack --preset $preset
 realpath build/package/*
