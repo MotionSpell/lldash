@@ -234,7 +234,97 @@ jobs:
 
     - name: Create package
       run: cpack --preset mac-production
-  
+
+    - name: Upload package
+      uses: actions/upload-artifact@v4
+      with:
+        name: lldash-mac-arm64
+        path: build/package/lldash-*.tar.gz
+
+  macos-intel-build:
+    runs-on: macos-13
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        submodules: true
+        fetch-depth: 0
+
+    - name: Set up environment variables
+      run: |
+        echo "BUILD_DIR=${{ github.workspace }}" >> $GITHUB_ENV
+
+    - name: Install dependencies
+      run: |
+        brew update && \
+        brew install \
+          cmake \
+          ninja \
+          pkg-config \
+          yasm \
+          nasm \
+          autoconf \
+          automake \
+          libtool \
+          python3 \
+          astyle
+
+    - name: Initialize vcpkg submodule
+      run: |
+        git submodule update --init --recursive
+      
+    - name: Bootstrap vcpkg
+      run: |
+        ./vcpkg/bootstrap-vcpkg.sh
+
+    - name: Install CWIPC via Homebrew
+      run: |
+        brew tap cwi-dis/cwipc
+        HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1 HOMEBREW_VERBOSE=1 brew install cwipc
+
+    - name: Verify CWIPC installation
+      run: |
+        # Verify that CWIPC is installed correctly
+        which cwipc_forward || echo "cwipc_forward not found in PATH"
+        which cwipc_view || echo "cwipc_view not found in PATH"
+        
+    - name: Configure CMake
+      run: |
+        cd ${{ env.BUILD_DIR }} && \
+        cmake --preset mac-production
+
+    - name: Build the project
+      run: |
+        cd ${{ env.BUILD_DIR }} && \
+        cmake --build build --preset intelmac-production --parallel $(sysctl -n hw.logicalcpu)
+
+    - name: Run integration tests
+      if: false
+      run: |
+        cd ${{ env.BUILD_DIR }}
+        
+        # Make script executable
+        chmod +x scripts/run-pipeline-test.sh
+        
+        # Show environment
+        echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
+        echo "PYTHONPATH=$PYTHONPATH"
+        
+        # Run the pipeline test
+        ./scripts/run-pipeline-test.sh
+
+    - name: Upload all logs
+      if: always()  # Upload logs even if the test fails for debug purposes
+      uses: actions/upload-artifact@v4
+      with:
+        name: mac-test-logs
+        path: ${{ env.BUILD_DIR }}/logs/**/*
+        retention-days: 5
+
+    - name: Create package
+      run: cpack --preset intelmac-production
+
     - name: Upload package
       uses: actions/upload-artifact@v4
       with:
@@ -646,7 +736,7 @@ jobs:
         retention-days: 5
     - name: Create package
       run: cpack --preset mingw-production
-  
+
     - name: Upload package
       uses: actions/upload-artifact@v4
       with:
@@ -658,6 +748,7 @@ jobs:
     needs:
       - linux-build
       - macos-build
+      - macos-intel-build
       - windows-build
     runs-on: ubuntu-latest
     steps:
@@ -673,6 +764,11 @@ jobs:
           name: lldash-linux-x86_64
           path: ${{ github.workspace }}/Assets
       - name: Download MacOS package
+        uses: actions/download-artifact@v4
+        with:
+          name: lldash-mac-arm64
+          path: ${{ github.workspace }}/Assets
+      - name: Download MacOS Intel package
         uses: actions/download-artifact@v4
         with:
           name: lldash-mac-x86_64
