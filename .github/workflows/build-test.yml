@@ -390,12 +390,14 @@ jobs:
         fetch-tags: true
 
     - name: Get all tags
+      shell: bash
       run: |
-            pwd
-            ls -la
-            git show-ref --tags
-            git log -10
-            git describe
+        set -x
+        pwd
+        ls -la
+        git show-ref --tags
+        git log -10
+        git describe
 
     - name: Install correct Python version
       uses: actions/setup-python@v5
