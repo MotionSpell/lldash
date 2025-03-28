@@ -344,8 +344,10 @@ jobs:
 
     - name: Get all tags
       run: |
+            pwd
+            ls -la
             git show-ref --tags
-            git log -40
+            git log -10
             git describe
 
     - name: Install correct Python version
