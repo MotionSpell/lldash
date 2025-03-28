@@ -705,7 +705,6 @@ jobs:
             Format-Table Name, Length, LastWriteTime
 
     - name: Run integration tests
-      if: false
       working-directory: ${{ env.BUILD_DIR }}
       shell: pwsh
       run: |
