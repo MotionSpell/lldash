@@ -483,7 +483,13 @@ jobs:
       if: env.CWIPC_CACHE_HIT != 'true'
       shell: cmd
       run: |
-        call %GITHUB_WORKSPACE%\cwipc\cwipc_util\python\cwipc_pymodules_install.bat
+        call %GITHUB_WORKSPACE%\cwipc\install\bin\cwipc_pymodules_install.bat
+
+    - name: Add CWIPC install directory to PATH
+      run: |
+        echo "%GITHUB_WORKSPACE%\cwipc\install\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+      shell: pwsh
+
 
     # Check LLDASH cache status
     - name: Check LLDASH cache status
