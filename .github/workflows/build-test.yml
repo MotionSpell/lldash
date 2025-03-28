@@ -292,7 +292,7 @@ jobs:
     - name: Configure CMake
       run: |
         cd ${{ env.BUILD_DIR }} && \
-        cmake --preset mac-production
+        cmake --preset intelmac-production
 
     - name: Build the project
       run: |
