@@ -331,6 +331,53 @@ jobs:
         name: lldash-mac-x86_64
         path: build/package/lldash-*.tar.gz
 
+  macos-universal-build:
+    runs-on: macos-latest
+    needs:
+      - macos-build
+      - macos-intel-build
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        submodules: true
+        fetch-depth: 0
+    - name: Get lipo-dir-merge
+      run:
+        git clone https://github.com/faaxm/lipo-dir-merge
+    - name: Create download directory and upload directory
+      run: |
+        mkdir -p ${{ github.workspace }}/Assets
+        mkdir -p ${{ github.workspace }}/tmp
+
+    - name: Download MacOS Arm64 package
+      uses: actions/download-artifact@v4
+      with:
+        name: lldash-mac-arm64
+        path: ${{ github.workspace }}/tmp
+    - name: Download MacOS Intel package
+      uses: actions/download-artifact@v4
+      with:
+        name: lldash-mac-x86_64
+        path: ${{ github.workspace }}/tmp
+    - name: Create universal binary tree
+      run: |
+        set -x
+        tar xfv ${{ github.workspace }}/tmp/lldash-mac-arm64/*arm64*.tar.gz
+        tar xfv ${{ github.workspace }}/tmp/lldash-mac-x86_64/*x86_64*.tar.gz
+        dir_arm64=$(echo *arm64*)
+        dir_x86_64=$(echo *x86_64*)
+        dir_universal=${dir_arm64/arm64/universal}
+        python3 lipo_dir_merge/lipo_dir_merge.py ${dir_arm64} ${dir_x86_64} ${dir_universal}
+        echo "Universal directory: $dir_universal"
+        tar cfz ${{ github.workspace }}/Assets/${dir_universal}.tar.gz ${dir_universal}
+
+    - name: Upload package
+      uses: actions/upload-artifact@v4
+      with:
+        name: lldash-mac-universal
+        path: ${{ github.workspace }}/Assets/lldash-*.tar.gz
+  
   windows-build:
     runs-on: windows-latest
 
@@ -763,6 +810,7 @@ jobs:
       - linux-build
       - macos-build
       - macos-intel-build
+      - macos-universal-build
       - windows-build
     runs-on: ubuntu-latest
     steps:
@@ -777,7 +825,7 @@ jobs:
         with:
           name: lldash-linux-x86_64
           path: ${{ github.workspace }}/Assets
-      - name: Download MacOS package
+      - name: Download MacOS Arm64 package
         uses: actions/download-artifact@v4
         with:
           name: lldash-mac-arm64
@@ -786,6 +834,11 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: lldash-mac-x86_64
+          path: ${{ github.workspace }}/Assets
+      - name: Download MacOS Intel package
+        uses: actions/download-artifact@v4
+        with:
+          name: lldash-mac-universal
           path: ${{ github.workspace }}/Assets
       - name: Download Windows package
         uses: actions/download-artifact@v4
