@@ -363,8 +363,8 @@ jobs:
     - name: Create universal binary tree
       run: |
         set -x
-        tar xfv ${{ github.workspace }}/tmp/lldash-mac-arm64/*arm64*.tar.gz
-        tar xfv ${{ github.workspace }}/tmp/lldash-mac-x86_64/*x86_64*.tar.gz
+        tar xfv ${{ github.workspace }}/tmp/*arm64*.tar.gz
+        tar xfv ${{ github.workspace }}/tmp/*x86_64*.tar.gz
         dir_arm64=$(echo *arm64*)
         dir_x86_64=$(echo *x86_64*)
         dir_universal=${dir_arm64/arm64/universal}
