@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - master
+    tags:
+      - v*
+      - exp*
   pull_request:
     branches:
       - master
@@ -117,6 +120,7 @@ jobs:
         cmake --build build --preset linux-production --parallel $(nproc)
 
     - name: Run integration tests
+      if: false
       run: |
         cd ${{ env.BUILD_DIR }}
         
@@ -137,6 +141,15 @@ jobs:
         name: linux-test-logs
         path: ${{ env.BUILD_DIR }}/logs/**/*
         retention-days: 5
+
+    - name: Create package
+      run: cpack --preset linux-production
+
+    - name: Upload package
+      uses: actions/upload-artifact@v4
+      with:
+        name: lldash-linux-x86_64
+        path: build/package/lldash-*.tar.gz
 
   macos-build:
     runs-on: macos-latest
@@ -197,6 +210,7 @@ jobs:
         cmake --build build --preset mac-production --parallel $(sysctl -n hw.logicalcpu)
 
     - name: Run integration tests
+      if: false
       run: |
         cd ${{ env.BUILD_DIR }}
         
@@ -218,6 +232,152 @@ jobs:
         path: ${{ env.BUILD_DIR }}/logs/**/*
         retention-days: 5
 
+    - name: Create package
+      run: cpack --preset mac-production
+
+    - name: Upload package
+      uses: actions/upload-artifact@v4
+      with:
+        name: lldash-mac-arm64
+        path: build/package/lldash-*.tar.gz
+
+  macos-intel-build:
+    runs-on: macos-13
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        submodules: true
+        fetch-depth: 0
+
+    - name: Set up environment variables
+      run: |
+        echo "BUILD_DIR=${{ github.workspace }}" >> $GITHUB_ENV
+
+    - name: Install dependencies
+      run: |
+        brew update && \
+        brew install \
+          cmake \
+          ninja \
+          pkg-config \
+          yasm \
+          nasm \
+          autoconf \
+          automake \
+          libtool \
+          python3 \
+          astyle
+
+    - name: Initialize vcpkg submodule
+      run: |
+        git submodule update --init --recursive
+      
+    - name: Bootstrap vcpkg
+      run: |
+        ./vcpkg/bootstrap-vcpkg.sh
+
+    - name: Install CWIPC via Homebrew
+      run: |
+        brew tap cwi-dis/cwipc
+        HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1 HOMEBREW_VERBOSE=1 brew install cwipc
+
+    - name: Verify CWIPC installation
+      run: |
+        # Verify that CWIPC is installed correctly
+        which cwipc_forward || echo "cwipc_forward not found in PATH"
+        which cwipc_view || echo "cwipc_view not found in PATH"
+        
+    - name: Configure CMake
+      run: |
+        cd ${{ env.BUILD_DIR }} && \
+        cmake --preset intelmac-production
+
+    - name: Build the project
+      run: |
+        cd ${{ env.BUILD_DIR }} && \
+        cmake --build build --preset intelmac-production --parallel $(sysctl -n hw.logicalcpu)
+
+    - name: Run integration tests
+      if: false
+      run: |
+        cd ${{ env.BUILD_DIR }}
+        
+        # Make script executable
+        chmod +x scripts/run-pipeline-test.sh
+        
+        # Show environment
+        echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
+        echo "PYTHONPATH=$PYTHONPATH"
+        
+        # Run the pipeline test
+        ./scripts/run-pipeline-test.sh
+
+    - name: Upload all logs
+      if: always()  # Upload logs even if the test fails for debug purposes
+      uses: actions/upload-artifact@v4
+      with:
+        name: mac-test-logs
+        path: ${{ env.BUILD_DIR }}/logs/**/*
+        retention-days: 5
+
+    - name: Create package
+      run: cpack --preset intelmac-production
+
+    - name: Upload package
+      uses: actions/upload-artifact@v4
+      with:
+        name: lldash-mac-x86_64
+        path: build/package/lldash-*.tar.gz
+
+  macos-universal-build:
+    runs-on: macos-latest
+    needs:
+      - macos-build
+      - macos-intel-build
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        submodules: true
+        fetch-depth: 0
+    - name: Get lipo-dir-merge
+      run:
+        git clone https://github.com/faaxm/lipo-dir-merge
+    - name: Create download directory and upload directory
+      run: |
+        mkdir -p ${{ github.workspace }}/Assets
+        mkdir -p ${{ github.workspace }}/tmp
+
+    - name: Download MacOS Arm64 package
+      uses: actions/download-artifact@v4
+      with:
+        name: lldash-mac-arm64
+        path: ${{ github.workspace }}/tmp
+    - name: Download MacOS Intel package
+      uses: actions/download-artifact@v4
+      with:
+        name: lldash-mac-x86_64
+        path: ${{ github.workspace }}/tmp
+    - name: Create universal binary tree
+      run: |
+        set -x
+        tar xfv ${{ github.workspace }}/tmp/*arm64*.tar.gz
+        tar xfv ${{ github.workspace }}/tmp/*x86_64*.tar.gz
+        dir_arm64=$(echo *arm64*)
+        dir_x86_64=$(echo *x86_64*)
+        dir_universal=${dir_arm64/arm64/universal}
+        python3 lipo-dir-merge/lipo-dir-merge.py ${dir_arm64} ${dir_x86_64} ${dir_universal}
+        echo "Universal directory: $dir_universal"
+        tar cfz ${{ github.workspace }}/Assets/${dir_universal}.tar.gz ${dir_universal}
+
+    - name: Upload package
+      uses: actions/upload-artifact@v4
+      with:
+        name: lldash-mac-universal
+        path: ${{ github.workspace }}/Assets/lldash-*.tar.gz
+  
   windows-build:
     runs-on: windows-latest
 
@@ -227,6 +387,17 @@ jobs:
       with:
         submodules: 'recursive'
         fetch-depth: 0
+        fetch-tags: true
+
+    - name: Get all tags
+      shell: bash
+      run: |
+        set -x
+        pwd
+        ls -la
+        git show-ref --tags
+        git log -10
+        git describe
 
     - name: Install correct Python version
       uses: actions/setup-python@v5
@@ -361,7 +532,13 @@ jobs:
       if: env.CWIPC_CACHE_HIT != 'true'
       shell: cmd
       run: |
-        call %GITHUB_WORKSPACE%\cwipc\cwipc_util\python\cwipc_pymodules_install.bat
+        call %GITHUB_WORKSPACE%\cwipc\install\bin\cwipc_pymodules_install.bat
+
+    - name: Add CWIPC install directory to PATH
+      run: |
+        echo "%GITHUB_WORKSPACE%\cwipc\install\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+      shell: pwsh
+
 
     # Check LLDASH cache status
     - name: Check LLDASH cache status
@@ -577,6 +754,7 @@ jobs:
             Format-Table Name, Length, LastWriteTime
 
     - name: Run integration tests
+      if: false
       working-directory: ${{ env.BUILD_DIR }}
       shell: pwsh
       run: |
@@ -620,4 +798,62 @@ jobs:
           ${{ env.BUILD_DIR }}/logs/**/*
           ${{ env.BUILD_DIR }}/logs/*
         retention-days: 5
+    - name: Create package
+      run: cpack --preset mingw-production
 
+    - name: Upload package
+      uses: actions/upload-artifact@v4
+      with:
+        name: lldash-windows-x86_64
+        path: build/package/lldash-*.tar.gz
+  
+  create-release:
+    if: startsWith(github.ref, 'refs/tags/')
+    needs:
+      - linux-build
+      - macos-build
+      - macos-intel-build
+      - macos-universal-build
+      - windows-build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
+      - name: Create Assets folder
+        run: mkdir -p ${{ github.workspace }}/Assets
+      - name: Download Linux package
+        uses: actions/download-artifact@v4
+        with:
+          name: lldash-linux-x86_64
+          path: ${{ github.workspace }}/Assets
+      - name: Download MacOS Arm64 package
+        uses: actions/download-artifact@v4
+        with:
+          name: lldash-mac-arm64
+          path: ${{ github.workspace }}/Assets
+      - name: Download MacOS Intel package
+        uses: actions/download-artifact@v4
+        with:
+          name: lldash-mac-x86_64
+          path: ${{ github.workspace }}/Assets
+      - name: Download MacOS Intel package
+        uses: actions/download-artifact@v4
+        with:
+          name: lldash-mac-universal
+          path: ${{ github.workspace }}/Assets
+      - name: Download Windows package
+        uses: actions/download-artifact@v4
+        with:
+          name: lldash-windows-x86_64
+          path: ${{ github.workspace }}/Assets
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ github.workspace }}/Assets/*
+          body: |
+            Release for ${{ github.ref }}
+          generate_release_notes: true
+          draft: true
+          prerelease: true

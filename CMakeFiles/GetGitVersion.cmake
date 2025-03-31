@@ -5,7 +5,12 @@ macro(get_git_version)
 	cmake_parse_arguments(MYARGS "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
 	# lldash-specific: our release tags start with v
-	execute_process(COMMAND "git" "describe" "--tags" "--match" "v*" RESULT_VARIABLE status OUTPUT_VARIABLE describe_output OUTPUT_STRIP_TRAILING_WHITESPACE)
+	execute_process(COMMAND "git" "describe" "--tags" "--match" "v*" 
+		WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+		RESULT_VARIABLE status 
+		OUTPUT_VARIABLE describe_output 
+		OUTPUT_STRIP_TRAILING_WHITESPACE
+		)
 	if(status AND NOT status EQUAL 0)
 		message(STATUS "GetGitVersion: git describe failed: ${status}, using .cachedgitversion.txt")
 		set(describe_version "0.0+unknown")
