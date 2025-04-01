@@ -301,7 +301,6 @@ jobs:
         which cwipc_view || echo "cwipc_view not found in PATH"
   
     - name: Run integration tests
-      if: false
       run: |
         cd ${{ env.BUILD_DIR }}
         
