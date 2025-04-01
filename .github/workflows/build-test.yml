@@ -70,6 +70,14 @@ jobs:
       run: |
         ./vcpkg/vcpkg install
 
+    - name: Upload vcpkg buildtrees in case of failure
+      if: ${{ failure() }} 
+      uses: actions/upload-artifact@v4
+      with:
+        name: linux-vcpkg-buildtrees
+        path: ./vcpkg/buildtrees
+        retention-days: 5
+  
     - name: Fix for libcrypto build
       run: |
         sudo apt-get update && \
@@ -187,7 +195,15 @@ jobs:
     - name: Install vcpkg dependencies
       run: |
         ./vcpkg/vcpkg install
-  
+
+    - name: Upload vcpkg buildtrees in case of failure
+      if: ${{ failure() }} 
+      uses: actions/upload-artifact@v4
+      with:
+        name: macos-vcpkg-buildtrees
+        path: ./vcpkg/buildtrees
+        retention-days: 5
+    
     - name: Configure CMake
       run: |
         cd ${{ env.BUILD_DIR }} && \
@@ -278,7 +294,15 @@ jobs:
     - name: Install vcpkg dependencies
       run: |
         ./vcpkg/vcpkg install
-          
+
+    - name: Upload vcpkg buildtrees in case of failure
+      if: ${{ failure() }} 
+      uses: actions/upload-artifact@v4
+      with:
+        name: macos-intel-vcpkg-buildtrees
+        path: ./vcpkg/buildtrees
+        retention-days: 5
+            
     - name: Configure CMake
       run: |
         cd ${{ env.BUILD_DIR }} && \
@@ -585,7 +609,15 @@ jobs:
     - name: Install vcpkg dependencies for LLDASH
       run: |
         ./vcpkg/vcpkg install
-  
+
+    - name: Upload vcpkg buildtrees in case of failure
+      if: ${{ failure() }} 
+      uses: actions/upload-artifact@v4
+      with:
+        name: windows-vcpkg-buildtrees
+        path: ./vcpkg/buildtrees
+        retention-days: 5
+    
     # Configure LLDASH project (MSYS2)
     - name: Configure LLDASH project
       if: env.LLDASH_CACHE_HIT != 'true'
