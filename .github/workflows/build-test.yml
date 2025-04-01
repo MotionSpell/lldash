@@ -62,10 +62,6 @@ jobs:
         chmod +x ./scripts/install_cmake.sh && \
         ./scripts/install_cmake.sh /opt/ninja /opt/cmake
 
-    - name: Initialize vcpkg submodule
-      run: |
-        git submodule update --init --recursive
-
     - name: Bootstrap vcpkg
       run: |
         ./vcpkg/bootstrap-vcpkg.sh
@@ -180,10 +176,6 @@ jobs:
           python3 \
           astyle
 
-    - name: Initialize vcpkg submodule
-      run: |
-        git submodule update --init --recursive
-      
     - name: Bootstrap vcpkg
       run: |
         ./vcpkg/bootstrap-vcpkg.sh
@@ -270,10 +262,6 @@ jobs:
           python3 \
           astyle
 
-    - name: Initialize vcpkg submodule
-      run: |
-        git submodule update --init --recursive
-      
     - name: Bootstrap vcpkg
       run: |
         ./vcpkg/bootstrap-vcpkg.sh
