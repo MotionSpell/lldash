@@ -70,6 +70,10 @@ jobs:
       run: |
         ./vcpkg/bootstrap-vcpkg.sh
 
+    - name: Install vcpkg dependencies
+      run: |
+        ./vcpkg/vcpkg install
+
     - name: Fix for libcrypto build
       run: |
         sudo apt-get update && \
@@ -188,6 +192,10 @@ jobs:
       run: |
         ./vcpkg/bootstrap-vcpkg.sh
 
+    - name: Install vcpkg dependencies
+      run: |
+        ./vcpkg/vcpkg install
+  
     - name: Configure CMake
       run: |
         cd ${{ env.BUILD_DIR }} && \
@@ -278,6 +286,11 @@ jobs:
     - name: Bootstrap vcpkg
       run: |
         ./vcpkg/bootstrap-vcpkg.sh
+
+    - name: Install vcpkg dependencies
+      run: |
+        ./vcpkg/vcpkg install
+          
     - name: Configure CMake
       run: |
         cd ${{ env.BUILD_DIR }} && \
@@ -581,6 +594,10 @@ jobs:
         cd vcpkg
         bootstrap-vcpkg.bat
 
+    - name: Install vcpkg dependencies for LLDASH
+      run: |
+        ./vcpkg/vcpkg install
+  
     # Configure LLDASH project (MSYS2)
     - name: Configure LLDASH project
       if: env.LLDASH_CACHE_HIT != 'true'
