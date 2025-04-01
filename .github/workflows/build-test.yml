@@ -86,7 +86,8 @@ jobs:
           libopencv-dev \
           python3-dev \
           python3-pip 
-    
+    - name: Install CWIPC
+      
     - name: Build CWIPC
       run: |
         cd cwipc
@@ -188,17 +189,6 @@ jobs:
       run: |
         ./vcpkg/bootstrap-vcpkg.sh
 
-    - name: Install CWIPC via Homebrew
-      run: |
-        brew tap cwi-dis/cwipc
-        HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1 HOMEBREW_VERBOSE=1 brew install cwipc
-
-    - name: Verify CWIPC installation
-      run: |
-        # Verify that CWIPC is installed correctly
-        which cwipc_forward || echo "cwipc_forward not found in PATH"
-        which cwipc_view || echo "cwipc_view not found in PATH"
-        
     - name: Configure CMake
       run: |
         cd ${{ env.BUILD_DIR }} && \
@@ -209,8 +199,20 @@ jobs:
         cd ${{ env.BUILD_DIR }} && \
         cmake --build build --preset mac-production --parallel $(sysctl -n hw.logicalcpu)
 
+
+    - name: Install CWIPC via Homebrew
+      run: |
+        brew tap cwi-dis/cwipc
+        HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1 HOMEBREW_VERBOSE=1 brew install --head cwipc
+  
+    - name: Verify CWIPC installation
+      run: |
+        # Verify that CWIPC is installed correctly
+        which cwipc_forward || echo "cwipc_forward not found in PATH"
+        which cwipc_view || echo "cwipc_view not found in PATH"
+        
+  
     - name: Run integration tests
-      if: false
       run: |
         cd ${{ env.BUILD_DIR }}
         
@@ -277,18 +279,6 @@ jobs:
     - name: Bootstrap vcpkg
       run: |
         ./vcpkg/bootstrap-vcpkg.sh
-
-    - name: Install CWIPC via Homebrew
-      run: |
-        brew tap cwi-dis/cwipc
-        HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1 HOMEBREW_VERBOSE=1 brew install cwipc
-
-    - name: Verify CWIPC installation
-      run: |
-        # Verify that CWIPC is installed correctly
-        which cwipc_forward || echo "cwipc_forward not found in PATH"
-        which cwipc_view || echo "cwipc_view not found in PATH"
-        
     - name: Configure CMake
       run: |
         cd ${{ env.BUILD_DIR }} && \
@@ -299,6 +289,17 @@ jobs:
         cd ${{ env.BUILD_DIR }} && \
         cmake --build build --preset intelmac-production --parallel $(sysctl -n hw.logicalcpu)
 
+    - name: Install CWIPC via Homebrew
+      run: |
+        brew tap cwi-dis/cwipc
+        HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1 HOMEBREW_VERBOSE=1 brew install --head cwipc
+  
+    - name: Verify CWIPC installation
+      run: |
+        # Verify that CWIPC is installed correctly
+        which cwipc_forward || echo "cwipc_forward not found in PATH"
+        which cwipc_view || echo "cwipc_view not found in PATH"
+  
     - name: Run integration tests
       if: false
       run: |
