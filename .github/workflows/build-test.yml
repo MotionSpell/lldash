@@ -362,78 +362,12 @@ jobs:
       with:
         python-version: '3.12'
 
-    # Add caching for vcpkg packages
-    - name: Cache vcpkg packages
-      uses: actions/cache@v3
-      id: cache-vcpkg
-      with:
-        path: |
-          vcpkg/installed/
-          cwipc/vcpkg/installed/
-          vcpkg/packages/
-          cwipc/vcpkg/packages/
-          build/vcpkg_installed/
-        key: vcpkg-${{ runner.os }}-${{ hashFiles('vcpkg.json', 'cwipc/vcpkg.json') }}-${{ github.sha }}
-        restore-keys: |
-          vcpkg-${{ runner.os }}-${{ hashFiles('vcpkg.json', 'cwipc/vcpkg.json') }}-
-          vcpkg-${{ runner.os }}-
-
-    # Add caching for CWIPC build
-    - name: Cache CWIPC build
-      uses: actions/cache@v3
-      id: cache-cwipc
-      with:
-        path: |
-          cwipc/build/
-          cwipc/install/
-          !cwipc/build/CMakeCache.txt
-        key: cwipc-build-${{ runner.os }}-${{ hashFiles('cwipc/**/*.cpp', 'cwipc/**/*.h', 'cwipc/CMakeLists.txt') }}-${{ github.sha }}
-        restore-keys: |
-          cwipc-build-${{ runner.os }}-${{ hashFiles('cwipc/**/*.cpp', 'cwipc/**/*.h', 'cwipc/CMakeLists.txt') }}-
-          cwipc-build-${{ runner.os }}-
-
-    # Add caching for LLDASH build
-    - name: Cache LLDASH build
-      uses: actions/cache@v3
-      id: cache-lldash
-      with:
-        path: |
-          build/
-          !build/CMakeCache.txt
-          !build/logs/
-        key: lldash-build-${{ runner.os }}-${{ hashFiles('src/**/*.cpp', 'src/**/*.h', 'CMakeLists.txt') }}-${{ github.sha }}
-        restore-keys: |
-          lldash-build-${{ runner.os }}-${{ hashFiles('src/**/*.cpp', 'src/**/*.h', 'CMakeLists.txt') }}-
-          lldash-build-${{ runner.os }}-
 
     - name: Set up environment variables
       run: |
         echo "BUILD_DIR=$env:GITHUB_WORKSPACE" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
       shell: pwsh
 
-    - name: Export GitHub Actions cache environment variables for vcpkg
-      uses: actions/github-script@v6
-      with:
-        script: |
-          core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
-          core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
-
-    - name: Create 3rdparty directory structure
-      shell: pwsh
-      run: |
-        $thirdpartydir="$((Get-Item .).FullName)\3rdparty"
-        mkdir $thirdpartydir
-
-
-    # Check LLDASH cache status
-    - name: Check LLDASH cache status
-      if: steps.cache-lldash.outputs.cache-hit == 'true'
-      shell: pwsh
-      run: |
-        Write-Host "LLDASH cache hit - skipping LLDASH build steps"
-        echo "LLDASH_CACHE_HIT=true" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-
-    # PHASE 2: BUILD LLDASH WITH MSYS2
     - name: Setup MSYS2
       uses: msys2/setup-msys2@v2
       with:
@@ -453,7 +387,6 @@ jobs:
       shell: pwsh
 
     - name: Update MSYS2 and install dependencies
-      if: env.LLDASH_CACHE_HIT != 'true'
       run: |
         C:\msys64\usr\bin\bash.exe -c "pacman -Syu --noconfirm"
         C:\msys64\usr\bin\bash.exe -c "pacman -S --noconfirm mingw-w64-x86_64-toolchain mingw-w64-x86_64-cmake mingw-w64-x86_64-ninja mingw-w64-x86_64-pkg-config mingw-w64-x86_64-nasm mingw-w64-x86_64-yasm mingw-w64-x86_64-autotools mingw-w64-x86_64-gcc git make curl mingw-w64-x86_64-libtool mingw-w64-x86_64-python3 mingw-w64-x86_64-python-pip mingw-w64-x86_64-ca-certificates mingw-w64-x86_64-freetype"
@@ -461,7 +394,6 @@ jobs:
 
     # Bootstrap vcpkg for LLDASH
     - name: Bootstrap vcpkg for LLDASH
-      if: env.LLDASH_CACHE_HIT != 'true'
       shell: cmd
       run: |
         cd vcpkg
@@ -481,21 +413,19 @@ jobs:
     
     # Configure LLDASH project (MSYS2)
     - name: Configure LLDASH project
-      if: env.LLDASH_CACHE_HIT != 'true'
-      working-directory: ${{ env.BUILD_DIR }}
       run: |
         cmake --preset mingw-production
       shell: bash
 
     # Build LLDASH project
     - name: Build LLDASH project
-      if: env.LLDASH_CACHE_HIT != 'true'
-      working-directory: ${{ env.BUILD_DIR }}
       run: cmake --build build --preset mingw-production --parallel $(nproc)
       shell: bash
 
+    # xxxjack I wonder why this is needed: exactly this same logic should be included in the CMake install process...
+    # xxxjack unless I am mistaken and forgot to copy it over from cwipc....
+    # xxxjack anyway, this should be done in cmake.
     - name: Analyze library dependencies and fix paths
-      working-directory: ${{ env.BUILD_DIR }}
       shell: pwsh
       run: |
         Write-Host "===== ANALYZING LIBRARY DEPENDENCIES =====" -ForegroundColor Cyan
