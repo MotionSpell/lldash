@@ -68,6 +68,22 @@ You can install the built binaries as follows:
 cmake --install build 
 ```
 
+## Updating the vcpkg dependencies
+
+Once in a while you should update the `vcpkg` dependencies to the latest version:
+
+```
+cd .\vcpkg
+git checkout master
+git pull
+.\bootstrap-vcpkg.bat
+cd ..
+.\vcpkg\vcpkg x-update-baseline
+.\vcpkg\vcpkg install --triplet=x64-linux-dynamic
+git commit -a -m "Vcpkg packages updated to most recent version"
+```
+
+Replacing `x64-linux-dynamic` with whatever is the correct triplet for the platform you are on.
 
 # Documentation
 
