@@ -68,7 +68,7 @@ jobs:
 
     - name: Install vcpkg dependencies
       run: |
-        ./vcpkg/vcpkg install
+        ./vcpkg/vcpkg install --triplet=x64-linux-dynamic
 
     - name: Upload vcpkg buildtrees in case of failure
       if: ${{ failure() }} 
@@ -194,7 +194,7 @@ jobs:
 
     - name: Install vcpkg dependencies
       run: |
-        ./vcpkg/vcpkg install
+        ./vcpkg/vcpkg install --triplet=arm64-osx-dynamic
 
     - name: Upload vcpkg buildtrees in case of failure
       if: ${{ failure() }} 
@@ -293,7 +293,7 @@ jobs:
 
     - name: Install vcpkg dependencies
       run: |
-        ./vcpkg/vcpkg install
+        ./vcpkg/vcpkg install --triplet=x64-osx-dynamic
 
     - name: Upload vcpkg buildtrees in case of failure
       if: ${{ failure() }} 
@@ -608,7 +608,7 @@ jobs:
 
     - name: Install vcpkg dependencies for LLDASH
       run: |
-        ./vcpkg/vcpkg install
+        ./vcpkg/vcpkg install --triplet=x64-mingw-dynamic
 
     - name: Upload vcpkg buildtrees in case of failure
       if: ${{ failure() }} 
