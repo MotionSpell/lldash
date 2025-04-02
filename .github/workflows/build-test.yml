@@ -57,11 +57,6 @@ jobs:
         astyle \
         bc
 
-    - name: Install CMake and Ninja
-      run: |
-        chmod +x ./scripts/install_cmake.sh && \
-        ./scripts/install_cmake.sh /opt/ninja /opt/cmake
-
     - name: Bootstrap vcpkg
       run: |
         ./vcpkg/bootstrap-vcpkg.sh
