@@ -89,25 +89,32 @@ jobs:
       run: |
         cmake --build build --preset linux-production --parallel $(nproc)
 
-        - name: Install pipeline test dependencies
-        run: |
-          python3 -m pip install requests 
-          
-          # Add library path to system
-          echo "/usr/local/lib" | sudo tee /etc/ld.so.conf.d/cwipc.conf
-          sudo ldconfig
-          
-          # Install wheels directly to system Python
-          echo "Installing CWIPC Python wheels:"
-          find /usr/local/share/cwipc/python/ -name "*.whl" -exec sudo pip3 install {} \; || echo "No wheels found"
+    - name: Install the project
+      run: |
+        cmake --install build --preset linux-production
+
+    - name: Install pipeline test dependencies
+      run: |
+        python3 -m venv .venv
+        source .venv/bin/activate
+        python -m pip install requests 
+        
+        # Add library path to system
+        echo "/usr/local/lib" | sudo tee /etc/ld.so.conf.d/cwipc.conf
+        sudo ldconfig
+        
+        # Install wheels directly to system Python
+        echo "Installing CWIPC Python wheels:"
+        find /usr/local/share/cwipc/python/ -name "*.whl" -exec sudo pip3 install {} \; || echo "No wheels found"
   
     - name: Run integration tests
-      if: false
       run: |
-        
+        source .venv/bin/activate
         # Show environment
         echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
         echo "PYTHONPATH=$PYTHONPATH"
+        echo "SIGNALS_SMD_PATH=$SIGNALS_SMD_PATH"
+        echo "PATH=$PATH"
         
         # Run the pipeline test
         ./scripts/run-pipeline-test.sh
