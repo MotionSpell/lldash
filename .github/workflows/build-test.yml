@@ -55,7 +55,8 @@ jobs:
         libtool \
         libtool-bin \
         astyle \
-        bc
+        bc \
+        libltdl-dev
 
     - name: Bootstrap vcpkg
       run: |
