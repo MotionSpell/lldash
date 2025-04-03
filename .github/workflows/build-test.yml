@@ -91,7 +91,7 @@ jobs:
 
     - name: Install the project
       run: |
-        cmake --install build --preset linux-production
+        cmake --install build
 
     - name: download cwipc
       uses: robinraju/release-downloader@v1
