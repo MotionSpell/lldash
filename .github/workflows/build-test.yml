@@ -156,7 +156,8 @@ jobs:
           automake \
           libtool \
           python3 \
-          astyle
+          astyle \
+          zlib
 
     - name: Bootstrap vcpkg
       run: |
@@ -237,7 +238,8 @@ jobs:
           automake \
           libtool \
           python3 \
-          astyle
+          astyle \
+          zlib
 
     - name: Bootstrap vcpkg
       run: |
