@@ -93,20 +93,36 @@ jobs:
       run: |
         cmake --install build --preset linux-production
 
-    - name: Install pipeline test dependencies
+    - name: download cwipc
+      uses: robinraju/release-downloader@v1
+      with:
+        repository: cwi-dis/cwipc
+        releaseId: nightly
+        fileName: cwipc-ubuntu2404-*-built.tar.gz
+        extract: true
+
+    - name: Install cwipc and other pipeline test dependencies
       run: |
+        cwipc_dir=$(find . -type d -name "cwipc-ubuntu2404-*-built" | head -n 1)
+        cwipc_dir=$(realpath "$cwipc_dir")
+
+        # Add cwipc bin directory to PATH
+        PATH=$cwipc_dir/bin:$PATH
+        echo "$cwipc_dir/bin" >> $GITHUB_PATH
+
+        # Add library path to system
+        echo "$cwipc_dir/lib" | sudo tee /etc/ld.so.conf.d/cwipc.conf
+        sudo ldconfig
+
+        # Create venv and install requirements
         python3 -m venv .venv
         source .venv/bin/activate
-        python -m pip install requests 
+        python -m pip install requests
         
-        # Add library path to system
-        echo "/usr/local/lib" | sudo tee /etc/ld.so.conf.d/cwipc.conf
-        sudo ldconfig
+        export CWIPC_PYTHON=python
+        cwipc_pymodules_install.sh
         
-        # Install wheels directly to system Python
-        echo "Installing CWIPC Python wheels:"
-        find /usr/local/share/cwipc/python/ -name "*.whl" -exec sudo pip3 install {} \; || echo "No wheels found"
-  
+        
     - name: Run integration tests
       run: |
         source .venv/bin/activate
