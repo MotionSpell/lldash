@@ -181,6 +181,7 @@ jobs:
           python3 \
           astyle \
           zlib
+        brew link --force zlib
 
     - name: Bootstrap vcpkg
       run: |
@@ -263,6 +264,7 @@ jobs:
           python3 \
           astyle \
           zlib
+        brew link --force zlib
 
     - name: Bootstrap vcpkg
       run: |
