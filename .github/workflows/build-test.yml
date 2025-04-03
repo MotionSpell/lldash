@@ -399,7 +399,7 @@ jobs:
         type %GITHUB_PATH%
       shell: cmd
 
-    - name: HACK: delete fake bash.exe from System32
+    - name: HACK delete fake bash.exe from System32
       run: |
         del C:\Windows\System32\bash.exe
       shell: cmd
