@@ -98,7 +98,7 @@ jobs:
       with:
         repository: cwi-dis/cwipc
         releaseId: nightly
-        fileName: cwipc-ubuntu2404-*-built.tar.gz
+        fileName: cwipc-ubuntu2404-*-built.tgz
         extract: true
 
     - name: Install cwipc and other pipeline test dependencies
