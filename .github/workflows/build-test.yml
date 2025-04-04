@@ -10,7 +10,8 @@ on:
   pull_request:
     branches:
       - master
-
+env:
+  CWIPC_RELEASE_TAG: nightly
 jobs:
   linux-build:
     runs-on: ubuntu-latest
@@ -97,7 +98,7 @@ jobs:
       uses: robinraju/release-downloader@v1
       with:
         repository: cwi-dis/cwipc
-        releaseId: nightly
+        tag: ${{ env.CWIPC_RELEASE_TAG }}
         fileName: cwipc-ubuntu2404-*-built.tgz
         extract: true
 
