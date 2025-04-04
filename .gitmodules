@@ -1,18 +1,15 @@
 [submodule "signals"]
 	path = signals
-	url = https://github.com/MotionSpell/signals.git
+	url = ../signals
 [submodule "vcpkg"]
 	path = vcpkg
 	url = https://github.com/microsoft/vcpkg
 [submodule "lldash-srd-packager"]
 	path = lldash-srd-packager
-	url = https://github.com/MotionSpell/lldash-srd-packager.git
+	url = ../lldash-srd-packager
 [submodule "lldash-playout"]
 	path = lldash-playout
-	url = https://github.com/MotionSpell/lldash-playout.git
+	url = ../lldash-playout
 [submodule "lldash-relay"]
 	path = lldash-relay
-	url = https://github.com/MotionSpell/lldash-relay.git
-[submodule "cwipc"]
-	path = cwipc
-	url = https://github.com/cwi-dis/cwipc.git
+	url = ../lldash-relay

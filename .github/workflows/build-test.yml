@@ -10,6 +10,9 @@ on:
   pull_request:
     branches:
       - master
+env:
+  CWIPC_RELEASE_TAG: nightly
+  VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
 
 jobs:
   linux-build:
@@ -26,6 +29,13 @@ jobs:
       run: |
         echo "SIGNALS_REPO=https://github.com/MotionSpell/signals.git" >> $GITHUB_ENV
         echo "BUILD_DIR=${{ github.workspace }}" >> $GITHUB_ENV
+
+    - name: Export GitHub Actions cache environment variables for vcpkg
+      uses: actions/github-script@v6
+      with:
+        script: |
+          core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
+          core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
 
     - name: Install dependencies
       run: |
@@ -55,17 +65,25 @@ jobs:
         libtool \
         libtool-bin \
         astyle \
-        bc
-
-    - name: Install CMake and Ninja
-      run: |
-        chmod +x ./scripts/install_cmake.sh && \
-        ./scripts/install_cmake.sh /opt/ninja /opt/cmake
+        bc \
+        libltdl-dev
 
     - name: Bootstrap vcpkg
       run: |
         ./vcpkg/bootstrap-vcpkg.sh
 
+    - name: Install vcpkg dependencies
+      run: |
+        ./vcpkg/vcpkg install --triplet=x64-linux-dynamic
+
+    - name: Upload vcpkg buildtrees in case of failure
+      if: ${{ failure() }} 
+      uses: actions/upload-artifact@v4
+      with:
+        name: linux-vcpkg-buildtrees
+        path: ./vcpkg/buildtrees
+        retention-days: 5
+  
     - name: Fix for libcrypto build
       run: |
         sudo apt-get update && \
@@ -73,59 +91,56 @@ jobs:
               sudo apt-get install -y libtool && \
               libtoolize --copy --force
 
-    - name: Install CWIPC dependencies
-      run: |
-        sudo apt-get install -y \
-          libpcl-dev \
-          libglfw3-dev \
-          libturbojpeg0-dev \
-          libopencv-dev \
-          python3-dev \
-          python3-pip 
-    
-    - name: Build CWIPC
-      run: |
-        cd cwipc
-        git submodule update --init --recursive        
-        git lfs install
-        git lfs pull
-        cmake -B build -DCMAKE_BUILD_TYPE=Release
-        cmake --build build --parallel $(nproc)
-        sudo cmake --install build
-
-    - name: Install pipeline test dependencies
-      run: |
-        python3 -m pip install requests 
-        
-        # Add library path to system
-        echo "/usr/local/lib" | sudo tee /etc/ld.so.conf.d/cwipc.conf
-        sudo ldconfig
-        
-        # Install wheels directly to system Python
-        echo "Installing CWIPC Python wheels:"
-        find /usr/local/share/cwipc/python/ -name "*.whl" -exec sudo pip3 install {} \; || echo "No wheels found"
-
     - name: Configure CMake
       run: |
-        cd ${{ env.BUILD_DIR }} && \
         cmake --preset linux-production
 
     - name: Build the project
       run: |
-        cd ${{ env.BUILD_DIR }} && \
         cmake --build build --preset linux-production --parallel $(nproc)
 
-    - name: Run integration tests
-      if: false
+    - name: Install the project
       run: |
-        cd ${{ env.BUILD_DIR }}
+        cmake --install build
+
+    - name: download cwipc
+      uses: robinraju/release-downloader@v1
+      with:
+        repository: cwi-dis/cwipc
+        tag: ${{ env.CWIPC_RELEASE_TAG }}
+        fileName: cwipc-ubuntu2404-*-built.tgz
+        extract: true
+
+    - name: Install cwipc and other pipeline test dependencies
+      run: |
+        cwipc_dir=$(find . -type d -name "cwipc-ubuntu2404-*-built" | head -n 1)
+        cwipc_dir=$(realpath "$cwipc_dir")
+
+        # Add cwipc bin directory to PATH
+        PATH=$cwipc_dir/bin:$PATH
+        echo "$cwipc_dir/bin" >> $GITHUB_PATH
+
+        # Add library path to system
+        echo "$cwipc_dir/lib" | sudo tee /etc/ld.so.conf.d/cwipc.conf
+        sudo ldconfig
+
+        # Create venv and install requirements
+        python3 -m venv .venv
+        source .venv/bin/activate
+        python -m pip install requests
         
-        # Make script executable
-        chmod +x scripts/run-pipeline-test.sh
+        export CWIPC_PYTHON=python
+        cwipc_pymodules_install.sh
         
+        
+    - name: Run integration tests
+      run: |
+        source .venv/bin/activate
         # Show environment
         echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
         echo "PYTHONPATH=$PYTHONPATH"
+        echo "SIGNALS_SMD_PATH=$SIGNALS_SMD_PATH"
+        echo "PATH=$PATH"
         
         # Run the pipeline test
         ./scripts/run-pipeline-test.sh
@@ -161,6 +176,13 @@ jobs:
       run: |
         echo "BUILD_DIR=${{ github.workspace }}" >> $GITHUB_ENV
 
+    - name: Export GitHub Actions cache environment variables for vcpkg
+      uses: actions/github-script@v6
+      with:
+        script: |
+          core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
+          core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
+  
     - name: Install dependencies
       run: |
         brew update && \
@@ -174,40 +196,38 @@ jobs:
           automake \
           libtool \
           python3 \
-          astyle
+          astyle \
+          zlib
+        echo LDFLAGS="-L/opt/homebrew/opt/zlib/lib" >> $GITHUB_ENV
+        echo CPPFLAGS="-I/opt/homebrew/opt/zlib/include" >> $GITHUB_ENV
 
     - name: Bootstrap vcpkg
       run: |
         ./vcpkg/bootstrap-vcpkg.sh
 
-    - name: Install CWIPC via Homebrew
+    - name: Install vcpkg dependencies
       run: |
-        brew tap cwi-dis/cwipc
-        HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1 HOMEBREW_VERBOSE=1 brew install cwipc
+        ./vcpkg/vcpkg install --triplet=arm64-osx-dynamic
 
-    - name: Verify CWIPC installation
-      run: |
-        # Verify that CWIPC is installed correctly
-        which cwipc_forward || echo "cwipc_forward not found in PATH"
-        which cwipc_view || echo "cwipc_view not found in PATH"
-        
+    - name: Upload vcpkg buildtrees in case of failure
+      if: ${{ failure() }} 
+      uses: actions/upload-artifact@v4
+      with:
+        name: macos-vcpkg-buildtrees
+        path: ./vcpkg/buildtrees
+        retention-days: 5
+    
     - name: Configure CMake
       run: |
-        cd ${{ env.BUILD_DIR }} && \
         cmake --preset mac-production
 
     - name: Build the project
       run: |
-        cd ${{ env.BUILD_DIR }} && \
         cmake --build build --preset mac-production --parallel $(sysctl -n hw.logicalcpu)
 
+  
     - name: Run integration tests
-      if: false
       run: |
-        cd ${{ env.BUILD_DIR }}
-        
-        # Make script executable
-        chmod +x scripts/run-pipeline-test.sh
         
         # Show environment
         echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
@@ -247,6 +267,13 @@ jobs:
       run: |
         echo "BUILD_DIR=${{ github.workspace }}" >> $GITHUB_ENV
 
+    - name: Export GitHub Actions cache environment variables for vcpkg
+      uses: actions/github-script@v6
+      with:
+        script: |
+          core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
+          core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
+
     - name: Install dependencies
       run: |
         brew update && \
@@ -260,40 +287,37 @@ jobs:
           automake \
           libtool \
           python3 \
-          astyle
-
+          astyle \
+          zlib
+        echo LDFLAGS="-L/usr/local/opt/zlib/lib" >> $GITHUB_ENV
+        echo CPPFLAGS="-I/usr/local/opt/zlib/include" >> $GITHUB_ENV
+          
     - name: Bootstrap vcpkg
       run: |
         ./vcpkg/bootstrap-vcpkg.sh
 
-    - name: Install CWIPC via Homebrew
+    - name: Install vcpkg dependencies
       run: |
-        brew tap cwi-dis/cwipc
-        HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1 HOMEBREW_VERBOSE=1 brew install cwipc
+        ./vcpkg/vcpkg install --triplet=x64-osx-dynamic
 
-    - name: Verify CWIPC installation
-      run: |
-        # Verify that CWIPC is installed correctly
-        which cwipc_forward || echo "cwipc_forward not found in PATH"
-        which cwipc_view || echo "cwipc_view not found in PATH"
-        
+    - name: Upload vcpkg buildtrees in case of failure
+      if: ${{ failure() }} 
+      uses: actions/upload-artifact@v4
+      with:
+        name: macos-intel-vcpkg-buildtrees
+        path: ./vcpkg/buildtrees
+        retention-days: 5
+            
     - name: Configure CMake
       run: |
-        cd ${{ env.BUILD_DIR }} && \
         cmake --preset intelmac-production
 
     - name: Build the project
       run: |
-        cd ${{ env.BUILD_DIR }} && \
         cmake --build build --preset intelmac-production --parallel $(sysctl -n hw.logicalcpu)
 
     - name: Run integration tests
-      if: false
       run: |
-        cd ${{ env.BUILD_DIR }}
-        
-        # Make script executable
-        chmod +x scripts/run-pipeline-test.sh
         
         # Show environment
         echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
@@ -392,50 +416,6 @@ jobs:
       with:
         python-version: '3.12'
 
-    # Add caching for vcpkg packages
-    - name: Cache vcpkg packages
-      uses: actions/cache@v3
-      id: cache-vcpkg
-      with:
-        path: |
-          vcpkg/installed/
-          cwipc/vcpkg/installed/
-          vcpkg/packages/
-          cwipc/vcpkg/packages/
-          build/vcpkg_installed/
-        key: vcpkg-${{ runner.os }}-${{ hashFiles('vcpkg.json', 'cwipc/vcpkg.json') }}-${{ github.sha }}
-        restore-keys: |
-          vcpkg-${{ runner.os }}-${{ hashFiles('vcpkg.json', 'cwipc/vcpkg.json') }}-
-          vcpkg-${{ runner.os }}-
-
-    # Add caching for CWIPC build
-    - name: Cache CWIPC build
-      uses: actions/cache@v3
-      id: cache-cwipc
-      with:
-        path: |
-          cwipc/build/
-          cwipc/install/
-          !cwipc/build/CMakeCache.txt
-        key: cwipc-build-${{ runner.os }}-${{ hashFiles('cwipc/**/*.cpp', 'cwipc/**/*.h', 'cwipc/CMakeLists.txt') }}-${{ github.sha }}
-        restore-keys: |
-          cwipc-build-${{ runner.os }}-${{ hashFiles('cwipc/**/*.cpp', 'cwipc/**/*.h', 'cwipc/CMakeLists.txt') }}-
-          cwipc-build-${{ runner.os }}-
-
-    # Add caching for LLDASH build
-    - name: Cache LLDASH build
-      uses: actions/cache@v3
-      id: cache-lldash
-      with:
-        path: |
-          build/
-          !build/CMakeCache.txt
-          !build/logs/
-        key: lldash-build-${{ runner.os }}-${{ hashFiles('src/**/*.cpp', 'src/**/*.h', 'CMakeLists.txt') }}-${{ github.sha }}
-        restore-keys: |
-          lldash-build-${{ runner.os }}-${{ hashFiles('src/**/*.cpp', 'src/**/*.h', 'CMakeLists.txt') }}-
-          lldash-build-${{ runner.os }}-
-
     - name: Set up environment variables
       run: |
         echo "BUILD_DIR=$env:GITHUB_WORKSPACE" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
@@ -447,96 +427,7 @@ jobs:
         script: |
           core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
           core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
-
-    - name: Create 3rdparty directory structure
-      shell: pwsh
-      run: |
-        $thirdpartydir="$((Get-Item .).FullName)\3rdparty"
-        mkdir $thirdpartydir
-
-    # Skip CWIPC build if cache hit
-    - name: Check CWIPC cache status
-      if: steps.cache-cwipc.outputs.cache-hit == 'true'
-      shell: pwsh
-      run: |
-        Write-Host "CWIPC cache hit - skipping CWIPC build steps"
-        echo "CWIPC_CACHE_HIT=true" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-
-    # Only build CWIPC if cache miss
-    - name: Setup Visual Studio developer environment
-      if: env.CWIPC_CACHE_HIT != 'true'
-      uses: ilammy/msvc-dev-cmd@v1
-      
-    # Install third-party packages for CWIPC
-    - name: Install third-party packages for CWIPC
-      if: env.CWIPC_CACHE_HIT != 'true'
-      shell: pwsh
-      run: |
-        if (Test-Path "cwipc\scripts\install-3rdparty-full-win1064.ps1") {
-          cwipc\scripts\install-3rdparty-full-win1064.ps1
-          Write-Host "Successfully ran cwipc third-party install script"
-        } else {
-          Write-Host "Third-party install script not found"
-        }
-
-    # Install Python packages for CWIPC
-    - name: Install Python packages for CWIPC
-      shell: pwsh
-      run: |
-        python -m pip install numpy opencv-python pyopengl PyQt5 cython
-        
-        $pythonExecutable = (Get-Command python).Path
-        $pythonRoot = Split-Path -Parent (Split-Path -Parent $pythonExecutable)
-        
-        Write-Host "Setting Python_ROOT_DIR=$pythonRoot"
-        Write-Host "Setting Python3_EXECUTABLE=$pythonExecutable"
-        
-        "Python_ROOT_DIR=$pythonRoot" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-        "Python3_EXECUTABLE=$pythonExecutable" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-
-    # Bootstrap cwipc's vcpkg
-    - name: Bootstrap vcpkg for CWIPC
-      if: env.CWIPC_CACHE_HIT != 'true'
-      shell: cmd
-      run: |
-        cd cwipc\vcpkg
-        bootstrap-vcpkg.bat
-
-    # Build CWIPC (Windows)
-    - name: Build CWIPC (Windows)
-      if: env.CWIPC_CACHE_HIT != 'true'
-      shell: cmd
-      run: |
-        cd cwipc
-        cmake --preset windows-production ^
-          -DCWIPC_WITH_PYTHON=ON ^
-          -DCWIPC_SKIP_TESTS=ON ^
-          -DCWIPC_SKIP_DOCS=ON
-          
-        cmake --build build --preset windows-production
-        cmake --install build --prefix "%GITHUB_WORKSPACE%\cwipc\install"
-
-    - name: Install CWIPC Python modules
-      if: env.CWIPC_CACHE_HIT != 'true'
-      shell: cmd
-      run: |
-        call %GITHUB_WORKSPACE%\cwipc\install\bin\cwipc_pymodules_install.bat
-
-    - name: Add CWIPC install directory to PATH
-      run: |
-        echo "%GITHUB_WORKSPACE%\cwipc\install\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-      shell: pwsh
-
-
-    # Check LLDASH cache status
-    - name: Check LLDASH cache status
-      if: steps.cache-lldash.outputs.cache-hit == 'true'
-      shell: pwsh
-      run: |
-        Write-Host "LLDASH cache hit - skipping LLDASH build steps"
-        echo "LLDASH_CACHE_HIT=true" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-
-    # PHASE 2: BUILD LLDASH WITH MSYS2
+  
     - name: Setup MSYS2
       uses: msys2/setup-msys2@v2
       with:
@@ -556,38 +447,51 @@ jobs:
       shell: pwsh
 
     - name: Update MSYS2 and install dependencies
-      if: env.LLDASH_CACHE_HIT != 'true'
       run: |
         C:\msys64\usr\bin\bash.exe -c "pacman -Syu --noconfirm"
         C:\msys64\usr\bin\bash.exe -c "pacman -S --noconfirm mingw-w64-x86_64-toolchain mingw-w64-x86_64-cmake mingw-w64-x86_64-ninja mingw-w64-x86_64-pkg-config mingw-w64-x86_64-nasm mingw-w64-x86_64-yasm mingw-w64-x86_64-autotools mingw-w64-x86_64-gcc git make curl mingw-w64-x86_64-libtool mingw-w64-x86_64-python3 mingw-w64-x86_64-python-pip mingw-w64-x86_64-ca-certificates mingw-w64-x86_64-freetype"
+        echo PATH environment variable:
+        echo %PATH%
+        echo GITHUB_PATH file contents:
+        type %GITHUB_PATH%
       shell: cmd
 
     # Bootstrap vcpkg for LLDASH
     - name: Bootstrap vcpkg for LLDASH
-      if: env.LLDASH_CACHE_HIT != 'true'
       shell: cmd
       run: |
         cd vcpkg
         bootstrap-vcpkg.bat
 
+    - name: Install vcpkg dependencies for LLDASH
+      run: |
+        ./vcpkg/vcpkg install --triplet=x64-mingw-dynamic
+      env:
+        SHELL: C:/msys64/mingw64/bin/bash.exe
+  
+    - name: Upload vcpkg buildtrees in case of failure
+      if: ${{ failure() }} 
+      uses: actions/upload-artifact@v4
+      with:
+        name: windows-vcpkg-buildtrees
+        path: ./vcpkg/buildtrees
+        retention-days: 5
+    
     # Configure LLDASH project (MSYS2)
     - name: Configure LLDASH project
-      if: env.LLDASH_CACHE_HIT != 'true'
-      working-directory: ${{ env.BUILD_DIR }}
       run: |
-        cmake --preset mingw-production \
-          -DCMAKE_PREFIX_PATH="${GITHUB_WORKSPACE}/cwipc/install"
+        cmake --preset mingw-production
       shell: bash
 
     # Build LLDASH project
     - name: Build LLDASH project
-      if: env.LLDASH_CACHE_HIT != 'true'
-      working-directory: ${{ env.BUILD_DIR }}
       run: cmake --build build --preset mingw-production --parallel $(nproc)
       shell: bash
 
+    # xxxjack I wonder why this is needed: exactly this same logic should be included in the CMake install process...
+    # xxxjack unless I am mistaken and forgot to copy it over from cwipc....
+    # xxxjack anyway, this should be done in cmake.
     - name: Analyze library dependencies and fix paths
-      working-directory: ${{ env.BUILD_DIR }}
       shell: pwsh
       run: |
         Write-Host "===== ANALYZING LIBRARY DEPENDENCIES =====" -ForegroundColor Cyan
@@ -625,7 +529,6 @@ jobs:
                 $found = $false
                 $searchPaths = @(
                     "${{ github.workspace }}\build\bin",
-                    "${{ github.workspace }}\cwipc\install\bin",
                     "${{ github.workspace }}\build\vcpkg_installed\x64-mingw-dynamic\bin",
                     "${{ github.workspace }}\build\vcpkg_installed\x64-mingw-dynamic\lib",
                     "C:\msys64\mingw64\bin"
