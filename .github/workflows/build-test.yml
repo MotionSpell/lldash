@@ -191,20 +191,9 @@ jobs:
           core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
   
     - name: Install dependencies
-      if: false
       run: |
-        brew update && \
-        brew install \
-          cmake \
-          ninja \
-          pkg-config \
-          yasm \
-          nasm \
-          autoconf \
-          automake \
-          libtool \
-          python3 \
-          astyle
+        brew update
+        brew install nasm
 
     - name: Bootstrap vcpkg
       run: |
@@ -285,20 +274,9 @@ jobs:
           core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
 
     - name: Install dependencies
-      if: false
       run: |
-        brew update && \
-        brew install \
-          cmake \
-          ninja \
-          pkg-config \
-          yasm \
-          nasm \
-          autoconf \
-          automake \
-          libtool \
-          python3 \
-          astyle
+        brew update
+        brew install nasm
                     
     - name: Bootstrap vcpkg
       run: |
