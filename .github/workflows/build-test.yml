@@ -172,6 +172,11 @@ jobs:
         submodules: true
         fetch-depth: 0
 
+    - name: Set up Xcode
+      uses: maxim-lobanov/setup-xcode@v1
+      with:
+        xcode-version: latest-stable
+
     - name: Set up environment variables
       run: |
         echo "BUILD_DIR=${{ github.workspace }}" >> $GITHUB_ENV
@@ -262,6 +267,11 @@ jobs:
       with:
         submodules: true
         fetch-depth: 0
+
+    - name: Set up Xcode
+      uses: maxim-lobanov/setup-xcode@v1
+      with:
+        xcode-version: latest-stable
 
     - name: Set up environment variables
       run: |
