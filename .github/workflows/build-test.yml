@@ -191,6 +191,7 @@ jobs:
           core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
   
     - name: Install dependencies
+      if: false
       run: |
         brew update && \
         brew install \
@@ -203,10 +204,7 @@ jobs:
           automake \
           libtool \
           python3 \
-          astyle \
-          zlib
-        echo LDFLAGS="-L/opt/homebrew/opt/zlib/lib" >> $GITHUB_ENV
-        echo CPPFLAGS="-I/opt/homebrew/opt/zlib/include" >> $GITHUB_ENV
+          astyle
 
     - name: Bootstrap vcpkg
       run: |
@@ -287,6 +285,7 @@ jobs:
           core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
 
     - name: Install dependencies
+      if: false
       run: |
         brew update && \
         brew install \
@@ -299,11 +298,8 @@ jobs:
           automake \
           libtool \
           python3 \
-          astyle \
-          zlib
-        echo LDFLAGS="-L/usr/local/opt/zlib/lib" >> $GITHUB_ENV
-        echo CPPFLAGS="-I/usr/local/opt/zlib/include" >> $GITHUB_ENV
-          
+          astyle
+                    
     - name: Bootstrap vcpkg
       run: |
         ./vcpkg/bootstrap-vcpkg.sh
