@@ -109,14 +109,14 @@ jobs:
         repository: cwi-dis/cwipc
         tag: ${{ env.CWIPC_RELEASE_TAG }}
         fileName: cwipc-ubuntu2404-*-built.tar.gz
+        out-file-path: cwipc-installed
         extract: true
 
     - name: Install cwipc and other pipeline test dependencies
       run: |
         ls -l
-
-        cwipc_dir=$(echo "cwipc-ubuntu2404-*-built")
-        cwipc_dir=$(realpath "$cwipc_dir")
+        cwipc_dir=$(realpath "cwipc_installed")
+        ls -l $cwipc_dir
 
         # Add cwipc bin directory to PATH
         PATH=$cwipc_dir/bin:$PATH
