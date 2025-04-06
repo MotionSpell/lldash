@@ -108,7 +108,7 @@ jobs:
       with:
         repository: cwi-dis/cwipc
         tag: ${{ env.CWIPC_RELEASE_TAG }}
-        fileName: cwipc-ubuntu2404-*-built.tgz
+        fileName: cwipc-ubuntu2404-*-built.tar.gz
         extract: true
 
     - name: Install cwipc and other pipeline test dependencies
