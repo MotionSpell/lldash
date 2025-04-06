@@ -113,7 +113,9 @@ jobs:
 
     - name: Install cwipc and other pipeline test dependencies
       run: |
-        cwipc_dir=$(find . -type d -name "cwipc-ubuntu2404-*-built" | head -n 1)
+        ls -l
+
+        cwipc_dir=$(echo "cwipc-ubuntu2404-*-built")
         cwipc_dir=$(realpath "$cwipc_dir")
 
         # Add cwipc bin directory to PATH
