@@ -221,9 +221,8 @@ jobs:
 
     - name: Install cwipc and other pipeline test dependencies
       run: |
-        git lfs uninstall # Workaround for brew unable to build --head if git-lfs is installed
         brew tap cwi-dis/cwipc
-        brew install --head cwipc
+        brew install cwipc
         ls -l /opt/homebrew/bin/cwipc* || true
       env:
         HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK: 1
@@ -308,9 +307,8 @@ jobs:
     
     - name: Install cwipc and other pipeline test dependencies
       run: |
-        git lfs uninstall # Workaround for brew unable to build --head if git-lfs is installed
         brew tap cwi-dis/cwipc
-        brew install --head cwipc
+        brew install cwipc
         ls -l /usr/local/bin/cwipc* || true
       env:
         HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK: 1
