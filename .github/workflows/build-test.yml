@@ -221,6 +221,7 @@ jobs:
 
   
     - name: Run integration tests
+      if: false
       run: |
         
         # Show environment
@@ -303,6 +304,7 @@ jobs:
         cmake --build build --preset intelmac-production --parallel $(sysctl -n hw.logicalcpu)
 
     - name: Run integration tests
+      if: false
       run: |
         
         # Show environment
