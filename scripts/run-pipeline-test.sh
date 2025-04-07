@@ -57,7 +57,18 @@ SERVER_OUTPUT=$(mktemp -p logs -t server )
 CLIENT_OUTPUT=$(mktemp -p logs -t client )
 EVANESCENT_OUTPUT=$(mktemp -p logs -t evanescent )
 TEST_FAILED=0
-
+echo "============== CHECKING ENVIRONMENT =============="
+echo "PATH=$PATH"
+echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
+echo "DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH"
+echo "SIGNALS_SMD_PATH=$SIGNALS_SMD_PATH"
+echo "EVANESCENT_PATH=$EVANESCENT_PATH"
+echo "evanescent:"
+ls -l $EVANESCENT_PATH/evanescent.exe
+echo "cwipc_forward:"
+ls -l `which cwipc_forward`
+echo "cwipc_view:"
+ls -l `which cwipc_view`
 echo "============== PIPELINE TEST =============="
 
 # Start evanescent server
