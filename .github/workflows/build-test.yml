@@ -132,7 +132,8 @@ jobs:
         python -m pip install requests
         
         export CWIPC_PYTHON=python
-        cwipc_pymodules_install.sh
+        # the next command will fail on Ubuntu24.04 because kinect and realsense cannot be installed. Ignore the failure.
+        cwipc_pymodules_install.sh || true
         
         
     - name: Run integration tests
