@@ -221,6 +221,7 @@ jobs:
 
     - name: Install cwipc and other pipeline test dependencies
       run: |
+        git lfs uninstall # Workaround for brew unable to build --head if git-lfs is installed
         brew tap cwi-dis/cwipc
         brew install --head cwipc
         ls -l /opt/homebrew/bin/cwipc* || true
@@ -307,6 +308,7 @@ jobs:
     
     - name: Install cwipc and other pipeline test dependencies
       run: |
+        git lfs uninstall # Workaround for brew unable to build --head if git-lfs is installed
         brew tap cwi-dis/cwipc
         brew install --head cwipc
         ls -l /usr/local/bin/cwipc* || true
