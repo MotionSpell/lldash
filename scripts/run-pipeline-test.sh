@@ -52,9 +52,10 @@ else
 fi
 
 # Create temp files for output
-SERVER_OUTPUT=$(mktemp)
-CLIENT_OUTPUT=$(mktemp)
-EVANESCENT_OUTPUT=$(mktemp)
+mkdir -p logs
+SERVER_OUTPUT=$(mktemp -p logs -t server )
+CLIENT_OUTPUT=$(mktemp -p logs -t client )
+EVANESCENT_OUTPUT=$(mktemp -p logs -t evanescent )
 TEST_FAILED=0
 
 echo "============== PIPELINE TEST =============="

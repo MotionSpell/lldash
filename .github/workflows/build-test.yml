@@ -222,7 +222,6 @@ jobs:
 
   
     - name: Run integration tests
-      if: false
       run: |
         
         # Show environment
@@ -305,7 +304,6 @@ jobs:
         cmake --build build --preset intelmac-production --parallel $(sysctl -n hw.logicalcpu)
 
     - name: Run integration tests
-      if: false
       run: |
         
         # Show environment
@@ -638,7 +636,6 @@ jobs:
             Format-Table Name, Length, LastWriteTime
 
     - name: Run integration tests
-      if: false
       working-directory: ${{ env.BUILD_DIR }}
       shell: pwsh
       run: |
