@@ -365,6 +365,11 @@ jobs:
         set -x
         tar xfv ${{ github.workspace }}/tmp/*arm64*.tar.gz
         tar xfv ${{ github.workspace }}/tmp/*x86_64*.tar.gz
+        
+        pwd
+        ls -l
+        ls -l lipo-dir-merge
+
         dir_arm64=$(echo *arm64*)
         dir_x86_64=$(echo *x86_64*)
         dir_universal=${dir_arm64/arm64/universal}
