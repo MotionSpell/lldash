@@ -115,7 +115,9 @@ jobs:
     - name: Install cwipc and other pipeline test dependencies
       run: |
         sudo apt-get install -y libglfw3
+
         # Add cwipc bin directory to PATH
+        cwipc_dir=$(realpath "cwipc-installed")
         PATH=$cwipc_dir/bin:$PATH
         echo "$cwipc_dir/bin" >> $GITHUB_PATH
 
