@@ -53,9 +53,9 @@ fi
 
 # Create temp files for output
 mkdir -p logs
-SERVER_OUTPUT=$(mktemp -p logs -t server )
-CLIENT_OUTPUT=$(mktemp -p logs -t client )
-EVANESCENT_OUTPUT=$(mktemp -p logs -t evanescent )
+SERVER_OUTPUT=./logs/server.log.txt
+CLIENT_OUTPUT=./logs/client.log.txt
+EVANESCENT_OUTPUT=./logs/evanescent.log.txt
 TEST_FAILED=0
 echo "============== CHECKING ENVIRONMENT =============="
 echo "PATH=$PATH"
