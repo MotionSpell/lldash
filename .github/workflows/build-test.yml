@@ -222,8 +222,10 @@ jobs:
     - name: Install cwipc and other pipeline test dependencies
       run: |
         brew tap cwi-dis/cwipc
-        brew install cwipc
+        brew install --head cwipc
         ls -l /opt/homebrew/bin/cwipc* || true
+      env:
+        HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK: 1
 
     - name: Run integration tests
       run: |
@@ -306,8 +308,10 @@ jobs:
     - name: Install cwipc and other pipeline test dependencies
       run: |
         brew tap cwi-dis/cwipc
-        brew install cwipc
+        brew install --head cwipc
         ls -l /usr/local/bin/cwipc* || true
+      env:
+        HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK: 1
 
     - name: Run integration tests
       run: |
