@@ -454,8 +454,7 @@ jobs:
     - name: Install vcpkg dependencies for LLDASH
       run: |
         ./vcpkg/vcpkg install --triplet=x64-mingw-dynamic
-      env:
-        SHELL: C:/msys64/mingw64/bin/bash.exe
+      shell: bash
   
     - name: Upload vcpkg buildtrees in case of failure
       if: ${{ failure() }} 
