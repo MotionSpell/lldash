@@ -114,12 +114,13 @@ jobs:
 
     - name: Install cwipc and other pipeline test dependencies
       run: |
-        sudo apt-get install -y libglfw3 libglu1-mesa
-
         # Add cwipc bin directory to PATH
         cwipc_dir=$(realpath "cwipc-installed")
         PATH=$cwipc_dir/bin:$PATH
         echo "$cwipc_dir/bin" >> $GITHUB_PATH
+
+        # Install cwipc dependencies
+        bash $cwipc_dir/libexec/cwipc/scripts/install-3rdparty-ubuntu2404.sh
 
         # Add library path to system
         echo "$cwipc_dir/lib" | sudo tee /etc/ld.so.conf.d/cwipc.conf
