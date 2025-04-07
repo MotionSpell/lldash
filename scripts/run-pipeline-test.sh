@@ -63,12 +63,14 @@ echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
 echo "DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH"
 echo "SIGNALS_SMD_PATH=$SIGNALS_SMD_PATH"
 echo "EVANESCENT_PATH=$EVANESCENT_PATH"
-echo "evanescent:"
+echo "evanescent: $EVANESCENT_PATH/evanescent.exe"
 ls -l $EVANESCENT_PATH/evanescent.exe
-echo "cwipc_forward:"
-ls -l `which cwipc_forward`
-echo "cwipc_view:"
-ls -l `which cwipc_view`
+x_cwipc_forward=$(which cwipc_forward)
+x_cwipc_view=$(which cwipc_view)
+echo "cwipc_forward: $x_cwipc_forward"
+ls -ld $x_cwipc_forward
+echo "cwipc_view: $x_cwipc_view"
+ls -ld $x_cwipc_view
 echo "============== PIPELINE TEST =============="
 
 # Start evanescent server

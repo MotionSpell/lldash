@@ -223,6 +223,7 @@ jobs:
       run: |
         brew tap cwi-dis/cwipc
         brew install cwipc
+        ls -l /opt/homebrew/bin/cwipc* || true
 
     - name: Run integration tests
       run: |
@@ -306,6 +307,7 @@ jobs:
       run: |
         brew tap cwi-dis/cwipc
         brew install cwipc
+        ls -l /usr/local/bin/cwipc* || true
 
     - name: Run integration tests
       run: |
