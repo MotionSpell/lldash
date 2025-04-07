@@ -115,7 +115,7 @@ jobs:
     - name: Install cwipc and other pipeline test dependencies
       run: |
         ls -l
-        cwipc_dir=$(realpath "cwipc_installed")
+        cwipc_dir=$(realpath "cwipc-installed")
         ls -l $cwipc_dir
 
         # Add cwipc bin directory to PATH
