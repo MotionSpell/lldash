@@ -220,13 +220,13 @@ jobs:
       run: |
         cmake --build build --preset mac-production --parallel $(sysctl -n hw.logicalcpu)
 
-  
+    - name: Install cwipc and other pipeline test dependencies
+      run: |
+        brew tap cwi-dis/cwipc
+        brew install cwipc
+
     - name: Run integration tests
       run: |
-        
-        # Show environment
-        echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
-        echo "PYTHONPATH=$PYTHONPATH"
         
         # Run the pipeline test
         ./scripts/run-pipeline-test.sh
@@ -302,6 +302,11 @@ jobs:
     - name: Build the project
       run: |
         cmake --build build --preset intelmac-production --parallel $(sysctl -n hw.logicalcpu)
+    
+    - name: Install cwipc and other pipeline test dependencies
+      run: |
+        brew tap cwi-dis/cwipc
+        brew install cwipc
 
     - name: Run integration tests
       run: |
