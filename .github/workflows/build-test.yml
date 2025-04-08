@@ -79,6 +79,8 @@ jobs:
 
     - name: Install CMake
       uses: lukka/get-cmake@latest
+      with:
+        cmakeVersion: "~3.31.1"
     
     - name: Setup vcpkg
       uses: lukka/run-vcpkg@v11
@@ -201,6 +203,8 @@ jobs:
 
     - name: Install CMake
       uses: lukka/get-cmake@latest
+      with:
+        cmakeVersion: "~3.31.1"
     
     - name: Setup vcpkg
       uses: lukka/run-vcpkg@v11
@@ -298,6 +302,8 @@ jobs:
 
     - name: Install CMake
       uses: lukka/get-cmake@latest
+      with:
+        cmakeVersion: "~3.31.1"
     
     - name: Setup vcpkg
       uses: lukka/run-vcpkg@v11
@@ -486,6 +492,8 @@ jobs:
 
     - name: Install CMake
       uses: lukka/get-cmake@latest
+      with:
+        cmakeVersion: "~3.31.1"
     
     - name: Setup vcpkg
       uses: lukka/run-vcpkg@v11
