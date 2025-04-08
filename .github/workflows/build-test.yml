@@ -484,6 +484,14 @@ jobs:
         type %GITHUB_PATH%
       shell: cmd
 
+    - name: Check msys bash
+      shell: pwsh
+      run: |
+        echo $env:PATH
+        bash.exe --version
+        bash.exe -c "set"
+        bash.exe -c "echo `$PATH"
+
     - name: Install CMake
       uses: lukka/get-cmake@latest
       with:
