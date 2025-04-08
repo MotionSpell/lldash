@@ -412,7 +412,7 @@ jobs:
         path: ${{ github.workspace }}/Assets/lldash-*.tar.gz
   
   windows-build:
-    runs-on: windows-latest
+    runs-on: windows-2019
     env:
       VCPKG_DEFAULT_TRIPLET: x64-mingw-dynamic
 
