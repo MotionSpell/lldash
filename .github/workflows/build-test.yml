@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - 13-use-cwipc-built-windows-fix
     tags:
       - v*
       - exp*
@@ -432,7 +433,7 @@ jobs:
           core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
   
     - name: Setup MSYS2
-      if: false
+      if: true
       uses: msys2/setup-msys2@v2
       with:
         update: true
@@ -444,10 +445,10 @@ jobs:
           toolchain:p
           cmake:p
           ninja:p
-        msystem: UCRT64
+        msystem: MINGW64
       
     - name: Set MSYS2 path
-      if: false
+      if: true
       run: |
         echo "C:\msys64\mingw64\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
         echo "C:\msys64\usr\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
@@ -456,7 +457,7 @@ jobs:
       shell: pwsh
 
     - name: Update MSYS2 and install dependencies
-      if: false
+      if: true
       run: |
         C:\msys64\usr\bin\bash.exe -c "pacman -Syu --noconfirm"
         C:\msys64\usr\bin\bash.exe -c "pacman -S --noconfirm mingw-w64-x86_64-toolchain mingw-w64-x86_64-cmake mingw-w64-x86_64-ninja mingw-w64-x86_64-pkg-config mingw-w64-x86_64-nasm mingw-w64-x86_64-yasm mingw-w64-x86_64-autotools mingw-w64-x86_64-gcc git make curl mingw-w64-x86_64-libtool mingw-w64-x86_64-python3 mingw-w64-x86_64-python-pip mingw-w64-x86_64-ca-certificates mingw-w64-x86_64-freetype"
