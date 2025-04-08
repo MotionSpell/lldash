@@ -261,12 +261,6 @@ jobs:
         path: ${{ env.BUILD_DIR }}/logs/**/*
         retention-days: 5
 
-    - name: Upload package
-      uses: actions/upload-artifact@v4
-      with:
-        name: lldash-mac-arm64
-        path: build/package/lldash-*.tar.gz
-
   macos-intel-build:
     runs-on: macos-13
     env:
