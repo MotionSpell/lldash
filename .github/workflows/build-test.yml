@@ -68,22 +68,6 @@ jobs:
         bc \
         libltdl-dev
 
-    - name: Bootstrap vcpkg
-      run: |
-        ./vcpkg/bootstrap-vcpkg.sh
-
-    - name: Install vcpkg dependencies
-      run: |
-        ./vcpkg/vcpkg install --triplet=x64-linux-dynamic
-
-    - name: Upload vcpkg buildtrees in case of failure
-      if: ${{ failure() }} 
-      uses: actions/upload-artifact@v4
-      with:
-        name: linux-vcpkg-buildtrees
-        path: ./vcpkg/buildtrees
-        retention-days: 5
-  
     - name: Fix for libcrypto build
       run: |
         sudo apt-get update && \
@@ -91,17 +75,41 @@ jobs:
               sudo apt-get install -y libtool && \
               libtoolize --copy --force
 
-    - name: Configure CMake
-      run: |
-        cmake --preset linux-production
+    - name: Install CMake
+      uses: lukka/get-cmake@latest
+    
+    - name: Setup vcpkg
+      uses: lukka/run-vcpkg@v11
+        
+    - name: CMake configure, build vcpkg packages, build & test
+      uses: lukka/run-cmake@v10
+      with:
+        configurePreset: linux-production
+        buildPreset: linux-production
+        testPreset: linux-production
+        packagePreset: linux-production
 
-    - name: Build the project
-      run: |
-        cmake --build build --preset linux-production --parallel $(nproc)
+    - name: Upload vcpkg buildtrees in case of failure
+      if: ${{ failure() }} 
+      uses: actions/upload-artifact@v4
+      with:
+        name: linux-buildtrees
+        path: ./vcpkg/buildtrees
+        retention-days: 5
+    
+    - name: Upload cmake build folder in case of failure
+      if: ${{ failure() }} 
+      uses: actions/upload-artifact@v4
+      with:
+        name: linux-build-folder
+        path: ./build
+        retention-days: 5
 
-    - name: Install the project
-      run: |
-        cmake --install build
+    - name: Upload package
+      uses: actions/upload-artifact@v4
+      with:
+        name: lldash-linux-x86_64
+        path: build/package/lldash-*.tar.gz
 
     - name: download cwipc
       uses: robinraju/release-downloader@v1
@@ -156,15 +164,6 @@ jobs:
         path: ${{ env.BUILD_DIR }}/logs/**/*
         retention-days: 5
 
-    - name: Create package
-      run: cpack --preset linux-production
-
-    - name: Upload package
-      uses: actions/upload-artifact@v4
-      with:
-        name: lldash-linux-x86_64
-        path: build/package/lldash-*.tar.gz
-
   macos-build:
     runs-on: macos-latest
 
@@ -196,13 +195,19 @@ jobs:
         brew update
         brew install nasm
 
-    - name: Bootstrap vcpkg
-      run: |
-        ./vcpkg/bootstrap-vcpkg.sh
-
-    - name: Install vcpkg dependencies
-      run: |
-        ./vcpkg/vcpkg install --triplet=arm64-osx-dynamic
+    - name: Install CMake
+      uses: lukka/get-cmake@latest
+    
+    - name: Setup vcpkg
+      uses: lukka/run-vcpkg@v11
+        
+    - name: CMake configure, build vcpkg packages, build & test
+      uses: lukka/run-cmake@v10
+      with:
+        configurePreset: mac-production
+        buildPreset: mac-production
+        testPreset: mac-production
+        packagePreset: mac-production
 
     - name: Upload vcpkg buildtrees in case of failure
       if: ${{ failure() }} 
@@ -212,14 +217,20 @@ jobs:
         path: ./vcpkg/buildtrees
         retention-days: 5
     
-    - name: Configure CMake
-      run: |
-        cmake --preset mac-production
+    - name: Upload cmake build folder in case of failure
+      if: ${{ failure() }} 
+      uses: actions/upload-artifact@v4
+      with:
+        name: macos-build-folder
+        path: ./build
+        retention-days: 5
 
-    - name: Build the project
-      run: |
-        cmake --build build --preset mac-production --parallel $(sysctl -n hw.logicalcpu)
-
+    - name: Upload package
+      uses: actions/upload-artifact@v4
+      with:
+        name: lldash-mac-arm64
+        path: build/package/lldash-*.tar.gz
+    
     - name: Install cwipc and other pipeline test dependencies
       run: |
         brew tap cwi-dis/cwipc
@@ -241,9 +252,6 @@ jobs:
         name: mac-test-logs
         path: ${{ env.BUILD_DIR }}/logs/**/*
         retention-days: 5
-
-    - name: Create package
-      run: cpack --preset mac-production
 
     - name: Upload package
       uses: actions/upload-artifact@v4
@@ -281,14 +289,20 @@ jobs:
       run: |
         brew update
         brew install nasm
-                    
-    - name: Bootstrap vcpkg
-      run: |
-        ./vcpkg/bootstrap-vcpkg.sh
 
-    - name: Install vcpkg dependencies
-      run: |
-        ./vcpkg/vcpkg install --triplet=x64-osx-dynamic
+    - name: Install CMake
+      uses: lukka/get-cmake@latest
+    
+    - name: Setup vcpkg
+      uses: lukka/run-vcpkg@v11
+        
+    - name: CMake configure, build vcpkg packages, build & test
+      uses: lukka/run-cmake@v10
+      with:
+        configurePreset: intelmac-production
+        buildPreset: intelmac-production
+        testPreset: intelmac-production
+        packagePreset: intelmac-production
 
     - name: Upload vcpkg buildtrees in case of failure
       if: ${{ failure() }} 
@@ -297,15 +311,21 @@ jobs:
         name: macos-intel-vcpkg-buildtrees
         path: ./vcpkg/buildtrees
         retention-days: 5
-            
-    - name: Configure CMake
-      run: |
-        cmake --preset intelmac-production
 
-    - name: Build the project
-      run: |
-        cmake --build build --preset intelmac-production --parallel $(sysctl -n hw.logicalcpu)
-    
+    - name: Upload cmake build folder in case of failure
+      if: ${{ failure() }} 
+      uses: actions/upload-artifact@v4
+      with:
+        name: macos-intel-build-folder
+        path: ./build
+        retention-days: 5
+
+    - name: Upload package
+      uses: actions/upload-artifact@v4
+      with:
+        name: lldash-mac-x86_64
+        path: build/package/lldash-*.tar.gz
+
     - name: Install cwipc and other pipeline test dependencies
       run: |
         brew tap cwi-dis/cwipc
@@ -331,15 +351,6 @@ jobs:
         name: intelmac-test-logs
         path: ${{ env.BUILD_DIR }}/logs/**/*
         retention-days: 5
-
-    - name: Create package
-      run: cpack --preset intelmac-production
-
-    - name: Upload package
-      uses: actions/upload-artifact@v4
-      with:
-        name: lldash-mac-x86_64
-        path: build/package/lldash-*.tar.gz
 
   macos-universal-build:
     runs-on: macos-latest
@@ -442,9 +453,7 @@ jobs:
           curl
         pacboy: >-
           toolchain:p
-          cmake:p
-          ninja:p
-        msystem: UCRT64
+        msystem: MINGW64
       
     - name: Set MSYS2 path
       if: false
@@ -466,18 +475,21 @@ jobs:
         type %GITHUB_PATH%
       shell: cmd
 
-    # Bootstrap vcpkg for LLDASH
-    - name: Bootstrap vcpkg for LLDASH
-      shell: cmd
-      run: |
-        cd vcpkg
-        bootstrap-vcpkg.bat
 
-    - name: Install vcpkg dependencies for LLDASH
-      run: |
-        ./vcpkg/vcpkg install --triplet=x64-mingw-dynamic
-      shell: pwsh
-  
+    - name: Install CMake
+      uses: lukka/get-cmake@latest
+    
+    - name: Setup vcpkg
+      uses: lukka/run-vcpkg@v11
+        
+    - name: CMake configure, build vcpkg packages, build & test
+      uses: lukka/run-cmake@v10
+      with:
+        configurePreset: mingw-production
+        buildPreset: mingw-production
+        testPreset: mingw-production
+        packagePreset: mingw-production
+
     - name: Upload vcpkg buildtrees in case of failure
       if: ${{ failure() }} 
       uses: actions/upload-artifact@v4
@@ -485,22 +497,20 @@ jobs:
         name: windows-vcpkg-buildtrees
         path: ./vcpkg/buildtrees
         retention-days: 5
-    
-    # Configure LLDASH project (MSYS2)
-    - name: Configure LLDASH project
-      run: |
-        cmake --preset mingw-production
-      shell: bash
 
-    # Build LLDASH project
-    - name: Build LLDASH project
-      run: cmake --build build --preset mingw-production --parallel $(nproc)
-      shell: bash
+    - name: Upload cmake build folder in case of failure
+      if: ${{ failure() }} 
+      uses: actions/upload-artifact@v4
+      with:
+        name: windows-build-folder
+        path: ./build
+        retention-days: 5
 
     # xxxjack I wonder why this is needed: exactly this same logic should be included in the CMake install process...
     # xxxjack unless I am mistaken and forgot to copy it over from cwipc....
     # xxxjack anyway, this should be done in cmake.
     - name: Analyze library dependencies and fix paths
+      if: false
       shell: pwsh
       run: |
         Write-Host "===== ANALYZING LIBRARY DEPENDENCIES =====" -ForegroundColor Cyan
