@@ -451,26 +451,27 @@ jobs:
           core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
   
     - name: Setup MSYS2
-      if: false
       uses: msys2/setup-msys2@v2
+      id: msys2
       with:
-        update: true
-        install: >-
-          git
-          make
-          curl
-        pacboy: >-
-          toolchain:p
+#        update: true
+#        install: >-
+#          git
+#          make
+#          curl
+#        pacboy: >-
+#          toolchain:p
         msystem: MINGW64
       
     - name: Set MSYS2 path
       if: false
       run: |
-        echo "C:\msys64\mingw64\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-        echo "C:\msys64\usr\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+        echo "$env:MSYS2_LOCATION\mingw64\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+        echo "$env:MSYS2_LOCATION\usr\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
         echo "MSYSTEM=MINGW64" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-        echo "VCPKG_DEFAULT_TRIPLET=x64-mingw-dynamic" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
       shell: pwsh
+      env:
+        MSYS2_LOCATION: ${{ steps.msys2.outputs.msys2-location }}
 
     - name: Update MSYS2 and install dependencies
       if: false
@@ -482,7 +483,6 @@ jobs:
         echo GITHUB_PATH file contents:
         type %GITHUB_PATH%
       shell: cmd
-
 
     - name: Install CMake
       uses: lukka/get-cmake@latest
