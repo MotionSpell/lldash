@@ -24,7 +24,7 @@
 		"hidden" : true,
 		"cacheVariables": {
 			"VCPKG_TARGET_TRIPLET": "x64-mingw-dynamic",
-			"VCPKG_TARGET_SYSTEM_NAME": "MinGW"
+			"VCPKG_CMAKE_SYSTEM_NAME": "MinGW"
 		},
 		"installDir": "${sourceDir}/installed",
 			"condition": {
