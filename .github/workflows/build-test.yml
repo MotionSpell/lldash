@@ -17,6 +17,8 @@ env:
 jobs:
   linux-build:
     runs-on: ubuntu-latest
+    env:
+      VCPKG_DEFAULT_TRIPLET: x64-linux-dynamic
 
     steps:
     - name: Checkout code
@@ -166,6 +168,8 @@ jobs:
 
   macos-build:
     runs-on: macos-latest
+    env:
+      VCPKG_DEFAULT_TRIPLET: arm64-osx-dynamic
 
     steps:
     - name: Checkout code
@@ -261,6 +265,8 @@ jobs:
 
   macos-intel-build:
     runs-on: macos-13
+    env:
+      VCPKG_DEFAULT_TRIPLET: x64-osx-dynamic
 
     steps:
     - name: Checkout code
@@ -406,6 +412,8 @@ jobs:
   
   windows-build:
     runs-on: windows-latest
+    env:
+      VCPKG_DEFAULT_TRIPLET: x64-mingw-dynamic
 
     steps:
     - name: Checkout code
