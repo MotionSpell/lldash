@@ -450,10 +450,6 @@ jobs:
         script: |
           core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
           core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
-  
-    - name: Uninstall wsl
-      run: |
-        wsl --uninstall
         
     - name: Setup MSYS2
       uses: msys2/setup-msys2@v2
