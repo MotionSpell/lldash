@@ -369,9 +369,9 @@ jobs:
       with:
         submodules: true
         fetch-depth: 0
-    - name: Get lipo-dir-merge
+    - name: Get lipomerge
       run:
-        git clone https://github.com/faaxm/lipo-dir-merge
+        git clone https://github.com/faaxm/lipomerge
     - name: Create download directory and upload directory
       run: |
         mkdir -p ${{ github.workspace }}/Assets
@@ -395,12 +395,12 @@ jobs:
         
         pwd
         ls -l
-        ls -l lipo-dir-merge
+        ls -l lipomerge
 
         dir_arm64=$(echo *arm64*)
         dir_x86_64=$(echo *x86_64*)
         dir_universal=${dir_arm64/arm64/universal}
-        python3 lipo-dir-merge/lipo-dir-merge.py ${dir_arm64} ${dir_x86_64} ${dir_universal}
+        python3 lipomerge/lipomerge.py ${dir_arm64} ${dir_x86_64} ${dir_universal}
         echo "Universal directory: $dir_universal"
         tar cfz ${{ github.workspace }}/Assets/${dir_universal}.tar.gz ${dir_universal}
 
