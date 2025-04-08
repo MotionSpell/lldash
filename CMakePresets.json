@@ -23,8 +23,7 @@
 		"inherits" : "vcpkg",
 		"hidden" : true,
 		"cacheVariables": {
-			"VCPKG_TARGET_TRIPLET": "x64-mingw-dynamic",
-			"VCPKG_CMAKE_SYSTEM_NAME": "MinGW"
+			"VCPKG_TARGET_TRIPLET": "x64-mingw-dynamic"
 		},
 		"installDir": "${sourceDir}/installed",
 			"condition": {
