@@ -494,56 +494,67 @@ jobs:
         bash.exe -c "set"
         bash.exe -c "echo `$PATH"
 
-    - name: Fix vcpkg bash path with overlay port
+    - name: Find and patch all vcpkg_make.cmake files
       shell: pwsh
       run: |
-        # Create the vcpkg-make overlay directory in your existing overlays path
-        New-Item -Path "${{ github.workspace }}/signals/vcpkg-additions/ports/vcpkg-make" -ItemType Directory -Force
+        Write-Host "Searching for vcpkg_make.cmake files..."
+        $makeFiles = Get-ChildItem -Path "${{ github.workspace }}" -Recurse -Filter "vcpkg_make.cmake" -ErrorAction SilentlyContinue
         
-        # Create the vcpkg.json file first
-        @"
-        {
-          "name": "vcpkg-make",
-          "version": "2025-04-02",
-          "port-version": 1,
-          "description": "Vcpkg port helper for make-based projects with custom bash support"
+        if ($makeFiles.Count -eq 0) {
+          Write-Host "No vcpkg_make.cmake files found. Searching deeper..."
+          $makeFiles = Get-ChildItem -Path "${{ github.workspace }}\vcpkg" -Recurse -Filter "vcpkg_make.cmake" -ErrorAction SilentlyContinue
         }
-        "@ | Out-File -FilePath "${{ github.workspace }}/signals/vcpkg-additions/ports/vcpkg-make/vcpkg.json" -Encoding utf8
         
-        # Create a portfile.cmake that includes our config and original scripts
-        @"
-        # Custom portfile for vcpkg-make to use MSYS2 bash
-
-        # Include our config first to override functions
-        include("\${CMAKE_CURRENT_LIST_DIR}/vcpkg-make-config.cmake")
-
-        # Use the original files
-        include("\${CURRENT_INSTALLED_DIR}/share/vcpkg-make/vcpkg_make.cmake")
-        include("\${CURRENT_INSTALLED_DIR}/share/vcpkg-make/vcpkg_make_build.cmake")
-        include("\${CURRENT_INSTALLED_DIR}/share/vcpkg-make/vcpkg_make_configure.cmake")
-        include("\${CURRENT_INSTALLED_DIR}/share/vcpkg-make/vcpkg_make_get_property.cmake")
-        include("\${CURRENT_INSTALLED_DIR}/share/vcpkg-make/vcpkg_make_install.cmake")
-
-        set(VCPKG_POLICY_EMPTY_PACKAGE enabled)
-        "@ | Out-File -FilePath "${{ github.workspace }}/signals/vcpkg-additions/ports/vcpkg-make/portfile.cmake" -Encoding utf8
+        Write-Host "Found $($makeFiles.Count) vcpkg_make.cmake files"
         
-        # Write the vcpkg-make-config.cmake file with our function override
-        @"
-        # Custom vcpkg-make-config.cmake to use MSYS2 bash on Windows
-
-        # Override the shell function to always use MSYS2 bash
-        function(vcpkg_make_get_shell out_var)
-            set("\${out_var}" "C:/msys64/usr/bin/bash.exe" -c PARENT_SCOPE)
-            message(STATUS "vcpkg-make using MSYS2 bash: C:/msys64/usr/bin/bash.exe")
-        endfunction()
-        "@ | Out-File -FilePath "${{ github.workspace }}/signals/vcpkg-additions/ports/vcpkg-make/vcpkg-make-config.cmake" -Encoding utf8
+        foreach ($file in $makeFiles) {
+          Write-Host "Examining $($file.FullName)"
+          $content = Get-Content -Path $file.FullName -Raw
+          
+          if ($content -match "C:/Windows/System32/bash\.exe") {
+            Write-Host "Found hardcoded bash path in $($file.FullName) - patching file"
+            $newContent = $content -replace "C:/Windows/System32/bash\.exe", "C:/msys64/usr/bin/bash.exe"
+            $newContent | Set-Content -Path $file.FullName -NoNewline
+            
+            # Verify the change
+            $updatedContent = Get-Content -Path $file.FullName -Raw
+            if ($updatedContent -match "C:/msys64/usr/bin/bash\.exe") {
+              Write-Host "✅ Successfully patched $($file.FullName)"
+              
+              # Show the context around the change
+              $lines = Get-Content -Path $file.FullName
+              $lineNum = ($lines | Select-String "C:/msys64/usr/bin/bash").LineNumber
+              if ($lineNum) {
+                $start = [Math]::Max(1, $lineNum - 3)
+                $end = [Math]::Min($lines.Count, $lineNum + 3)
+                Write-Host "Context (lines $start-$end):"
+                $lines[$start-1..$end-1] | ForEach-Object { Write-Host "  $_" }
+              }
+            } else {
+              Write-Host "❌ Failed to patch $($file.FullName)"
+            }
+          } else {
+            Write-Host "No hardcoded bash path found in $($file.FullName)"
+          }
+        }
         
-        # Keep this environment variable as backup
-        echo "VCPKG_MAKE_BASH_PATH=C:\msys64\usr\bin\bash.exe" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+        # Also check for other files that might reference bash.exe
+        Write-Host "Searching for other files that might reference bash.exe..."
+        $otherFiles = Get-ChildItem -Path "${{ github.workspace }}\vcpkg\scripts" -Recurse -Include "*.cmake" | 
+          Select-String -Pattern "bash\.exe" -List
         
-        # Verify files were created
-        Get-ChildItem "${{ github.workspace }}/signals/vcpkg-additions/ports/vcpkg-make" | Format-Table Name, Length
-        Get-ChildItem "${{ github.workspace }}/signals/vcpkg-additions/ports/vcpkg-make" -Recurse | Format-Table Name, Length  
+        foreach ($file in $otherFiles) {
+          if ($file.Path -notlike "*vcpkg_make.cmake") {
+            Write-Host "Found bash reference in: $($file.Path)"
+            $content = Get-Content -Path $file.Path -Raw
+            if ($content -match "C:/Windows/System32/bash\.exe") {
+              Write-Host "Patching $($file.Path)"
+              $newContent = $content -replace "C:/Windows/System32/bash\.exe", "C:/msys64/usr/bin/bash.exe"
+              $newContent | Set-Content -Path $file.Path -NoNewline
+            }
+          }
+        }
+        
     - name: Install CMake
       uses: lukka/get-cmake@latest
       with:
