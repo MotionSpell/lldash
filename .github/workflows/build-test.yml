@@ -494,59 +494,69 @@ jobs:
         bash.exe -c "set"
         bash.exe -c "echo `$PATH"
 
-    - name: Fix bash path for vcpkg with MinGW
+    - name: Safe bash path fix for Windows (no system directory changes)
       shell: pwsh
       run: |
-        # 1. Find and patch vcpkg_execute_required_process.cmake
-        $executeFile = Get-ChildItem -Path "${{ github.workspace }}\vcpkg\scripts" -Recurse -Filter "vcpkg_execute_required_process.cmake" -File | Select-Object -First 1
-        if ($executeFile) {
-          Write-Host "Found vcpkg_execute_required_process.cmake at: $($executeFile.FullName)"
-          $content = Get-Content -Path $executeFile.FullName -Raw
-          if ($content -match "C:/Windows/System32/bash.exe") {
-            Write-Host "Patching bash path in vcpkg_execute_required_process.cmake"
-            $newContent = $content -replace "C:/Windows/System32/bash.exe", "C:/msys64/usr/bin/bash.exe"
-            Set-Content -Path $executeFile.FullName -Value $newContent -NoNewline
+        Write-Host "===== FIXING VCPKG BASH PATH ISSUE =====" -ForegroundColor Cyan
+        
+        # 1. Create a wrapper in a user-writable directory
+        Write-Host "Creating bash wrapper in user-writable directory..."
+        $wrapperDir = "D:\bash_wrapper"  # D: drive is writable in GitHub Actions
+        New-Item -Path $wrapperDir -ItemType Directory -Force | Out-Null
+        
+        # Create bash.cmd wrapper
+        @"
+        @echo off
+        echo Running bash wrapper - redirecting to MSYS2 bash
+        C:\msys64\usr\bin\bash.exe %*
+        exit /b %ERRORLEVEL%
+        "@ | Out-File -FilePath "$wrapperDir\bash.cmd" -Encoding ascii
+        
+        # Create bash.exe (just a copy with .exe extension)
+        Copy-Item -Path "$wrapperDir\bash.cmd" -Destination "$wrapperDir\bash.exe" -Force
+        
+        # 2. Add wrapper directory to PATH before System32
+        $env:PATH = "$wrapperDir;$env:PATH"
+        echo "$wrapperDir" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+        
+        # 3. Set environment variables for vcpkg
+        echo "BASH=C:\msys64\usr\bin\bash.exe" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+        echo "SHELL=C:\msys64\usr\bin\bash.exe" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+        echo "VCPKG_MAKE_BASH_PATH=C:\msys64\usr\bin\bash.exe" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+        
+        # 4. Patch vcpkg files in workspace
+        $scriptFiles = Get-ChildItem -Path "${{ github.workspace }}\vcpkg\scripts\cmake" -Include "vcpkg_*.cmake" -Recurse
+        
+        Write-Host "Found $($scriptFiles.Count) vcpkg script files to check"
+        $patchCount = 0
+        
+        foreach ($file in $scriptFiles) {
+          $content = Get-Content -Path $file.FullName -Raw -ErrorAction SilentlyContinue
+          
+          if ($content -match "C:/Windows/System32/bash\.exe") {
+            Write-Host "  Patching $($file.Name)" -ForegroundColor Yellow
+            $newContent = $content -replace "C:/Windows/System32/bash\.exe", "C:/msys64/usr/bin/bash.exe"
+            Set-Content -Path $file.FullName -Value $newContent -NoNewline -Force
+            $patchCount++
           }
         }
         
-        # 2. Find and patch vcpkg_configure_make.cmake
-        $configureFile = Get-ChildItem -Path "${{ github.workspace }}\vcpkg\scripts" -Recurse -Filter "vcpkg_configure_make.cmake" -File | Select-Object -First 1
-        if ($configureFile) {
-          Write-Host "Found vcpkg_configure_make.cmake at: $($configureFile.FullName)"
-          $content = Get-Content -Path $configureFile.FullName -Raw
-          if ($content -match "C:/Windows/System32/bash.exe") {
-            Write-Host "Patching bash path in vcpkg_configure_make.cmake"
-            $newContent = $content -replace "C:/Windows/System32/bash.exe", "C:/msys64/usr/bin/bash.exe"
-            Set-Content -Path $configureFile.FullName -Value $newContent -NoNewline
-          }
-        }
+        Write-Host "Patched $patchCount files with correct bash path" -ForegroundColor Green
         
-        # 3. Look for other relevant files with bash references
-        $otherFiles = Get-ChildItem -Path "${{ github.workspace }}\vcpkg\scripts" -Recurse -Include "*.cmake" | 
-          Select-String -Pattern "C:/Windows/System32/bash\.exe" -List
+        # 5. Clear caches to avoid cached issues
+        Write-Host "Configuring vcpkg to avoid using cached packages" -ForegroundColor Cyan
+        echo "VCPKG_BINARY_SOURCES=clear" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+        echo "VCPKG_FORCE_SYSTEM_BINARIES=1" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+        echo "VCPKG_KEEP_ENV_VARS=PATH;BASH;SHELL;VCPKG_MAKE_BASH_PATH" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
         
-        foreach ($file in $otherFiles) {
-          if ($file.Path -notmatch "(vcpkg_execute_required_process|vcpkg_configure_make)\.cmake") {
-            Write-Host "Found bash reference in: $($file.Path)"
-            $content = Get-Content -Path $file.Path -Raw
-            $newContent = $content -replace "C:/Windows/System32/bash.exe", "C:/msys64/usr/bin/bash.exe"
-            Set-Content -Path $file.Path -Value $newContent -NoNewline
-          }
-        }
+        # 6. Test bash wrapper
+        Write-Host "Testing bash wrapper:"
+        & "$wrapperDir\bash.exe" -c "echo This is MSYS2 bash running through our wrapper; bash --version"
         
-        # 4. Set environment variables to help with bash detection
-        echo "BASH=C:/msys64/usr/bin/bash.exe" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-        echo "SHELL=C:/msys64/usr/bin/bash.exe" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-        echo "VCPKG_MAKE_BASH_PATH=C:/msys64/usr/bin/bash.exe" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-        
-        # 5. Verify MSYS2 bash exists
-        if (Test-Path "C:/msys64/usr/bin/bash.exe") {
-          Write-Host "✅ MSYS2 bash found at C:/msys64/usr/bin/bash.exe"
-          & "C:/msys64/usr/bin/bash.exe" --version
-        } else {
-          Write-Host "❌ MSYS2 bash not found! This is unexpected."
-          exit 1
-        }
+        # 7. Verify PATH precedence
+        Write-Host "Verifying PATH precedence:"
+        $bashPath = (Get-Command bash -ErrorAction SilentlyContinue).Source
+        Write-Host "bash.exe found at: $bashPath"
 
     - name: Install CMake
       uses: lukka/get-cmake@latest
@@ -563,6 +573,16 @@ jobs:
         buildPreset: mingw-production
         testPreset: mingw-production
         packagePreset: mingw-production
+        configurePresetAdditionalArgs: >-
+          -DVCPKG_HOST_TRIPLET=x64-windows
+          -DBASH=C:/msys64/usr/bin/bash.exe
+          -DVCPKG_MAKE_BASH_PATH=C:/msys64/usr/bin/bash.exe
+        useLocalCache: false
+        useCloudCache: false
+        cmakeListsOrSettingsJson: CMakeListsTxtAdvanced
+        cmakeAppendedArgs: >-
+          -DVCPKG_DOWNLOAD_VCPKG=ON
+          -DFORCE_VCPKG_FLUSH=ON
 
     - name: Upload vcpkg buildtrees in case of failure
       if: ${{ failure() }} 
