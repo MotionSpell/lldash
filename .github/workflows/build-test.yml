@@ -552,6 +552,10 @@ jobs:
     
     - name: Setup vcpkg
       uses: lukka/run-vcpkg@v11
+      with:
+        vcpkgDirectory: '${{ github.workspace }}/vcpkg'
+        appendedCacheKey: 'clearCache-${{ github.run_id }}'
+        runVcpkgInstall: false
         
     - name: CMake configure, build vcpkg packages, build & test
       uses: lukka/run-cmake@v10
@@ -560,16 +564,7 @@ jobs:
         buildPreset: mingw-production
         testPreset: mingw-production
         packagePreset: mingw-production
-        configurePresetAdditionalArgs: >-
-          -DVCPKG_HOST_TRIPLET=x64-windows
-          -DBASH=C:/msys64/usr/bin/bash.exe
-          -DVCPKG_MAKE_BASH_PATH=C:/msys64/usr/bin/bash.exe
-        useLocalCache: false
-        useCloudCache: false
-        cmakeListsOrSettingsJson: CMakeListsTxtAdvanced
-        cmakeAppendedArgs: >-
-          -DVCPKG_DOWNLOAD_VCPKG=ON
-          -DFORCE_VCPKG_FLUSH=ON
+        configurePresetAdditionalArgs: "-DVCPKG_HOST_TRIPLET=x64-windows -DBASH=C:/msys64/usr/bin/bash.exe -DVCPKG_MAKE_BASH_PATH=C:/msys64/usr/bin/bash.exe -DVCPKG_DISABLE_CACHE=ON"
 
     - name: Upload vcpkg buildtrees in case of failure
       if: ${{ failure() }} 
