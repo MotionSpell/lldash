@@ -494,22 +494,56 @@ jobs:
         bash.exe -c "set"
         bash.exe -c "echo `$PATH"
 
-    - name: Fix vcpkg bash path and MinGW detection
+    - name: Fix vcpkg bash path with overlay port
       shell: pwsh
       run: |
+        # Create the vcpkg-make overlay directory in your existing overlays path
+        New-Item -Path "${{ github.workspace }}/signals/vcpkg-additions/ports/vcpkg-make" -ItemType Directory -Force
+        
+        # Create the vcpkg.json file first
+        @"
+        {
+          "name": "vcpkg-make",
+          "version": "2025-04-02",
+          "port-version": 1,
+          "description": "Vcpkg port helper for make-based projects with custom bash support"
+        }
+        "@ | Out-File -FilePath "${{ github.workspace }}/signals/vcpkg-additions/ports/vcpkg-make/vcpkg.json" -Encoding utf8
+        
+        # Create a portfile.cmake that includes our config and original scripts
+        @"
+        # Custom portfile for vcpkg-make to use MSYS2 bash
+
+        # Include our config first to override functions
+        include("\${CMAKE_CURRENT_LIST_DIR}/vcpkg-make-config.cmake")
+
+        # Use the original files
+        include("\${CURRENT_INSTALLED_DIR}/share/vcpkg-make/vcpkg_make.cmake")
+        include("\${CURRENT_INSTALLED_DIR}/share/vcpkg-make/vcpkg_make_build.cmake")
+        include("\${CURRENT_INSTALLED_DIR}/share/vcpkg-make/vcpkg_make_configure.cmake")
+        include("\${CURRENT_INSTALLED_DIR}/share/vcpkg-make/vcpkg_make_get_property.cmake")
+        include("\${CURRENT_INSTALLED_DIR}/share/vcpkg-make/vcpkg_make_install.cmake")
+
+        set(VCPKG_POLICY_EMPTY_PACKAGE enabled)
+        "@ | Out-File -FilePath "${{ github.workspace }}/signals/vcpkg-additions/ports/vcpkg-make/portfile.cmake" -Encoding utf8
+        
+        # Write the vcpkg-make-config.cmake file with our function override
+        @"
+        # Custom vcpkg-make-config.cmake to use MSYS2 bash on Windows
+
+        # Override the shell function to always use MSYS2 bash
+        function(vcpkg_make_get_shell out_var)
+            set("\${out_var}" "C:/msys64/usr/bin/bash.exe" -c PARENT_SCOPE)
+            message(STATUS "vcpkg-make using MSYS2 bash: C:/msys64/usr/bin/bash.exe")
+        endfunction()
+        "@ | Out-File -FilePath "${{ github.workspace }}/signals/vcpkg-additions/ports/vcpkg-make/vcpkg-make-config.cmake" -Encoding utf8
+        
+        # Keep this environment variable as backup
         echo "VCPKG_MAKE_BASH_PATH=C:\msys64\usr\bin\bash.exe" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-        echo "VCPKG_CMAKE_SYSTEM_NAME=MinGW" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-    
-    #Recheck the path 
-    - name: Re-Check msys bash
-      shell: pwsh
-      run: |
-        echo $env:PATH
-        bash.exe --version
-        bash.exe -c "set"
-        bash.exe -c "echo `$PATH"
-
-
+        
+        # Verify files were created
+        Get-ChildItem "${{ github.workspace }}/signals/vcpkg-additions/ports/vcpkg-make" | Format-Table Name, Length
+        Get-ChildItem "${{ github.workspace }}/signals/vcpkg-additions/ports/vcpkg-make" -Recurse | Format-Table Name, Length  
     - name: Install CMake
       uses: lukka/get-cmake@latest
       with:
