@@ -494,67 +494,60 @@ jobs:
         bash.exe -c "set"
         bash.exe -c "echo `$PATH"
 
-    - name: Find and patch all vcpkg_make.cmake files
+    - name: Fix bash path for vcpkg with MinGW
       shell: pwsh
       run: |
-        Write-Host "Searching for vcpkg_make.cmake files..."
-        $makeFiles = Get-ChildItem -Path "${{ github.workspace }}" -Recurse -Filter "vcpkg_make.cmake" -ErrorAction SilentlyContinue
-        
-        if ($makeFiles.Count -eq 0) {
-          Write-Host "No vcpkg_make.cmake files found. Searching deeper..."
-          $makeFiles = Get-ChildItem -Path "${{ github.workspace }}\vcpkg" -Recurse -Filter "vcpkg_make.cmake" -ErrorAction SilentlyContinue
-        }
-        
-        Write-Host "Found $($makeFiles.Count) vcpkg_make.cmake files"
-        
-        foreach ($file in $makeFiles) {
-          Write-Host "Examining $($file.FullName)"
-          $content = Get-Content -Path $file.FullName -Raw
-          
-          if ($content -match "C:/Windows/System32/bash\.exe") {
-            Write-Host "Found hardcoded bash path in $($file.FullName) - patching file"
-            $newContent = $content -replace "C:/Windows/System32/bash\.exe", "C:/msys64/usr/bin/bash.exe"
-            $newContent | Set-Content -Path $file.FullName -NoNewline
-            
-            # Verify the change
-            $updatedContent = Get-Content -Path $file.FullName -Raw
-            if ($updatedContent -match "C:/msys64/usr/bin/bash\.exe") {
-              Write-Host "✅ Successfully patched $($file.FullName)"
-              
-              # Show the context around the change
-              $lines = Get-Content -Path $file.FullName
-              $lineNum = ($lines | Select-String "C:/msys64/usr/bin/bash").LineNumber
-              if ($lineNum) {
-                $start = [Math]::Max(1, $lineNum - 3)
-                $end = [Math]::Min($lines.Count, $lineNum + 3)
-                Write-Host "Context (lines $start-$end):"
-                $lines[$start-1..$end-1] | ForEach-Object { Write-Host "  $_" }
-              }
-            } else {
-              Write-Host "❌ Failed to patch $($file.FullName)"
-            }
-          } else {
-            Write-Host "No hardcoded bash path found in $($file.FullName)"
+        # 1. Find and patch vcpkg_execute_required_process.cmake
+        $executeFile = Get-ChildItem -Path "${{ github.workspace }}\vcpkg\scripts" -Recurse -Filter "vcpkg_execute_required_process.cmake" -File | Select-Object -First 1
+        if ($executeFile) {
+          Write-Host "Found vcpkg_execute_required_process.cmake at: $($executeFile.FullName)"
+          $content = Get-Content -Path $executeFile.FullName -Raw
+          if ($content -match "C:/Windows/System32/bash.exe") {
+            Write-Host "Patching bash path in vcpkg_execute_required_process.cmake"
+            $newContent = $content -replace "C:/Windows/System32/bash.exe", "C:/msys64/usr/bin/bash.exe"
+            Set-Content -Path $executeFile.FullName -Value $newContent -NoNewline
           }
         }
         
-        # Also check for other files that might reference bash.exe
-        Write-Host "Searching for other files that might reference bash.exe..."
+        # 2. Find and patch vcpkg_configure_make.cmake
+        $configureFile = Get-ChildItem -Path "${{ github.workspace }}\vcpkg\scripts" -Recurse -Filter "vcpkg_configure_make.cmake" -File | Select-Object -First 1
+        if ($configureFile) {
+          Write-Host "Found vcpkg_configure_make.cmake at: $($configureFile.FullName)"
+          $content = Get-Content -Path $configureFile.FullName -Raw
+          if ($content -match "C:/Windows/System32/bash.exe") {
+            Write-Host "Patching bash path in vcpkg_configure_make.cmake"
+            $newContent = $content -replace "C:/Windows/System32/bash.exe", "C:/msys64/usr/bin/bash.exe"
+            Set-Content -Path $configureFile.FullName -Value $newContent -NoNewline
+          }
+        }
+        
+        # 3. Look for other relevant files with bash references
         $otherFiles = Get-ChildItem -Path "${{ github.workspace }}\vcpkg\scripts" -Recurse -Include "*.cmake" | 
-          Select-String -Pattern "bash\.exe" -List
+          Select-String -Pattern "C:/Windows/System32/bash\.exe" -List
         
         foreach ($file in $otherFiles) {
-          if ($file.Path -notlike "*vcpkg_make.cmake") {
+          if ($file.Path -notmatch "(vcpkg_execute_required_process|vcpkg_configure_make)\.cmake") {
             Write-Host "Found bash reference in: $($file.Path)"
             $content = Get-Content -Path $file.Path -Raw
-            if ($content -match "C:/Windows/System32/bash\.exe") {
-              Write-Host "Patching $($file.Path)"
-              $newContent = $content -replace "C:/Windows/System32/bash\.exe", "C:/msys64/usr/bin/bash.exe"
-              $newContent | Set-Content -Path $file.Path -NoNewline
-            }
+            $newContent = $content -replace "C:/Windows/System32/bash.exe", "C:/msys64/usr/bin/bash.exe"
+            Set-Content -Path $file.Path -Value $newContent -NoNewline
           }
         }
         
+        # 4. Set environment variables to help with bash detection
+        echo "BASH=C:/msys64/usr/bin/bash.exe" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+        echo "SHELL=C:/msys64/usr/bin/bash.exe" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+        echo "VCPKG_MAKE_BASH_PATH=C:/msys64/usr/bin/bash.exe" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+        
+        # 5. Verify MSYS2 bash exists
+        if (Test-Path "C:/msys64/usr/bin/bash.exe") {
+          Write-Host "✅ MSYS2 bash found at C:/msys64/usr/bin/bash.exe"
+          & "C:/msys64/usr/bin/bash.exe" --version
+        } else {
+          Write-Host "❌ MSYS2 bash not found! This is unexpected."
+          exit 1
+        }
+
     - name: Install CMake
       uses: lukka/get-cmake@latest
       with:
