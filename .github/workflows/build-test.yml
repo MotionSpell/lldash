@@ -561,6 +561,33 @@ jobs:
         bash.exe -c "echo `$PATH"
 
 
+    - name: Clear CMake and vcpkg cache
+      run: |
+        if (Test-Path "D:\a\lldash\lldash\build") {
+          Write-Host "Removing CMake build directory..."
+          Remove-Item -Recurse -Force "D:\a\lldash\lldash\build"
+        }
+
+        if (Test-Path "D:\a\lldash\lldash\vcpkg") {
+          Write-Host "Removing vcpkg directory..."
+          Remove-Item -Recurse -Force "D:\a\lldash\lldash\vcpkg"
+        }
+        if (Test-Path "D:\a\lldash\lldash\969f6665-88a2-4c98-938e-ca9259871fec\vcpkg_cache") {
+          Write-Host "Removing vcpkg binary cache directory..."
+          Remove-Item -Recurse -Force "D:\a\lldash\lldash\969f6665-88a2-4c98-938e-ca9259871fec\vcpkg_cache"
+        } 
+
+          # Re-download vcpkg submodule
+        Write-Host "Reinitializing and updating vcpkg submodule..."
+        git submodule update --init --recursive
+
+    - name: Cache vcpkg
+      uses: actions/cache@v3
+      with:
+        path: D:\a\lldash\lldash\vcpkg
+        key: vcpkg-cache-${{ github.run_id }} 
+
+
     - name: Install CMake
       uses: lukka/get-cmake@latest
       with:
