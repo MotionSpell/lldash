@@ -451,12 +451,6 @@ jobs:
           core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
           core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
 
-    - name: Clear MSYS2 cache
-      run: |
-        if (Test-Path "C:\msys64") {
-          Write-Host "Removing cached MSYS2 directory..."
-          Remove-Item -Recurse -Force "C:\msys64"
-        }
 
 
     - name: Setup MSYS2
@@ -552,40 +546,10 @@ jobs:
         }
 
 
-    - name: Check msys bash
-      shell: pwsh
-      run: |
-        echo $env:PATH
-        bash.exe --version
-        bash.exe -c "set"
-        bash.exe -c "echo `$PATH"
+ 
 
 
-    - name: Clear CMake and vcpkg cache
-      run: |
-        if (Test-Path "D:\a\lldash\lldash\build") {
-          Write-Host "Removing CMake build directory..."
-          Remove-Item -Recurse -Force "D:\a\lldash\lldash\build"
-        }
 
-        if (Test-Path "D:\a\lldash\lldash\vcpkg") {
-          Write-Host "Removing vcpkg directory..."
-          Remove-Item -Recurse -Force "D:\a\lldash\lldash\vcpkg"
-        }
-        if (Test-Path "D:\a\lldash\lldash\969f6665-88a2-4c98-938e-ca9259871fec\vcpkg_cache") {
-          Write-Host "Removing vcpkg binary cache directory..."
-          Remove-Item -Recurse -Force "D:\a\lldash\lldash\969f6665-88a2-4c98-938e-ca9259871fec\vcpkg_cache"
-        } 
-
-          # Re-download vcpkg submodule
-        Write-Host "Reinitializing and updating vcpkg submodule..."
-        git submodule update --init --recursive
-
-    - name: Cache vcpkg
-      uses: actions/cache@v3
-      with:
-        path: D:\a\lldash\lldash\vcpkg
-        key: vcpkg-cache-${{ github.run_id }} 
 
 
     # - name: Install CMake
@@ -622,14 +586,13 @@ jobs:
 
     - name: CMake configure, build, test, and package
       run: |
-        %MSYS2_PATH%\usr\bin\bash.exe -c "cd $GITHUB_WORKSPACE && cmake --preset mingw-production"
-        %MSYS2_PATH%\usr\bin\bash.exe -c "cd $GITHUB_WORKSPACE && cmake --build --preset mingw-production"
-        %MSYS2_PATH%\usr\bin\bash.exe -c "cd $GITHUB_WORKSPACE && ctest --preset mingw-production"
-        %MSYS2_PATH%\usr\bin\bash.exe -c "cd $GITHUB_WORKSPACE && cpack --preset mingw-production"
+        %MSYS2_PATH%\usr\bin\bash.exe -c "cd /d/a/lldash/lldash && cmake --preset mingw-production"
+        %MSYS2_PATH%\usr\bin\bash.exe -c "cd /d/a/lldash/lldash && cmake --build build --preset mingw-production"
+        %MSYS2_PATH%\usr\bin\bash.exe -c "cd /d/a/lldash/lldash && ctest --preset mingw-production"
+        %MSYS2_PATH%\usr\bin\bash.exe -c "cd /d/a/lldash/lldash && cpack -G ZIP --preset mingw-production"
       shell: cmd
       env:
         MSYS2_PATH: D:\a\_temp\msys64
-
 
     - name: Upload vcpkg buildtrees in case of failure
       if: ${{ failure() }} 
