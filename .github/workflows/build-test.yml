@@ -486,11 +486,13 @@ jobs:
       shell: cmd
 
 
-
     - name: Set MSYS2_PATH for CMakePresets
       shell: pwsh
       run: |
+        # Define the standard MSYS2 path
         $msys2Path = "C:\msys64"
+        
+        # Check if MSYS2 exists at the standard location
         if (Test-Path $msys2Path) {
           Write-Host "Found MSYS2 at standard location: $msys2Path"
         } else {
@@ -500,13 +502,22 @@ jobs:
           if (Test-Path $altPath) {
             $msys2Path = $altPath
             Write-Host "Found MSYS2 at: $msys2Path"
+          } else {
+            Write-Host "❌ MSYS2 not found. Exiting."
+            exit 1
           }
         }
         
         # Set the MSYS2_PATH environment variable for this job
         echo "MSYS2_PATH=$msys2Path" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
         
+        # Update MSYS2 and install required dependencies
+        Write-Host "Updating MSYS2 and installing dependencies..."
+        & "$msys2Path\usr\bin\bash.exe" -c "pacman -Syu --noconfirm"
+        & "$msys2Path\usr\bin\bash.exe" -c "pacman -S --noconfirm mingw-w64-x86_64-toolchain mingw-w64-x86_64-cmake mingw-w64-x86_64-ninja mingw-w64-x86_64-pkg-config mingw-w64-x86_64-nasm mingw-w64-x86_64-yasm mingw-w64-x86_64-autotools mingw-w64-x86_64-libtool mingw-w64-x86_64-python3 mingw-w64-x86_64-python-pip mingw-w64-x86_64-ca-certificates mingw-w64-x86_64-freetype"
+        
         # Verify that required tools exist
+        Write-Host "Verifying required tools..."
         $requiredTools = @(
           "$msys2Path\mingw64\bin\gcc.exe",
           "$msys2Path\mingw64\bin\g++.exe",
@@ -519,8 +530,17 @@ jobs:
             Write-Host "✅ Found: $tool"
           } else {
             Write-Host "❌ Missing: $tool"
+            $missing = $true
           }
         }
+        
+        if ($missing) {
+          Write-Host "❌ One or more required tools are missing. Exiting."
+          exit 1
+        } else {
+          Write-Host "✅ All required tools are available."
+        }
+
 
     - name: Check msys bash
       shell: pwsh
