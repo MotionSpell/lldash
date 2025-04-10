@@ -549,7 +549,42 @@ jobs:
  
 
 
+    - name: Use MSYS2 CMake
+      shell: pwsh
+      run: |
+        Write-Host "Using CMake from MSYS2 installation"
+        & "$env:MSYS2_PATH\usr\bin\bash.exe" -c "cmake --version"
 
+    - name: Bootstrap vcpkg for LLDASH
+      shell: cmd
+      run: |
+        cd vcpkg
+        bootstrap-vcpkg.bat
+        vcpkg integrate install
+
+    - name: Configure LLDASH project
+      working-directory: ${{ env.BUILD_DIR }}
+      shell: bash
+      run: |
+        cmake --preset mingw-production
+
+    - name: Build LLDASH project
+      working-directory: ${{ env.BUILD_DIR }}
+      shell: bash
+      run: |
+        cmake --build build --preset mingw-production --parallel $(nproc)
+
+    - name: Test LLDASH project
+      working-directory: ${{ env.BUILD_DIR }}
+      shell: bash
+      run: |
+        ctest --preset mingw-production
+
+    - name: Package LLDASH project
+      working-directory: ${{ env.BUILD_DIR }}
+      shell: bash
+      run: |
+        cpack --preset mingw-production
 
 
     # - name: Install CMake
@@ -569,30 +604,6 @@ jobs:
     #     packagePreset: mingw-production
 
 
-    - name: Install CMake through MSYS2
-      run: |
-        %MSYS2_PATH%\usr\bin\bash.exe -c "pacman -S --noconfirm mingw-w64-x86_64-cmake"
-      shell: cmd
-      env:
-        MSYS2_PATH: D:\a\_temp\msys64
-
-    - name: Setup vcpkg in MSYS2
-      run: |
-        cd vcpkg
-        %MSYS2_PATH%\usr\bin\bash.exe -c "cd $GITHUB_WORKSPACE/vcpkg && ./bootstrap-vcpkg.sh"
-      shell: cmd
-      env:
-        MSYS2_PATH: D:\a\_temp\msys64
-
-    - name: CMake configure, build, test, and package
-      run: |
-        %MSYS2_PATH%\usr\bin\bash.exe -c "cd /d/a/lldash/lldash && cmake --preset mingw-production"
-        %MSYS2_PATH%\usr\bin\bash.exe -c "cd /d/a/lldash/lldash && cmake --build build --preset mingw-production"
-        %MSYS2_PATH%\usr\bin\bash.exe -c "cd /d/a/lldash/lldash && ctest --preset mingw-production"
-        %MSYS2_PATH%\usr\bin\bash.exe -c "cd /d/a/lldash/lldash && cpack -G ZIP --preset mingw-production"
-      shell: cmd
-      env:
-        MSYS2_PATH: D:\a\_temp\msys64
 
     - name: Upload vcpkg buildtrees in case of failure
       if: ${{ failure() }} 
