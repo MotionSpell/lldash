@@ -485,6 +485,56 @@ jobs:
         type %GITHUB_PATH%
       shell: cmd
 
+
+    - name: Create CMakeUserPresets.json file
+      shell: pwsh
+      run: |
+        # Create a CMakeUserPresets.json file with correct environment variable syntax
+        @"
+        {
+          "version": 6,
+          "configurePresets": [
+            {
+              "name": "mingw",
+              "inherits": "mingw",
+              "cacheVariables": {
+                "CMAKE_C_COMPILER": "$env{MSYS2_PATH}/mingw64/bin/gcc.exe",
+                "CMAKE_CXX_COMPILER": "$env{MSYS2_PATH}/mingw64/bin/g++.exe",
+                "CMAKE_MAKE_PROGRAM": "$env{MSYS2_PATH}/mingw64/bin/mingw32-make.exe",
+                "VCPKG_MAKE_BASH_PATH": "$env{MSYS2_PATH}/usr/bin/bash.exe",
+                "VCPKG_TARGET_TRIPLET": "x64-mingw-dynamic"
+              }
+            }
+          ]
+        }
+        "@ | Out-File -FilePath "CMakeUserPresets.json" -Encoding utf8
+        
+        # Alternatively, use hardcoded paths
+        if (-not (Test-Path "CMakeUserPresets.json")) {
+          @"
+          {
+            "version": 6,
+            "configurePresets": [
+              {
+                "name": "mingw",
+                "inherits": "mingw",
+                "cacheVariables": {
+                  "CMAKE_C_COMPILER": "C:/msys64/mingw64/bin/gcc.exe",
+                  "CMAKE_CXX_COMPILER": "C:/msys64/mingw64/bin/g++.exe",
+                  "CMAKE_MAKE_PROGRAM": "C:/msys64/mingw64/bin/mingw32-make.exe",
+                  "VCPKG_MAKE_BASH_PATH": "C:/msys64/usr/bin/bash.exe",
+                  "VCPKG_TARGET_TRIPLET": "x64-mingw-dynamic"
+                }
+              }
+            ]
+          }
+          "@ | Out-File -FilePath "CMakeUserPresets.json" -Encoding utf8
+        }
+        
+        # Show the created file
+        Get-Content -Path "CMakeUserPresets.json"
+
+
     - name: Set MSYS2_PATH for CMakePresets
       shell: pwsh
       run: |

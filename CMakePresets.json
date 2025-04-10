@@ -23,10 +23,6 @@
 		"inherits" : "vcpkg",
 		"hidden" : true,
 		"cacheVariables": {
-			"CMAKE_C_COMPILER": "${env:MSYS2_PATH}/mingw64/bin/gcc.exe",
-			"CMAKE_CXX_COMPILER": "${env:MSYS2_PATH}/mingw64/bin/g++.exe",
-			"CMAKE_MAKE_PROGRAM": "${env:MSYS2_PATH}/mingw64/bin/mingw32-make.exe",
-			"VCPKG_MAKE_BASH_PATH": "${env:MSYS2_PATH}/usr/bin/bash.exe",
 			"VCPKG_TARGET_TRIPLET": "x64-mingw-dynamic"
 
 		},
