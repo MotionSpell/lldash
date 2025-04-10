@@ -472,6 +472,7 @@ jobs:
 #          toolchain:p
         msystem: MINGW64
         cache: false
+        release: 20241208   
     
     - name: Force update MSYS2
       run: |
