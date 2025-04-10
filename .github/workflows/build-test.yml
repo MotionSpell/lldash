@@ -465,7 +465,7 @@ jobs:
         msystem: MINGW64
       
     - name: Set MSYS2 path
-      if: false
+      if: true
       run: |
         echo "$env:MSYS2_LOCATION\mingw64\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
         echo "$env:MSYS2_LOCATION\usr\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
@@ -475,7 +475,7 @@ jobs:
         MSYS2_LOCATION: ${{ steps.msys2.outputs.msys2-location }}
 
     - name: Update MSYS2 and install dependencies
-      if: false
+      if: true
       run: |
         C:\msys64\usr\bin\bash.exe -c "pacman -Syu --noconfirm"
         C:\msys64\usr\bin\bash.exe -c "pacman -S --noconfirm mingw-w64-x86_64-toolchain mingw-w64-x86_64-cmake mingw-w64-x86_64-ninja mingw-w64-x86_64-pkg-config mingw-w64-x86_64-nasm mingw-w64-x86_64-yasm mingw-w64-x86_64-autotools mingw-w64-x86_64-gcc git make curl mingw-w64-x86_64-libtool mingw-w64-x86_64-python3 mingw-w64-x86_64-python-pip mingw-w64-x86_64-ca-certificates mingw-w64-x86_64-freetype"
@@ -485,6 +485,41 @@ jobs:
         type %GITHUB_PATH%
       shell: cmd
 
+    - name: Set MSYS2_PATH for CMakePresets
+      shell: pwsh
+      run: |
+        $msys2Path = "C:\msys64"
+        if (Test-Path $msys2Path) {
+          Write-Host "Found MSYS2 at standard location: $msys2Path"
+        } else {
+          Write-Host "MSYS2 not found at standard location, checking other possible locations"
+          # Check other potential locations
+          $altPath = "D:\a\_temp\msys64"
+          if (Test-Path $altPath) {
+            $msys2Path = $altPath
+            Write-Host "Found MSYS2 at: $msys2Path"
+          }
+        }
+        
+        # Set the MSYS2_PATH environment variable for this job
+        echo "MSYS2_PATH=$msys2Path" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+        
+        # Verify that required tools exist
+        $requiredTools = @(
+          "$msys2Path\mingw64\bin\gcc.exe",
+          "$msys2Path\mingw64\bin\g++.exe",
+          "$msys2Path\mingw64\bin\mingw32-make.exe",
+          "$msys2Path\usr\bin\bash.exe"
+        )
+        
+        foreach ($tool in $requiredTools) {
+          if (Test-Path $tool) {
+            Write-Host "✅ Found: $tool"
+          } else {
+            Write-Host "❌ Missing: $tool"
+          }
+        }
+
     - name: Check msys bash
       shell: pwsh
       run: |
@@ -492,6 +527,7 @@ jobs:
         bash.exe --version
         bash.exe -c "set"
         bash.exe -c "echo `$PATH"
+
 
     - name: Install CMake
       uses: lukka/get-cmake@latest
