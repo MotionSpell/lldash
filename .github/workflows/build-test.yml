@@ -604,47 +604,32 @@ jobs:
     #     testPreset: mingw-production
     #     packagePreset: mingw-production
 
+
     - name: Install CMake through MSYS2
       run: |
-        C:\msys64\usr\bin\bash.exe -c "pacman -S --noconfirm mingw-w64-x86_64-cmake"
+        %MSYS2_PATH%\usr\bin\bash.exe -c "pacman -S --noconfirm mingw-w64-x86_64-cmake"
       shell: cmd
+      env:
+        MSYS2_PATH: D:\a\_temp\msys64
 
     - name: Setup vcpkg in MSYS2
       run: |
-        # Clone vcpkg if not already present (if using submodules, skip this part)
-        if [ ! -d "vcpkg" ]; then
-          git clone https://github.com/Microsoft/vcpkg.git
-        fi
-        
-        # Bootstrap vcpkg using MSYS2 shell
         cd vcpkg
-        ./bootstrap-vcpkg.sh
-        
-        # Configure vcpkg to work with MinGW
-        echo "set(VCPKG_DEFAULT_TRIPLET x64-mingw-dynamic)" > triplets/community/x64-mingw-dynamic.cmake
-        echo "set(VCPKG_TARGET_ARCHITECTURE x64)" >> triplets/community/x64-mingw-dynamic.cmake
-        echo "set(VCPKG_CRT_LINKAGE dynamic)" >> triplets/community/x64-mingw-dynamic.cmake
-        echo "set(VCPKG_LIBRARY_LINKAGE dynamic)" >> triplets/community/x64-mingw-dynamic.cmake
-        echo "set(VCPKG_CMAKE_SYSTEM_NAME MinGW)" >> triplets/community/x64-mingw-dynamic.cmake
-      shell: bash
-
-    - name: CMake configure, build vcpkg packages, build & test in MSYS2
-      run: |
-        # Configure project
-        cmake --preset mingw-production
-        
-        # Build project
-        cmake --build --preset mingw-production
-        
-        # Test project
-        ctest --preset mingw-production
-        
-        # Package project
-        cpack --preset mingw-production
-      shell: bash
+        %MSYS2_PATH%\usr\bin\bash.exe -c "cd $GITHUB_WORKSPACE/vcpkg && ./bootstrap-vcpkg.sh"
+      shell: cmd
       env:
-        PATH: C:\msys64\mingw64\bin;C:\msys64\usr\bin;${{ env.PATH }}
-        MSYSTEM: MINGW64
+        MSYS2_PATH: D:\a\_temp\msys64
+
+    - name: CMake configure, build, test, and package
+      run: |
+        %MSYS2_PATH%\usr\bin\bash.exe -c "cd $GITHUB_WORKSPACE && cmake --preset mingw-production"
+        %MSYS2_PATH%\usr\bin\bash.exe -c "cd $GITHUB_WORKSPACE && cmake --build --preset mingw-production"
+        %MSYS2_PATH%\usr\bin\bash.exe -c "cd $GITHUB_WORKSPACE && ctest --preset mingw-production"
+        %MSYS2_PATH%\usr\bin\bash.exe -c "cd $GITHUB_WORKSPACE && cpack --preset mingw-production"
+      shell: cmd
+      env:
+        MSYS2_PATH: D:\a\_temp\msys64
+
 
     - name: Upload vcpkg buildtrees in case of failure
       if: ${{ failure() }} 
