@@ -334,6 +334,8 @@ jobs:
 
     - name: Install cwipc and other pipeline test dependencies
       run: |
+        brew install python@3.12
+        brew install python@3.13
         brew tap cwi-dis/cwipc
         brew install cwipc
         ls -l /usr/local/bin/cwipc* || true
