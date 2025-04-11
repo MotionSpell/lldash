@@ -244,8 +244,6 @@ jobs:
         brew tap cwi-dis/cwipc
         brew install cwipc
         ls -l /opt/homebrew/bin/cwipc* || true
-      env:
-        HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK: 1
 
     - name: Run integration tests
       run: |
