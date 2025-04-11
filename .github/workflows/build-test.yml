@@ -504,12 +504,24 @@ jobs:
       uses: lukka/run-vcpkg@v11
         
     - name: CMake configure, build vcpkg packages, build & test
+      if: false
       uses: lukka/run-cmake@v10
       with:
         configurePreset: mingw-production
         buildPreset: mingw-production
         testPreset: mingw-production
         packagePreset: mingw-production
+
+    - name: manually run CMake configure, build vcpkg packages, build & test
+      shell: pwsh
+      run: |
+        Get-Command cmake
+        cmake --version
+        cmake --preset mingw-production
+        cmake --build --preset mingw-production
+        cmake --install build
+        cpack --preset mingw-production
+
 
     - name: Upload vcpkg buildtrees in case of failure
       if: ${{ failure() }} 
