@@ -457,13 +457,13 @@ jobs:
       uses: msys2/setup-msys2@v2
       id: msys2
       with:
-#        update: true
-#        install: >-
-#          git
-#          make
-#          curl
-#        pacboy: >-
-#          toolchain:p
+        #        update: true
+        #        install: >-
+        #          git
+        #          make
+        #          curl
+        #        pacboy: >-
+        #          toolchain:p
         msystem: MINGW64
       
     - name: Set MSYS2 path
@@ -513,9 +513,10 @@ jobs:
         packagePreset: mingw-production
 
     - name: manually run CMake configure, build vcpkg packages, build & test
-      shell: pwsh
+      shell: msys {0}
       run: |
-        Get-Command cmake
+        which cmake
+        echo "PATH=$PATH"
         cmake --version
         cmake --preset mingw-production
         cmake --build --preset mingw-production
