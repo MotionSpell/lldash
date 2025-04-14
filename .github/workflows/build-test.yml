@@ -513,7 +513,7 @@ jobs:
         packagePreset: mingw-production
 
     - name: manually run CMake configure, build vcpkg packages, build & test
-      shell: msys2 {0}
+      shell: msys2 -use-full-path {0}
       run: |
         which cmake
         echo "PATH=$PATH"
