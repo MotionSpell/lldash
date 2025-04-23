@@ -169,3 +169,7 @@ doc/html/
 
 # test output: directory is created when tests starts and removed when they pass
 /out
+
+# Python venv
+venv/
+.venv
