@@ -16,7 +16,7 @@ def run_receiver(args: argparse.Namespace):
     if args.verbose:
         print("Starting receiver...")
     # Placeholder for receiver logic
-    
+
 
 def main():
     parser = argparse.ArgumentParser(description="Test latency of CWIPC.")
@@ -49,14 +49,19 @@ def main():
         server_thread = threading.Thread(target=run_server, args=(args,))
         sender_thread = threading.Thread(target=run_sender, args=(args,))
         receiver_thread = threading.Thread(target=run_receiver, args=(args,))
-
+        if args.verbose:
+            print("Starting threads...")
         server_thread.start()
         sender_thread.start()
         receiver_thread.start()
-
+        if args.verbose:
+            print("Waiting for threads to finish...")
         server_thread.join()
         sender_thread.join()
         receiver_thread.join()
+    else:
+        print("Invalid mode selected. Use --help for more information.")
+        return
 
 if __name__ == "__main__":
     main()
