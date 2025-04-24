@@ -4,55 +4,66 @@ import subprocess
 import time
 import cwipc
 
-def run_server(args: argparse.Namespace):
-    if args.verbose:
-        print("Starting server...")
-    outfile = open("testlatency_server_output.txt", "w")
-    subprocess.run(
-        [
-            "evanescent.exe", 
-            "--port", "9000"
+class ServerThread(threading.Thread):
+    def __init__(self, args: argparse.Namespace):
+        super().__init__()
+        self.args = args
+
+    def run(self):
+        if self.args.verbose:
+            print("Starting server...")
+        outfile = open("testlatency_server_output.txt", "w")
+        subprocess.run(
+            [
+                "evanescent.exe", 
+                "--port", "9000"
+            ],
+            stdout=outfile,
+            stderr=subprocess.STDOUT,
+        )
+        
+class SenderThread(threading.Thread):
+    def __init__(self, args : argparse.Namespace):
+        super().__init__()
+        self.args = args
+
+    def run(self):
+        if self.args.verbose:
+            print("Starting sender...")
+        outfile = open("testlatency_sender_output.txt", "w")
+        subprocess.run(
+            [
+                "cwipc_forward", 
+                "--count", "100", 
+                "--verbose", 
+                "--synthetic", 
+                "--nodrop", 
+                "--bin2dash", "http://127.0.0.1:9000/", 
+                "--seg_dur", "2000"
         ],
         stdout=outfile,
         stderr=subprocess.STDOUT,
     )
 
-def run_sender(args: argparse.Namespace):
-    if args.verbose:
-        print("Starting sender...")
-    outfile = open("testlatency_sender_output.txt", "w")
-    subprocess.run(
-        [
-            "cwipc_forward", 
-            "--count", "100", 
-            "--verbose", 
-            "--synthetic", 
-            "--nodrop", 
-            "--bin2dash", "http://127.0.0.1:9000/", 
-            "--seg_dur", "2000"
+class ReceiverThread(threading.Thread):
+    def __init__(self, args: argparse.Namespace):
+        super().__init__()
+        self.args = args
+
+    def run(self):
+        if self.args.verbose:
+            print("Starting receiver...")
+        outfile = open("testlatency_receiver_output.txt", "w")
+        subprocess.run(
+            [
+                "cwipc_view", 
+                "--verbose", 
+                "--nodisplay", 
+                "--sub", "http://127.0.0.1:9000/bin2dashSink.mpd"
         ],
         stdout=outfile,
         stderr=subprocess.STDOUT,
     )
-
-def run_receiver(args: argparse.Namespace):
-    if args.verbose:
-        print("Sleep 5 seconds")
-    outfile = open("testlatency_receiver_output.txt", "w")
-    time.sleep(5)
-    if args.verbose:
-        print("Starting receiver...")
-    subprocess.run(
-        [
-            "cwipc_view", 
-            "--verbose", 
-            "--nodisplay", 
-            "--sub", "http://127.0.0.1:9000/bin2dashSink.mpd"
-        ],
-        stdout=outfile,
-        stderr=subprocess.STDOUT,
-    )
-
 
 def main():
     parser = argparse.ArgumentParser(description="Test latency of CWIPC.")
@@ -82,9 +93,9 @@ def main():
     elif args.mode == "receiver":
         run_receiver(args)
     elif args.mode == "all":
-        server_thread = threading.Thread(target=run_server, args=(args,))
-        sender_thread = threading.Thread(target=run_sender, args=(args,))
-        receiver_thread = threading.Thread(target=run_receiver, args=(args,))
+        server_thread = ServerThread(args)
+        sender_thread = SenderThread(args)
+        receiver_thread = ReceiverThread(args)
         if args.verbose:
             print("Starting threads...")
         server_thread.start()
