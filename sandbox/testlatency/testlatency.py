@@ -7,20 +7,51 @@ import cwipc
 def run_server(args: argparse.Namespace):
     if args.verbose:
         print("Starting server...")
-    subprocess.run(["evanescent.exe", "--port", "9000"])
+    outfile = open("testlatency_server_output.txt", "w")
+    subprocess.run(
+        [
+            "evanescent.exe", 
+            "--port", "9000"
+        ],
+        stdout=outfile,
+        stderr=subprocess.STDOUT,
+    )
 
 def run_sender(args: argparse.Namespace):
     if args.verbose:
         print("Starting sender...")
-    subprocess.run(["cwipc_forward", "--count", "100", "--verbose", "--synthetic", "--nodrop", "--bin2dash", "http://127.0.0.1:9000/"])
+    outfile = open("testlatency_sender_output.txt", "w")
+    subprocess.run(
+        [
+            "cwipc_forward", 
+            "--count", "100", 
+            "--verbose", 
+            "--synthetic", 
+            "--nodrop", 
+            "--bin2dash", "http://127.0.0.1:9000/", 
+            "--seg_dur", "2000"
+        ],
+        stdout=outfile,
+        stderr=subprocess.STDOUT,
+    )
 
 def run_receiver(args: argparse.Namespace):
     if args.verbose:
         print("Sleep 5 seconds")
+    outfile = open("testlatency_receiver_output.txt", "w")
     time.sleep(5)
     if args.verbose:
         print("Starting receiver...")
-    subprocess.run(["cwipc_view", "--verbose", "--nodisplay", "--sub", "http://127.0.0.1:9000/bin2dashSink.mpd"])
+    subprocess.run(
+        [
+            "cwipc_view", 
+            "--verbose", 
+            "--nodisplay", 
+            "--sub", "http://127.0.0.1:9000/bin2dashSink.mpd"
+        ],
+        stdout=outfile,
+        stderr=subprocess.STDOUT,
+    )
 
 
 def main():
@@ -61,9 +92,20 @@ def main():
         receiver_thread.start()
         if args.verbose:
             print("Waiting for threads to finish...")
-        server_thread.join()
         sender_thread.join()
+        if args.verbose:
+            print("sender thread finished")
         receiver_thread.join()
+        if args.verbose:
+            print("receiver thread finished")
+        server_thread.join(5)
+        if server_thread.is_alive():
+            if args.verbose:
+                print("Server thread is still alive, Please kill with control-C...")
+            server_thread.join()
+        if args.verbose:
+            print("server thread finished")
+        
     else:
         print("Invalid mode selected. Use --help for more information.")
         return
