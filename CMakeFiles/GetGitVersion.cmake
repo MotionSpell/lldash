@@ -5,7 +5,7 @@ macro(get_git_version)
 	cmake_parse_arguments(MYARGS "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
 	# lldash-specific: our release tags start with v
-	execute_process(COMMAND "git" "describe" "--tags" "--match" "'v*'" 
+	execute_process(COMMAND "git" "describe" "--tags" 
 		WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
 		RESULT_VARIABLE status 
 		OUTPUT_VARIABLE describe_output 
