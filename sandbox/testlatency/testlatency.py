@@ -1,21 +1,26 @@
 import argparse
 import threading
+import subprocess
+import time
 import cwipc
 
 def run_server(args: argparse.Namespace):
     if args.verbose:
         print("Starting server...")
-    # Placeholder for server logic
+    subprocess.run(["evanescent.exe", "--port", "9000"])
 
 def run_sender(args: argparse.Namespace):
     if args.verbose:
         print("Starting sender...")
-    # Placeholder for sender logic
+    subprocess.run(["cwipc_forward", "--count", "100", "--verbose", "--synthetic", "--nodrop", "--bin2dash", "http://127.0.0.1:9000/"])
 
 def run_receiver(args: argparse.Namespace):
     if args.verbose:
+        print("Sleep 5 seconds")
+    time.sleep(5)
+    if args.verbose:
         print("Starting receiver...")
-    # Placeholder for receiver logic
+    subprocess.run(["cwipc_view", "--verbose", "--nodisplay", "--sub", "http://127.0.0.1:9000/bin2dashSink.mpd"])
 
 
 def main():
