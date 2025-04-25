@@ -1,55 +1,82 @@
+import sys
 import argparse
 import threading
 import subprocess
-import time
+from typing import Optional
 import cwipc
 
 class ServerThread(threading.Thread):
     def __init__(self, args: argparse.Namespace):
         super().__init__()
         self.args = args
-        self.process = None
+        self.process : Optional[subprocess.Popen] = None
+        self.mpd_seen = threading.Semaphore(0)
+        self.exit_status = -1
 
     def run(self):
         if self.args.verbose:
-            print("Starting server...")
-        outfile = open("testlatency_server_output.txt", "w")
+            print("testlatency: Starting server...", file=sys.stderr)
         self.process = subprocess.Popen(
             [
                 "evanescent.exe", 
                 "--port", "9000"
             ],
-            stdout=outfile,
-            stderr=subprocess.STDOUT,
+            stdout=subprocess.PIPE,
         )
-        self.process.wait()
+        reported_mpd_seen = False
+        while True:
+            line = self.process.stdout.readline()
+            if not line:
+                break
+            line = line.decode("utf-8").strip()
+            if not reported_mpd_seen and "Added" in line and ".mpd" in line:
+                if self.args.verbose:
+                    print(f"testlatency: MPD file seen in server output: {line}", file=sys.stderr)
+                self.mpd_seen.release()
+                reported_mpd_seen = True
+        self.exit_status = self.process.wait()
+        if self.args.verbose:
+            print("testlatency: Server finished with exit status:", self.exit_status, file=sys.stderr)
+        if self.exit_status == -15:
+            # Expected exit status for SIGTERM
+            self.exit_status = 0
         
     def stop(self):
         if self.process:
             self.process.terminate()
+            
+    def wait_for_mpd(self, timeout : float):
+        self.mpd_seen.acquire(timeout=timeout)
+        if self.args.verbose:
+            print("testlatency: MPD file seen, continuing...", file=sys.stderr)
         
 class SenderThread(threading.Thread):
     def __init__(self, args : argparse.Namespace):
         super().__init__()
         self.args = args
+        self.exit_status = -1
 
     def run(self):
         if self.args.verbose:
-            print("Starting sender...")
-        outfile = open("testlatency_sender_output.txt", "w")
-        subprocess.run(
-            [
-                "cwipc_forward", 
-                "--count", "100", 
-                "--verbose", 
-                "--synthetic", 
-                "--nodrop", 
-                "--bin2dash", "http://127.0.0.1:9000/", 
-                "--seg_dur", "2000"
-        ],
-        stdout=outfile,
-        stderr=subprocess.STDOUT,
-    )
+            print("testlatency: Starting sender...", file=sys.stderr)
+        cmd_line = [
+            "cwipc_forward", 
+            "--count", "450",
+            "--fps", "15", 
+            "--synthetic", 
+            "--nodrop", 
+            "--bin2dash", "http://127.0.0.1:9000/", 
+        ]
+        if self.args.seg_dur > 0:
+            cmd_line += ["--seg_dur", str(self.args.seg_dur)]
+        result = subprocess.run(
+            cmd_line,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        self.exit_status = result.returncode
+        if self.args.verbose:
+            print("testlatency: Sender finished with exit status:", self.exit_status, file=sys.stderr)
 
 class ReceiverThread(threading.Thread):
     def __init__(self, args: argparse.Namespace):
@@ -58,18 +85,17 @@ class ReceiverThread(threading.Thread):
 
     def run(self):
         if self.args.verbose:
-            print("Starting receiver...")
-        outfile = open("testlatency_receiver_output.txt", "w")
-        subprocess.run(
+            print("testlatency: Starting receiver...", file=sys.stderr)
+        result = subprocess.run(
             [
                 "cwipc_view", 
-                "--verbose", 
                 "--nodisplay", 
                 "--sub", "http://127.0.0.1:9000/bin2dashSink.mpd"
-        ],
-        stdout=outfile,
-        stderr=subprocess.STDOUT,
-    )
+            ]
+        )
+        self.exit_status = result.returncode
+        if self.args.verbose:
+            print("testlatency: Receiver finished with exit status:", self.exit_status, file=sys.stderr)
 
 def main():
     parser = argparse.ArgumentParser(description="Test latency of CWIPC.")
@@ -78,6 +104,12 @@ def main():
         choices=["server", "sender", "receiver", "all"],
         default="all",
         help="Mode to run the script in: server, sender, or receiver.",
+    )
+    parser.add_argument(
+        "--seg_dur",
+        type=int,
+        default=0,
+        help="Segment duration in milliseconds. Default is leave to lldash-srd-packager.",
     )
     parser.add_argument(
         "--server_host",
@@ -93,38 +125,54 @@ def main():
     args = parser.parse_args()
 
     if args.mode == "server":
-        run_server(args)
+        ServerThread(args).run()
     elif args.mode == "sender":
-        run_sender(args)
+        SenderThread(args).run()
     elif args.mode == "receiver":
-        run_receiver(args)
+        ReceiverThread(args).run()
     elif args.mode == "all":
         server_thread = ServerThread(args)
         sender_thread = SenderThread(args)
         receiver_thread = ReceiverThread(args)
         if args.verbose:
-            print("Starting threads...")
+            print("testlatency: Starting server and sender threads...", file=sys.stderr)
         server_thread.start()
         sender_thread.start()
+        server_thread.wait_for_mpd(10)
+        if args.verbose:
+            print("testlatency: Starting receiver thread...", file=sys.stderr)
         receiver_thread.start()
         if args.verbose:
-            print("Waiting for threads to finish...")
+            print("testlatency: Waiting for threads to finish...", file=sys.stderr)
         sender_thread.join()
         if args.verbose:
-            print("sender thread finished")
+            print("testlatency: sender thread finished", file=sys.stderr)
         receiver_thread.join()
         if args.verbose:
-            print("receiver thread finished")
+            print("testlatency: receiver thread finished", file=sys.stderr)
         if args.verbose:
-            print("Stopping server thread...")
+            print("testlatency: Stopping server thread...", file=sys.stderr)
         server_thread.stop()
         server_thread.join()
         if args.verbose:
-            print("server thread finished")
-        
+            print("testlatency: server thread finished", file=sys.stderr)
+        ok = True
+        if server_thread.exit_status != 0:
+            print(f"testlatency: Server thread exited with exit status code {server_thread.exit_status}", file=sys.stderr)
+            ok = False
+        if sender_thread.exit_status != 0:
+            print(f"testlatency: Sender thread exited with exit status code {sender_thread.exit_status}", file=sys.stderr)
+            ok = False
+        if receiver_thread.exit_status != 0:
+            print(f"testlatency: Receiver thread exited with exit status code {receiver_thread.exit_status}", file=sys.stderr)
+            ok = False
+        if ok:
+            return 0
+        else:
+            return 1
     else:
-        print("Invalid mode selected. Use --help for more information.")
-        return
+        print("testlatency: Invalid mode selected. Use --help for more information.", file=sys.stderr)
+        return -1
 
 if __name__ == "__main__":
     main()
