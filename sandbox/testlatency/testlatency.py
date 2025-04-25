@@ -8,12 +8,13 @@ class ServerThread(threading.Thread):
     def __init__(self, args: argparse.Namespace):
         super().__init__()
         self.args = args
+        self.process = None
 
     def run(self):
         if self.args.verbose:
             print("Starting server...")
         outfile = open("testlatency_server_output.txt", "w")
-        subprocess.run(
+        self.process = subprocess.Popen(
             [
                 "evanescent.exe", 
                 "--port", "9000"
@@ -21,6 +22,11 @@ class ServerThread(threading.Thread):
             stdout=outfile,
             stderr=subprocess.STDOUT,
         )
+        self.process.wait()
+        
+    def stop(self):
+        if self.process:
+            self.process.terminate()
         
 class SenderThread(threading.Thread):
     def __init__(self, args : argparse.Namespace):
@@ -109,11 +115,10 @@ def main():
         receiver_thread.join()
         if args.verbose:
             print("receiver thread finished")
-        server_thread.join(5)
-        if server_thread.is_alive():
-            if args.verbose:
-                print("Server thread is still alive, Please kill with control-C...")
-            server_thread.join()
+        if args.verbose:
+            print("Stopping server thread...")
+        server_thread.stop()
+        server_thread.join()
         if args.verbose:
             print("server thread finished")
         
