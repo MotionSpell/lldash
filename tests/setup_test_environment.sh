@@ -4,8 +4,15 @@
 # Adds ./installed/bin to PATH
 
 if [ $(uname) = "Linux" ]; then
-    echo "Not implemented yet"
-    exit 1
+    sudo apt install -y python3.12-venv
+    curl -L -o cwipc-built.tar.gz https://github.com/cwi-dis/cwipc/releases/download/nightly/cwipc-ubuntu2404-nightly-built.tar.gz
+    (cd installed && tar xfv ../cwipc-built.tar.gz)
+    python3.12 -m venv .venv
+    source .venv/bin/activate
+    CWIPC_PYTHON=$(which python) cwipc_pymodules_install.sh || true
+    export PATH=$(pwd)/installed/bin:$PATH
+    export LD_LIBRARY_PATH=$(pwd)/installed/lib:$LD_LIBRARY_PATH
+    export SIGNALS_SMD_PATH=$(pwd)/installed/lib/
 elif [ $(uname) = "Darwin" ]; then
     brew tap cwi-dis/cwipc
     # Workaround for issue cwipc#192
