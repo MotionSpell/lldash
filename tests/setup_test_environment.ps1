@@ -16,3 +16,9 @@ python -m venv .venv
 
 cwipc_pymodules_install.ps1
 $Env:SIGNALS_SMD_PATH=$lldash_bin_dir
+
+if ($env:GITHUB_ACTIONS) {
+    echo "SIGNALS_SMD_PATH=$Env:SIGNALS_SMD_PATH" | Out-File -FilePath $GITHUB_ENV -Encoding utf8 -Append
+    echo "$cwipc_bin_dir" | Out-File -FilePath $GITHUB_PATH -Encoding utf8 -Append
+    echo "$lldash_bin_dir" | Out-File -FilePath $GITHUB_PATH -Encoding utf8 -Append
+}
