@@ -126,39 +126,14 @@ jobs:
 
     - name: Install cwipc and other pipeline test dependencies
       run: |
-        # Add cwipc bin directory to PATH
-        cwipc_dir=$(realpath "cwipc-installed")
-        PATH=$cwipc_dir/bin:$PATH
-        echo "$cwipc_dir/bin" >> $GITHUB_PATH
-
+        brew install python@3.12
+        source tests/setup_test_environment.sh
         # Install cwipc dependencies
-        bash $cwipc_dir/libexec/cwipc/scripts/install-3rdparty-ubuntu2404.sh
+        # bash $cwipc_dir/libexec/cwipc/scripts/install-3rdparty-ubuntu2404.sh
 
-        # Add library path to system
-        echo "$cwipc_dir/lib" | sudo tee /etc/ld.so.conf.d/cwipc.conf
-        sudo ldconfig
-
-        # Create venv and install requirements
-        python3 -m venv .venv
-        source .venv/bin/activate
-        python -m pip install requests
-        
-        export CWIPC_PYTHON=python
-        # the next command will fail on Ubuntu24.04 because kinect and realsense cannot be installed. Ignore the failure.
-        cwipc_pymodules_install.sh || true
-        
-        
     - name: Run integration tests
       run: |
-        source .venv/bin/activate
-        # Show environment
-        echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
-        echo "PYTHONPATH=$PYTHONPATH"
-        echo "SIGNALS_SMD_PATH=$SIGNALS_SMD_PATH"
-        echo "PATH=$PATH"
-        
-        # Run the pipeline test
-        ./scripts/run-pipeline-test.sh
+        python test/testlatency/test_latency.py --verbose --seg_dur 1000
     
     - name: Upload all logs
       if: always()  # for debug purposes  
@@ -242,17 +217,12 @@ jobs:
     
     - name: Install cwipc and other pipeline test dependencies
       run: |
-        brew tap cwi-dis/cwipc
-        brew install cwipc
-        ls -l /opt/homebrew/bin/cwipc* || true
-      env:
-        HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK: 1
+        brew install python@3.12
+        source tests/setup_test_environment.sh
 
     - name: Run integration tests
       run: |
-        
-        # Run the pipeline test
-        ./scripts/run-pipeline-test.sh
+        python test/testlatency/test_latency.py --verbose --seg_dur 1000
 
     - name: Upload all logs
       if: always()  # Upload logs even if the test fails for debug purposes
@@ -336,24 +306,13 @@ jobs:
 
     - name: Install cwipc and other pipeline test dependencies
       run: |
-        brew install python@3.13 || brew link --overwrite python@3.13
-        brew install python@3.12 || brew link --overwrite python@3.12
-        brew tap cwi-dis/cwipc
-        brew install cwipc
-        ls -l /usr/local/bin/cwipc* || true
-      env:
-        HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK: 1
+        brew install python@3.12
+        source tests/setup_test_environment.sh
 
     - name: Run integration tests
-      if: false
       run: |
-        
-        # Show environment
-        echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
-        echo "PYTHONPATH=$PYTHONPATH"
-        
-        # Run the pipeline test
-        ./scripts/run-pipeline-test.sh
+        python test/testlatency/test_latency.py --verbose --seg_dur 1000
+
 
     - name: Upload all logs
       if: always()  # Upload logs even if the test fails for debug purposes
@@ -703,40 +662,17 @@ jobs:
             Sort-Object Name | 
             Format-Table Name, Length, LastWriteTime
 
-    - name: Run integration tests
-      working-directory: ${{ env.BUILD_DIR }}
+    - name: Install cwipc and other pipeline test dependencies
       shell: pwsh
       run: |
-        echo "Setting up environment for tests..."
-        
-        $env:PATH = "${{ github.workspace }}\build\bin;${{ github.workspace }}\cwipc\install\bin;${{ github.workspace }}\build\vcpkg_installed\x64-mingw-dynamic\bin;${{ github.workspace }}\build\vcpkg_installed\x64-mingw-dynamic\lib;C:\msys64\mingw64\bin;$env:PATH"
-        
-        #set Python environment variables
-        $env:PYTHONUNBUFFERED = "1"
+        & tests\setup_test_environment.ps1
 
-        $env:SIGNALS_SMD_PATH = "${{ github.workspace }}\build\bin"
-                
-        echo "Checking for executables in PATH:"
-        $exes = @("evanescent.exe", "cwipc_forward.exe", "cwipc_view.exe")
-        foreach ($exe in $exes) {
-            $exePath = (Get-Command $exe -ErrorAction SilentlyContinue).Path
-            if ($exePath) {
-                Write-Host "Found $exe at: $exePath"
-            } else {
-                Write-Host "WARNING: $exe not found in PATH"
-            }
-        }
+    - name: Run integration tests
+      shell: pwsh
+      run: |
+        & .\.venv\Scripts\Activate.ps1
+        python test/testlatency/test_latency.py --verbose --seg_dur 1000
 
-        
-        echo "Running pipeline integration test..."
-        $scriptPath = Join-Path ${{ env.BUILD_DIR }} "scripts\run-pipeline-test.ps1"
-        
-        if (Test-Path $scriptPath) {
-            & $scriptPath
-        } else {
-            Write-Host "ERROR: Could not find pipeline test script at $scriptPath"
-            exit 1
-        }
 
     - name: Upload test logs
       if: always()
