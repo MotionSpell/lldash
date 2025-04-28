@@ -19,6 +19,10 @@ tmp/
 installed/
 # This directory shows up so often during testing that"ll just ignore it.
 vcpkg_installed/
+# cwipc packages and installed directory, for testing
+cwipc-built.tar.gz
+cwipc-built.zip
+cwipc-built/
 
 # Enable "build/" folder in the NuGet Packages folder since NuGet packages use it for MSBuild targets
 !packages/*/build/
