@@ -126,13 +126,13 @@ jobs:
 
     - name: Install cwipc and other pipeline test dependencies
       run: |
-        brew install python@3.12
         source tests/setup_test_environment.sh
         # Install cwipc dependencies
         # bash $cwipc_dir/libexec/cwipc/scripts/install-3rdparty-ubuntu2404.sh
 
     - name: Run integration tests
       run: |
+        source .venv/bin/activate
         python tests/testlatency/testlatency.py --verbose --seg_dur 1000
     
     - name: Upload all logs
@@ -222,6 +222,7 @@ jobs:
 
     - name: Run integration tests
       run: |
+        source .venv/bin/activate
         python tests/testlatency/testlatency.py --verbose --seg_dur 1000
 
     - name: Upload all logs
@@ -311,6 +312,7 @@ jobs:
 
     - name: Run integration tests
       run: |
+        source .venv/bin/activate
         python tests/testlatency/testlatency.py --verbose --seg_dur 1000
 
 
@@ -375,7 +377,6 @@ jobs:
         path: ${{ github.workspace }}/Assets/lldash-*.tar.gz
   
   windows-build:
-    if: false
     runs-on: windows-latest
     env:
       VCPKG_DEFAULT_TRIPLET: x64-mingw-dynamic
