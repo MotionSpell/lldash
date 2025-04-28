@@ -64,7 +64,6 @@ class SenderThread(threading.Thread):
             "--count", "450",
             "--fps", "15", 
             "--synthetic", 
-            "--nodrop", 
             "--bin2dash", "http://127.0.0.1:9000/", 
         ]
         if self.args.seg_dur > 0:
