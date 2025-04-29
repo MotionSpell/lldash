@@ -9,7 +9,7 @@ class ServerThread(threading.Thread):
     def __init__(self, args: argparse.Namespace):
         super().__init__()
         self.args = args
-        self.process : Optional[subprocess.Popen] = None
+        self.process : Optional[subprocess.Popen[str]] = None
         self.mpd_seen = threading.Semaphore(0)
         self.exit_status = -1
 
@@ -21,14 +21,16 @@ class ServerThread(threading.Thread):
                 "evanescent.exe", 
                 "--port", "9000"
             ],
+            text=True
             stdout=subprocess.PIPE,
         )
         reported_mpd_seen = False
         while True:
+            assert self.process.stdout
             line = self.process.stdout.readline()
             if not line:
                 break
-            line = line.decode("utf-8").strip()
+            line = line.strip()
             if not reported_mpd_seen and "Added" in line and ".mpd" in line:
                 if self.args.verbose:
                     print(f"testlatency: MPD file seen in server output: {line}", file=sys.stderr)
@@ -61,6 +63,7 @@ class SenderThread(threading.Thread):
             print("testlatency: Starting sender...", file=sys.stderr)
         cmd_line = [
             "cwipc_forward", 
+            "--verbose",
             "--count", "450",
             "--fps", "15", 
             "--synthetic", 
@@ -70,8 +73,7 @@ class SenderThread(threading.Thread):
             cmd_line += ["--seg_dur", str(self.args.seg_dur)]
         result = subprocess.run(
             cmd_line,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            check=True
         )
         self.exit_status = result.returncode
         if self.args.verbose:
@@ -90,7 +92,8 @@ class ReceiverThread(threading.Thread):
                 "cwipc_view", 
                 "--nodisplay", 
                 "--sub", "http://127.0.0.1:9000/bin2dashSink.mpd"
-            ]
+            ],
+            check=True,
         )
         self.exit_status = result.returncode
         if self.args.verbose:
