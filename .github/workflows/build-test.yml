@@ -126,7 +126,7 @@ jobs:
 
     - name: Install cwipc and other pipeline test dependencies
       run: |
-        sudo apt apt-get install -y libglfw3
+        sudo apt apt-get install -y libglfw3 libjpeg8 liblz4-1 libopencv-core4.5d libopencv-imgproc4.5d libopengl0 libpcl-common1.12 libpcl-io1.12 libturbojpeg
         cmake --install build
         source tests/setup_test_environment.sh
         # Install cwipc dependencies
