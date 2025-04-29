@@ -126,6 +126,7 @@ jobs:
 
     - name: Install cwipc and other pipeline test dependencies
       run: |
+        sudo apt apt-get install -y libglfw3
         cmake --install build
         source tests/setup_test_environment.sh
         # Install cwipc dependencies
