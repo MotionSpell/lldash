@@ -21,7 +21,7 @@ class ServerThread(threading.Thread):
                 "evanescent.exe", 
                 "--port", "9000"
             ],
-            text=True
+            text=True,
             stdout=subprocess.PIPE,
         )
         reported_mpd_seen = False
@@ -31,6 +31,8 @@ class ServerThread(threading.Thread):
             if not line:
                 break
             line = line.strip()
+            if self.args.verbose:
+                print(f"testlatency: Server output: {line}", file=sys.stderr)
             if not reported_mpd_seen and "Added" in line and ".mpd" in line:
                 if self.args.verbose:
                     print(f"testlatency: MPD file seen in server output: {line}", file=sys.stderr)
