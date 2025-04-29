@@ -85,6 +85,7 @@ class ReceiverThread(threading.Thread):
     def __init__(self, args: argparse.Namespace):
         super().__init__()
         self.args = args
+        self.exit_status = -1
 
     def run(self):
         if self.args.verbose:
