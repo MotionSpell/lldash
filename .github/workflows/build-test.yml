@@ -126,6 +126,7 @@ jobs:
 
     - name: Install cwipc and other pipeline test dependencies
       run: |
+        cmake --install build
         source tests/setup_test_environment.sh
         # Install cwipc dependencies
         # bash $cwipc_dir/libexec/cwipc/scripts/install-3rdparty-ubuntu2404.sh
@@ -217,6 +218,7 @@ jobs:
     
     - name: Install cwipc and other pipeline test dependencies
       run: |
+        cmake --install build
         brew install python@3.12
         source tests/setup_test_environment.sh
 
@@ -307,6 +309,7 @@ jobs:
 
     - name: Install cwipc and other pipeline test dependencies
       run: |
+        cmake --install build
         brew install python@3.12
         source tests/setup_test_environment.sh
 
@@ -666,6 +669,7 @@ jobs:
     - name: Install cwipc and other pipeline test dependencies
       shell: pwsh
       run: |
+        cmake --install build
         & tests\setup_test_environment.ps1
 
     - name: Run integration tests
