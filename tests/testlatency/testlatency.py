@@ -168,7 +168,8 @@ def main():
         if ok:
             return 0
         else:
-            return 1
+            print(f"testlatency: One or more threads exited with an error.", file=sys.stderr)
+            sys.exit(1)
     else:
         print("testlatency: Invalid mode selected. Use --help for more information.", file=sys.stderr)
         return -1
