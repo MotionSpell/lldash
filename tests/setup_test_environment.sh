@@ -17,7 +17,7 @@ if [ $(uname) = "Linux" ]; then
     source .venv/bin/activate
     CWIPC_PYTHON=$(which python) cwipc_pymodules_install.sh || true
     
-    if [ "${GITHUB_ACTIONS:-false}" == true ]; then
+    if [ "${GITHUB_ACTIONS:-false}" = true ]; then
         echo "$(pwd)/installed/bin" >> $GITHUB_PATH
         echo "LD_LIBRARY_PATH=$(pwd)/installed/lib:$LD_LIBRARY_PATH" >> $GITHUB_ENV
         echo "SIGNALS_SMD_PATH=$(pwd)/installed/lib/" >> $GITHUB_ENV
@@ -33,7 +33,7 @@ elif [ $(uname) = "Darwin" ]; then
     export PATH=$(pwd)/installed/bin:$PATH
     export DYLD_LIBRARY_PATH=$(pwd)/installed/lib:$DYLD_LIBRARY_PATH
     export SIGNALS_SMD_PATH=$(pwd)/installed/lib/
-    if [ "${GITHUB_ACTIONS:-false}" == true ]; then
+    if [ "${GITHUB_ACTIONS:-false}" = true ]; then
         echo "$(pwd)/installed/bin" >> $GITHUB_PATH
         echo "DYLD_LIBRARY_PATH=$(pwd)/installed/lib:$DYLD_LIBRARY_PATH" >> $GITHUB_ENV
         echo "SIGNALS_SMD_PATH=$(pwd)/installed/lib/" >> $GITHUB_ENV
@@ -42,7 +42,7 @@ else
     echo "Unsupported OS"
 fi
 
-if [ "${GITHUB_ACTIONS:false}" == true ]; then
+if [ "${GITHUB_ACTIONS:-false}" = true ]; then
     # GitHub actions
     echo $(pwd)/installed/bin >> $GITHUB_PATH
     echo "DYLD_LIBRARY_PATH=$(pwd)/installed/lib" >> $GITHUB_ENV
