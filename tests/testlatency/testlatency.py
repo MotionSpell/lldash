@@ -23,6 +23,16 @@ def main():
         default=0,
         help="Frames per second for the synthetic source. Default is leave to capturer.",)
     parser.add_argument(
+        "--npoints",
+        type=int,
+        default=0,
+        help="Number of points for the synthetic source. Default is leave to capturer.",)
+    parser.add_argument(
+        "--uncompressed",
+        action="store_true",
+        help="Use uncompressed point clouds.",
+    )
+    parser.add_argument(
         "--duration",
         type=int,
         default=20,

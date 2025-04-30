@@ -6,6 +6,7 @@ from typing import Optional
 import cwipc
 import cwipc.net.sink_bin2dash
 import cwipc.net.sink_encoder
+import cwipc.net.sink_passthrough
 
 class SenderThread(threading.Thread):
     def __init__(self, args : argparse.Namespace):
@@ -18,12 +19,15 @@ class SenderThread(threading.Thread):
         self.sender : Optional[cwipc.net.cwipc_rawsink_abstract] = None
 
     def init(self):
-        npoints = 0
+        npoints = self.args.npoints
         url = "http://127.0.0.1:9000/"
         nodrop = True
         
         self.sender = cwipc.net.sink_bin2dash.cwipc_sink_bin2dash(url, self.args.verbose, nodrop, seg_dur_in_ms=self.args.seg_dur)
-        self.encoder = cwipc.net.sink_encoder.cwipc_sink_encoder(self.sender, self.args.verbose, nodrop)
+        if self.args.uncompressed:
+            self.encoder = cwipc.net.sink_passthrough.cwipc_sink_passthrough(self.sender, self.args.verbose, nodrop)
+        else:
+            self.encoder = cwipc.net.sink_encoder.cwipc_sink_encoder(self.sender, self.args.verbose, nodrop)
         self.source = cwipc.cwipc_synthetic(self.args.fps, npoints)
         
         self.encoder.set_producer(self)

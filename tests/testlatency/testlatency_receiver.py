@@ -5,6 +5,7 @@ import threading
 import sys
 import time
 import cwipc
+import cwipc.net.source_passthrough
 import cwipc.net.source_sub
 import cwipc.net.source_decoder
 from typing import Optional
@@ -21,7 +22,10 @@ class ReceiverThread(threading.Thread):
     def init(self):
         url = "http://127.0.0.1:9000/bin2dashSink.mpd"
         self.source = cwipc.net.source_sub.cwipc_source_sub(url, self.args.verbose)
-        self.decoder = cwipc.net.source_decoder.cwipc_source_decoder(self.source, self.args.verbose)
+        if self.args.uncompressed:
+            self.decoder = cwipc.net.source_passthrough.cwipc_source_passthrough(self.source, self.args.verbose)
+        else:
+            self.decoder = cwipc.net.source_decoder.cwipc_source_decoder(self.source, self.args.verbose)
         
         # self.source.start()
         self.decoder.start()
