@@ -4,103 +4,10 @@ import threading
 import subprocess
 from typing import Optional
 import cwipc
+from testlatency_server import ServerThread
+from testlatency_sender import SenderThread
+from testlatency_receiver import ReceiverThread
 
-class ServerThread(threading.Thread):
-    def __init__(self, args: argparse.Namespace):
-        super().__init__()
-        self.args = args
-        self.process : Optional[subprocess.Popen[str]] = None
-        self.mpd_seen = threading.Semaphore(0)
-        self.exit_status = -1
-
-    def run(self):
-        if self.args.verbose:
-            print("testlatency: Starting server...", file=sys.stderr)
-        self.process = subprocess.Popen(
-            [
-                "evanescent.exe", 
-                "--port", "9000"
-            ],
-            text=True,
-            stdout=subprocess.PIPE,
-        )
-        reported_mpd_seen = False
-        while True:
-            assert self.process.stdout
-            line = self.process.stdout.readline()
-            if not line:
-                break
-            line = line.strip()
-            if self.args.verbose:
-                print(f"testlatency: Server output: {line}", file=sys.stderr)
-            if not reported_mpd_seen and "Added" in line and ".mpd" in line:
-                if self.args.verbose:
-                    print(f"testlatency: MPD file seen in server output: {line}", file=sys.stderr)
-                self.mpd_seen.release()
-                reported_mpd_seen = True
-        self.exit_status = self.process.wait()
-        if self.args.verbose:
-            print("testlatency: Server finished with exit status:", self.exit_status, file=sys.stderr)
-        if self.exit_status == -15:
-            # Expected exit status for SIGTERM
-            self.exit_status = 0
-        
-    def stop(self):
-        if self.process:
-            self.process.terminate()
-            
-    def wait_for_mpd(self, timeout : float):
-        self.mpd_seen.acquire(timeout=timeout)
-        if self.args.verbose:
-            print("testlatency: MPD file seen, continuing...", file=sys.stderr)
-        
-class SenderThread(threading.Thread):
-    def __init__(self, args : argparse.Namespace):
-        super().__init__()
-        self.args = args
-        self.exit_status = -1
-
-    def run(self):
-        if self.args.verbose:
-            print("testlatency: Starting sender...", file=sys.stderr)
-        cmd_line = [
-            "cwipc_forward", 
-            "--verbose",
-            "--count", "450",
-            "--fps", "15", 
-            "--synthetic", 
-            "--bin2dash", "http://127.0.0.1:9000/", 
-        ]
-        if self.args.seg_dur > 0:
-            cmd_line += ["--seg_dur", str(self.args.seg_dur)]
-        result = subprocess.run(
-            cmd_line,
-            check=True
-        )
-        self.exit_status = result.returncode
-        if self.args.verbose:
-            print("testlatency: Sender finished with exit status:", self.exit_status, file=sys.stderr)
-
-class ReceiverThread(threading.Thread):
-    def __init__(self, args: argparse.Namespace):
-        super().__init__()
-        self.args = args
-        self.exit_status = -1
-
-    def run(self):
-        if self.args.verbose:
-            print("testlatency: Starting receiver...", file=sys.stderr)
-        result = subprocess.run(
-            [
-                "cwipc_view", 
-                "--nodisplay", 
-                "--sub", "http://127.0.0.1:9000/bin2dashSink.mpd"
-            ],
-            check=True,
-        )
-        self.exit_status = result.returncode
-        if self.args.verbose:
-            print("testlatency: Receiver finished with exit status:", self.exit_status, file=sys.stderr)
 
 def main():
     parser = argparse.ArgumentParser(description="Test latency of CWIPC.")
