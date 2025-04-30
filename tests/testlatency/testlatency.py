@@ -18,6 +18,11 @@ def main():
         help="Mode to run the script in: server, sender, or receiver.",
     )
     parser.add_argument(
+        "--fps",
+        type=int,
+        default=0,
+        help="Frames per second for the synthetic source. Default is leave to capturer.",)
+    parser.add_argument(
         "--seg_dur",
         type=int,
         default=0,
@@ -34,7 +39,19 @@ def main():
         action="store_true",
         help="Enable verbose output.",
     )
+    parser.add_argument(
+        "--debugpy",
+        action="store_true",
+        help="Enable debugpy for remote debugging.",
+    )
     args = parser.parse_args()
+
+    if args.debugpy:
+        import debugpy
+        debugpy.listen(5678)
+        print(f"{sys.argv[0]}: waiting for debugpy attach on 5678", flush=True)
+        debugpy.wait_for_client()
+        print(f"{sys.argv[0]}: debugger attached")        
 
     if args.mode == "server":
         ServerThread(args).run()
@@ -50,7 +67,14 @@ def main():
             print("testlatency: Starting server and sender threads...", file=sys.stderr)
         server_thread.start()
         sender_thread.start()
-        server_thread.wait_for_mpd(10)
+        ok = server_thread.wait_for_mpd(10)
+        if not ok:
+            print("testlatency: Server thread did not produce MPD file, aborting...", file=sys.stderr)
+            server_thread.stop()
+            # sender_thread.stop()
+            server_thread.join()
+            sender_thread.join()
+            sys.exit(1)
         if args.verbose:
             print("testlatency: Starting receiver thread...", file=sys.stderr)
         receiver_thread.start()

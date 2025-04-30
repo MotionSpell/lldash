@@ -20,7 +20,6 @@ class ReceiverThread(threading.Thread):
                 "--nodisplay", 
                 "--sub", "http://127.0.0.1:9000/bin2dashSink.mpd"
             ],
-            check=True,
         )
         self.exit_status = result.returncode
         if self.args.verbose:

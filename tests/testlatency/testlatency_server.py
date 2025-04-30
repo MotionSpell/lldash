@@ -14,7 +14,7 @@ class ServerThread(threading.Thread):
 
     def run(self):
         if self.args.verbose:
-            print("testlatency: Starting server...", file=sys.stderr)
+            print("testlatency: server: Starting server...", file=sys.stderr)
         self.process = subprocess.Popen(
             [
                 "evanescent.exe", 
@@ -22,6 +22,7 @@ class ServerThread(threading.Thread):
             ],
             text=True,
             stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT
         )
         reported_mpd_seen = False
         while True:
@@ -31,15 +32,15 @@ class ServerThread(threading.Thread):
                 break
             line = line.strip()
             if self.args.verbose:
-                print(f"testlatency: Server output: {line}", file=sys.stderr)
+                print(f"testlatency: server: Server output: {line}", file=sys.stderr)
             if not reported_mpd_seen and "Added" in line and ".mpd" in line:
                 if self.args.verbose:
-                    print(f"testlatency: MPD file seen in server output: {line}", file=sys.stderr)
+                    print(f"testlatency: server: MPD file seen in server output: {line}", file=sys.stderr)
                 self.mpd_seen.release()
                 reported_mpd_seen = True
         self.exit_status = self.process.wait()
         if self.args.verbose:
-            print("testlatency: Server finished with exit status:", self.exit_status, file=sys.stderr)
+            print("testlatency: server: Server finished with exit status:", self.exit_status, file=sys.stderr)
         if self.exit_status == -15:
             # Expected exit status for SIGTERM
             self.exit_status = 0
@@ -51,5 +52,5 @@ class ServerThread(threading.Thread):
     def wait_for_mpd(self, timeout : float):
         self.mpd_seen.acquire(timeout=timeout)
         if self.args.verbose:
-            print("testlatency: MPD file seen, continuing...", file=sys.stderr)
+            print("testlatency: server: MPD file seen, continuing...", file=sys.stderr)
         
