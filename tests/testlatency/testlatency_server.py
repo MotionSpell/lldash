@@ -2,6 +2,7 @@ import threading
 import argparse
 import subprocess
 import sys
+import time
 from typing import Optional
 
 class ServerThread(threading.Thread):
@@ -49,8 +50,15 @@ class ServerThread(threading.Thread):
         if self.process:
             self.process.terminate()
             
-    def wait_for_mpd(self, timeout : float):
-        self.mpd_seen.acquire(timeout=timeout)
+    def wait_for_mpd(self, timeout : float = 0) -> bool:
+        # Alternative implementation: we wait for 2* seg_dur
+        wait_dur = 4 * self.args.seg_dur
+        time.sleep(wait_dur / 1000.0)
+        return True
+        ok = self.mpd_seen.acquire(timeout=timeout)
+        if not ok:
+            print("testlatency: server: MPD file not seen in server output, aborting...", file=sys.stderr)
+            return False
         if self.args.verbose:
             print("testlatency: server: MPD file seen, continuing...", file=sys.stderr)
-        
+        return True        

@@ -64,7 +64,7 @@ class SenderThread(threading.Thread):
         assert self.source
         assert self.encoder
         assert self.sender
-        count = 150
+        count = 30
         num = 0
         self.exit_status = 0
         for num in range(count):

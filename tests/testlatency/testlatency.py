@@ -67,7 +67,7 @@ def main():
             print("testlatency: Starting server and sender threads...", file=sys.stderr)
         server_thread.start()
         sender_thread.start()
-        ok = server_thread.wait_for_mpd(10)
+        ok = server_thread.wait_for_mpd()
         if not ok:
             print("testlatency: Server thread did not produce MPD file, aborting...", file=sys.stderr)
             server_thread.stop()
