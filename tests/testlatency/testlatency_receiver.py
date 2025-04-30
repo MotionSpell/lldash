@@ -1,16 +1,16 @@
 
 import argparse
-import subprocess
 import threading
 import sys
 import time
+from collections import namedtuple
 import cwipc
 import cwipc.net.source_passthrough
 import cwipc.net.source_sub
 import cwipc.net.source_decoder
 from typing import Optional
 
-
+ReceiverStatistics = namedtuple("ReceiverStatistics", ["timestamp", "receiver_num", "receiver_count"])
 class ReceiverThread(threading.Thread):
     def __init__(self, args: argparse.Namespace):
         super().__init__()
@@ -18,6 +18,7 @@ class ReceiverThread(threading.Thread):
         self.exit_status = -1
         self.source : Optional[cwipc.net.cwipc_rawsource_abstract] = None
         self.decoder : Optional[cwipc.cwipc_decoder] = None
+        self.statistics : list[ReceiverStatistics] = []
 
     def init(self):
         url = "http://127.0.0.1:9000/bin2dashSink.mpd"
@@ -47,7 +48,8 @@ class ReceiverThread(threading.Thread):
         now_ms = int(now * 1000)
         latency = now_ms - timestamp
         if True:
-            print(f"testlatency: receiver: now={now}, num={num}, timestamp={timestamp}, latency={latency}, pointcount={count}", file=sys.stderr)
+            print(f"testlatency: receiver: now={now}, timestamp={timestamp}, receiver_num={num}, receiver_pointcount={count}, latency={latency}", file=sys.stderr)
+        self.statistics.append(ReceiverStatistics(timestamp, num, count))
         
     def run(self):
         if self.args.verbose:
