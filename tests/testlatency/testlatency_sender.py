@@ -22,7 +22,7 @@ class SenderThread(threading.Thread):
         url = "http://127.0.0.1:9000/"
         nodrop = True
         
-        self.sender = cwipc.net.sink_bin2dash.cwipc_sink_bin2dash(url, self.args.verbose, nodrop)
+        self.sender = cwipc.net.sink_bin2dash.cwipc_sink_bin2dash(url, self.args.verbose, nodrop, seg_dur_in_ms=self.args.seg_dur)
         self.encoder = cwipc.net.sink_encoder.cwipc_sink_encoder(self.sender, self.args.verbose, nodrop)
         self.source = cwipc.cwipc_synthetic(self.args.fps, npoints)
         
