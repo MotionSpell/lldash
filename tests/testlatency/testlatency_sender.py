@@ -64,10 +64,10 @@ class SenderThread(threading.Thread):
         assert self.source
         assert self.encoder
         assert self.sender
-        count = 30
+        start_time = time.time()
         num = 0
         self.exit_status = 0
-        for num in range(count):
+        while time.time() - start_time < self.args.duration:
             ok = self.source.available(wait=True)
             if not ok:
                 print("testlatency: Sender source not available, exiting...", file=sys.stderr)
@@ -80,7 +80,9 @@ class SenderThread(threading.Thread):
                 break
             self.report(num, pc.timestamp(), pc.count())
             self.encoder.feed(pc)
-            count -= 1
+            num += 1
+        if self.args.verbose:
+            print(f"testlatency: sent {num} point clouds in {time.time()-start_time} seconds.", file=sys.stderr)
         self.close()
 
         if self.args.verbose:

@@ -23,6 +23,12 @@ def main():
         default=0,
         help="Frames per second for the synthetic source. Default is leave to capturer.",)
     parser.add_argument(
+        "--duration",
+        type=int,
+        default=20,
+        help="Duration in seconds for the sender. Default is 20.",
+    )
+    parser.add_argument(
         "--seg_dur",
         type=int,
         default=0,
