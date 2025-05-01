@@ -39,10 +39,9 @@ def main():
         help="Duration in seconds for the sender. Default is 20.",
     )
     parser.add_argument(
-        "--ignore",
-        type=int,
-        default=0,
-        help="Number of initial frames to ignore for latency calculation. Default is 0.",
+        "--all_latencies",
+        action="store_true",
+        help="Don't ignore initial latencies in the analysis.",
     )
     parser.add_argument(
         "--seg_dur",
@@ -128,7 +127,7 @@ def main():
             print(f"testlatency: One or more threads exited with an error.", file=sys.stderr)
             sys.exit(1)
         analyser = Analyser(receiver_thread.statistics, sender_thread.statistics)
-        results = analyser.analyse(args.ignore)
+        results = analyser.analyse(not args.all_latencies)
         analyser.print(results)
     else:
         print("testlatency: Invalid mode selected. Use --help for more information.", file=sys.stderr)
