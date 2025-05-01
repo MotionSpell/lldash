@@ -5,9 +5,9 @@ import subprocess
 from typing import Optional
 import cwipc
 from testlatency_server import ServerThread
-from testlatency_sender import SenderThread
-from testlatency_receiver import ReceiverThread
-
+from testlatency_sender import SenderThread, SenderStatistics
+from testlatency_receiver import ReceiverThread, ReceiverStatistics
+from testlatency_analyse import Analyser, AnalyserResults
 
 def main():
     parser = argparse.ArgumentParser(description="Test latency of CWIPC.")
@@ -118,11 +118,12 @@ def main():
         if receiver_thread.exit_status != 0:
             print(f"testlatency: Receiver thread exited with exit status code {receiver_thread.exit_status}", file=sys.stderr)
             ok = False
-        if ok:
-            return 0
-        else:
+        if not ok:
             print(f"testlatency: One or more threads exited with an error.", file=sys.stderr)
             sys.exit(1)
+        analyser = Analyser(receiver_thread.statistics, sender_thread.statistics)
+        results = analyser.analyse()
+        analyser.print(results)
     else:
         print("testlatency: Invalid mode selected. Use --help for more information.", file=sys.stderr)
         return -1

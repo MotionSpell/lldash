@@ -47,7 +47,7 @@ class ReceiverThread(threading.Thread):
         now = time.time()
         now_ms = int(now * 1000)
         latency = now_ms - timestamp
-        if True:
+        if self.args.verbose:
             print(f"testlatency: receiver: now={now}, timestamp={timestamp}, receiver_num={num}, receiver_pointcount={count}, latency={latency}", file=sys.stderr)
         self.statistics.append(ReceiverStatistics(timestamp, num, count))
         
