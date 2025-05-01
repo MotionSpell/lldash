@@ -27,7 +27,53 @@ The repository includes the following components:
 
 # Build
 
-lldash can be built using CMake with presets and `vcpkg` to manage dependencies. Below are the instructions for building the project.
+lldash can be built using `CMake` with presets and `vcpkg` to manage dependencies. Builds have been tested on Linux, Windows (64 bit Intel) and Mac (Intel or Silicon).
+
+If you get the build working for Linux or Windows on Arm64: please let us know.
+
+## Build Prerequisites
+
+### Windows (Intel 64 bit)
+
+- Install Visual Studio 2022 (community edition is good enough)
+  - Install at least the "Desktop Development with C++" tools.
+  - You only really need the compilers for vcpkg to build some auxiliary tools, but its just as easy to install the whole visual studio.
+- Optionally install Visual Studio Code from https://code.visualstudio.com/
+  - Install the C++ extensions
+  - Install the Python extensions
+  - Install the cmake extensions
+- Install git from https://git-scm.com/downloads/win
+- Install CMake from https://cmake.org/download/ (64 bit version)
+- Install MSYS2 from https://www.msys2.org/
+  - By default MSYS2 will open a UCRT64 shell, but testing has been done with the MINGW64 shell and toolset.
+  - In the MINGw64 shell, run `scripts/install_mingw64_prerequisites.sh`
+  - Add `C:\msys64\mingw64\bin` to your system-wide search path:
+    - Open System Properties, Advanced, Environment Variables
+    - Add to `Path` in the System Variables section.
+
+### Mac (Intel or Silicon)
+
+To be provided
+
+### Linux (Intel)
+
+To be provided
+
+## Building from the command line
+
+to be provided
+
+### Windows
+
+to be provided
+
+### Linux, Mac
+
+to be provided
+
+## Building with vscode
+
+to be provided
 
 ## Dependencies
 
