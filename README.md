@@ -59,21 +59,26 @@ To be provided
 
 To be provided
 
-## Building from the command line
+## Building
 
-to be provided
+You can build from the command line or from vscode. The first time you build will take very long (about 30 minutes) because `vcpkg` will have to build all of the dependency packages. These are cached, however, so subsequent builds will be a lot quicker.
 
 ### Windows
 
-to be provided
+In powershell, run `scripts\buildpackage.ps1`. You have to supply the preset you want to build (but these will be listed if you don't supply the argument).
+
+This will build everything, install into `.\installed` and create an installable package.
 
 ### Linux, Mac
 
-to be provided
+Run `scripts/buildpackage.sh`. You have to supply the preset you want to build (but these will be listed if you don't supply the argument).
+
+This will build everything, install into `./installed` and create an installable package.
 
 ## Building with vscode
 
-to be provided
+Use the `cmake: select preset` command to select your preset. (control-shift-P or command-shift-P allows you to run the command, or use the CMake sidebar)
+Then use `cmake: configure`, `cmake: build`, `cmake: package`
 
 ## Dependencies
 
