@@ -15,6 +15,7 @@ build/
 [Bb]in/
 [Oo]bj/
 tmp/
+logs/
 # We will put installed packages here
 installed/
 # This directory shows up so often during testing that"ll just ignore it.
