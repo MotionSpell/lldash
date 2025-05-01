@@ -61,3 +61,16 @@ class Analyser:
     
     def print(self, results: AnalyserResults):
         print(f"testlatency: count_total={results.count_total}, count_lost_initial={results.count_lost_initial}, count_lost_running={results.count_lost_running}, latency_ignored_count={results.latency_ignored_count}, latency_min={results.latency_min:.3f}, latency_max={results.latency_max:.3f}, latency_avg={results.latency_avg:.3f}, latency_stddev={results.latency_stddev:.3f}")
+        
+    def judge(self, results: AnalyserResults) -> bool:
+        if results.count_total == 0:
+            print("testlatency: judge: no data received", file=sys.stderr)
+            return False
+        if results.count_lost_initial > results.count_total * 0.5:
+            print(f"testlatency: judge: {results.count_lost_initial} initial frames lost, more than 50% of total frames", file=sys.stderr)
+            return False
+        if results.count_lost_running / results.count_total > 0.1:
+            print(f"testlatency: judge: {results.count_lost_running} running frames lost, more than 10% of total frames", file=sys.stderr)
+            return False
+
+        return True

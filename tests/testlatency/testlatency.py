@@ -95,7 +95,7 @@ def main():
             # sender_thread.stop()
             server_thread.join()
             sender_thread.join()
-            sys.exit(1)
+            return 1
         if args.verbose:
             print("testlatency: Starting receiver thread...", file=sys.stderr)
         receiver_thread.start()
@@ -125,13 +125,19 @@ def main():
             ok = False
         if not ok:
             print(f"testlatency: One or more threads exited with an error.", file=sys.stderr)
-            sys.exit(1)
+            return 1
         analyser = Analyser(receiver_thread.statistics, sender_thread.statistics)
         results = analyser.analyse(not args.all_latencies)
         analyser.print(results)
+        if analyser.judge(results):
+            print("testlatency: Latency test passed.", file=sys.stderr)
+            return 0
+        else:
+            print("testlatency: Latency test failed.", file=sys.stderr)
+            return 1
     else:
         print("testlatency: Invalid mode selected. Use --help for more information.", file=sys.stderr)
-        return -1
+        return 2
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
