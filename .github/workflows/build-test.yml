@@ -16,6 +16,7 @@ env:
 
 jobs:
   linux-build:
+    if: false
     runs-on: ubuntu-latest
     env:
       VCPKG_DEFAULT_TRIPLET: x64-linux-dynamic
@@ -156,6 +157,7 @@ jobs:
         retention-days: 5
 
   macos-build:
+    if: false
     runs-on: macos-latest
     env:
       VCPKG_DEFAULT_TRIPLET: arm64-osx-dynamic
@@ -247,6 +249,7 @@ jobs:
         retention-days: 5
 
   macos-intel-build:
+    if: false
     runs-on: macos-13
     env:
       VCPKG_DEFAULT_TRIPLET: x64-osx-dynamic
@@ -391,7 +394,6 @@ jobs:
         path: ${{ github.workspace }}/Assets/lldash-*.tar.gz
   
   windows-build:
-    if: false
     runs-on: windows-latest
     env:
       VCPKG_DEFAULT_TRIPLET: x64-mingw-dynamic
