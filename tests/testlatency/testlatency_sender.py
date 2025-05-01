@@ -9,7 +9,7 @@ import cwipc.net.sink_bin2dash
 import cwipc.net.sink_encoder
 import cwipc.net.sink_passthrough
 
-SenderStatistics = namedtuple("SenderStatistics", ["timestamp", "sender_num", "sender_count"])
+SenderStatistics = namedtuple("SenderStatistics", ["timestamp", "sender_wallclock", "sender_num", "sender_count"])
 
 class SenderThread(threading.Thread):
     def __init__(self, args : argparse.Namespace):
@@ -62,9 +62,10 @@ class SenderThread(threading.Thread):
         self.sender = None
         
     def report(self, num : int, timestamp : float, count : int):
+        now = time.time()
         if self.args.verbose:
-            print(f"testlatency: sender: now={time.time()}, timestamp={timestamp}, sender_num={num}, sender_pointcount={count}", file=sys.stderr)
-        self.statistics.append(SenderStatistics(timestamp, num, count))
+            print(f"testlatency: sender: now={now}, timestamp={timestamp}, sender_num={num}, sender_pointcount={count}", file=sys.stderr)
+        self.statistics.append(SenderStatistics(timestamp, now, num, count))
         
     def run(self):
         self.init()

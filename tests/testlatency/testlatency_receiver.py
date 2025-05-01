@@ -10,7 +10,7 @@ import cwipc.net.source_sub
 import cwipc.net.source_decoder
 from typing import Optional
 
-ReceiverStatistics = namedtuple("ReceiverStatistics", ["timestamp", "receiver_num", "receiver_count"])
+ReceiverStatistics = namedtuple("ReceiverStatistics", ["timestamp", "receiver_wallclock", "receiver_num", "receiver_count"])
 class ReceiverThread(threading.Thread):
     def __init__(self, args: argparse.Namespace):
         super().__init__()
@@ -49,7 +49,7 @@ class ReceiverThread(threading.Thread):
         latency = now_ms - timestamp
         if self.args.verbose:
             print(f"testlatency: receiver: now={now}, timestamp={timestamp}, receiver_num={num}, receiver_pointcount={count}, latency={latency}", file=sys.stderr)
-        self.statistics.append(ReceiverStatistics(timestamp, num, count))
+        self.statistics.append(ReceiverStatistics(timestamp, now, num, count))
         
     def run(self):
         if self.args.verbose:
