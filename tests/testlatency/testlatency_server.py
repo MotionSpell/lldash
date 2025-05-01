@@ -14,6 +14,11 @@ class ServerThread(threading.Thread):
         self.exit_status = -1
 
     def run(self):
+        serverproc_stderr = None
+        serverproc_stdout = None
+        if self.args.logdir:
+            serverproc_stderr = open(self.args.logdir + "/testlatency_server.stderr.log", "w")
+            serverproc_stdout = open(self.args.logdir + "/testlatency_server.stdout.log", "w")
         if self.args.verbose:
             print("testlatency: server: Starting server...", file=sys.stderr)
         self.process = subprocess.Popen(
@@ -23,7 +28,7 @@ class ServerThread(threading.Thread):
             ],
             text=True,
             stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT
+            stderr=serverproc_stderr
         )
         reported_mpd_seen = False
         while True:
@@ -31,6 +36,8 @@ class ServerThread(threading.Thread):
             line = self.process.stdout.readline()
             if not line:
                 break
+            if serverproc_stdout:
+                serverproc_stdout.write(line)
             line = line.strip()
             if self.args.verbose:
                 print(f"testlatency: server: Server output: {line}", file=sys.stderr)

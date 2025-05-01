@@ -15,7 +15,7 @@ def main():
         "--mode",
         choices=["server", "sender", "receiver", "all"],
         default="all",
-        help="Mode to run the script in: server, sender, or receiver.",
+        help="Mode to run the script in: server, sender, or receiver. Default: all",
     )
     parser.add_argument(
         "--fps",
@@ -61,6 +61,12 @@ def main():
         help="Enable verbose output.",
     )
     parser.add_argument(
+        "--logdir",
+        type=str,
+        default="",
+        help="Directory to store log files. Default: on stdout and stderr",
+    )
+    parser.add_argument(
         "--debugpy",
         action="store_true",
         help="Enable debugpy for remote debugging.",
@@ -73,7 +79,13 @@ def main():
         print(f"{sys.argv[0]}: waiting for debugpy attach on 5678", flush=True)
         debugpy.wait_for_client()
         print(f"{sys.argv[0]}: debugger attached")        
-
+    if args.logdir:
+        import os
+        if not os.path.exists(args.logdir):
+            os.makedirs(args.logdir)
+        log_file = os.path.join(args.logdir, "testlatency.stderr.log")
+        sys.stderr = open(log_file, "w")
+        print(f"{sys.argv[0]}: logging to {log_file}", flush=True)
     if args.mode == "server":
         ServerThread(args).run()
     elif args.mode == "sender":
@@ -130,10 +142,10 @@ def main():
         results = analyser.analyse(not args.all_latencies)
         analyser.print(results)
         if analyser.judge(results):
-            print("testlatency: Latency test passed.", file=sys.stderr)
+            print("testlatency: Latency test passed.")
             return 0
         else:
-            print("testlatency: Latency test failed.", file=sys.stderr)
+            print("testlatency: Latency test failed.")
             return 1
     else:
         print("testlatency: Invalid mode selected. Use --help for more information.", file=sys.stderr)
