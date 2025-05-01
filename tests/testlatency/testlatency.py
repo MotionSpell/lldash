@@ -4,103 +4,10 @@ import threading
 import subprocess
 from typing import Optional
 import cwipc
-
-class ServerThread(threading.Thread):
-    def __init__(self, args: argparse.Namespace):
-        super().__init__()
-        self.args = args
-        self.process : Optional[subprocess.Popen[str]] = None
-        self.mpd_seen = threading.Semaphore(0)
-        self.exit_status = -1
-
-    def run(self):
-        if self.args.verbose:
-            print("testlatency: Starting server...", file=sys.stderr)
-        self.process = subprocess.Popen(
-            [
-                "evanescent.exe", 
-                "--port", "9000"
-            ],
-            text=True,
-            stdout=subprocess.PIPE,
-        )
-        reported_mpd_seen = False
-        while True:
-            assert self.process.stdout
-            line = self.process.stdout.readline()
-            if not line:
-                break
-            line = line.strip()
-            if self.args.verbose:
-                print(f"testlatency: Server output: {line}", file=sys.stderr)
-            if not reported_mpd_seen and "Added" in line and ".mpd" in line:
-                if self.args.verbose:
-                    print(f"testlatency: MPD file seen in server output: {line}", file=sys.stderr)
-                self.mpd_seen.release()
-                reported_mpd_seen = True
-        self.exit_status = self.process.wait()
-        if self.args.verbose:
-            print("testlatency: Server finished with exit status:", self.exit_status, file=sys.stderr)
-        if self.exit_status == -15:
-            # Expected exit status for SIGTERM
-            self.exit_status = 0
-        
-    def stop(self):
-        if self.process:
-            self.process.terminate()
-            
-    def wait_for_mpd(self, timeout : float):
-        self.mpd_seen.acquire(timeout=timeout)
-        if self.args.verbose:
-            print("testlatency: MPD file seen, continuing...", file=sys.stderr)
-        
-class SenderThread(threading.Thread):
-    def __init__(self, args : argparse.Namespace):
-        super().__init__()
-        self.args = args
-        self.exit_status = -1
-
-    def run(self):
-        if self.args.verbose:
-            print("testlatency: Starting sender...", file=sys.stderr)
-        cmd_line = [
-            "cwipc_forward", 
-            "--verbose",
-            "--count", "450",
-            "--fps", "15", 
-            "--synthetic", 
-            "--bin2dash", "http://127.0.0.1:9000/", 
-        ]
-        if self.args.seg_dur > 0:
-            cmd_line += ["--seg_dur", str(self.args.seg_dur)]
-        result = subprocess.run(
-            cmd_line,
-            check=True
-        )
-        self.exit_status = result.returncode
-        if self.args.verbose:
-            print("testlatency: Sender finished with exit status:", self.exit_status, file=sys.stderr)
-
-class ReceiverThread(threading.Thread):
-    def __init__(self, args: argparse.Namespace):
-        super().__init__()
-        self.args = args
-        self.exit_status = -1
-
-    def run(self):
-        if self.args.verbose:
-            print("testlatency: Starting receiver...", file=sys.stderr)
-        result = subprocess.run(
-            [
-                "cwipc_view", 
-                "--nodisplay", 
-                "--sub", "http://127.0.0.1:9000/bin2dashSink.mpd"
-            ],
-            check=True,
-        )
-        self.exit_status = result.returncode
-        if self.args.verbose:
-            print("testlatency: Receiver finished with exit status:", self.exit_status, file=sys.stderr)
+from testlatency_server import ServerThread
+from testlatency_sender import SenderThread, SenderStatistics
+from testlatency_receiver import ReceiverThread, ReceiverStatistics
+from testlatency_analyse import Analyser, AnalyserResults
 
 def main():
     parser = argparse.ArgumentParser(description="Test latency of CWIPC.")
@@ -108,7 +15,33 @@ def main():
         "--mode",
         choices=["server", "sender", "receiver", "all"],
         default="all",
-        help="Mode to run the script in: server, sender, or receiver.",
+        help="Mode to run the script in: server, sender, or receiver. Default: all",
+    )
+    parser.add_argument(
+        "--fps",
+        type=int,
+        default=0,
+        help="Frames per second for the synthetic source. Default is leave to capturer.",)
+    parser.add_argument(
+        "--npoints",
+        type=int,
+        default=0,
+        help="Number of points for the synthetic source. Default is leave to capturer.",)
+    parser.add_argument(
+        "--uncompressed",
+        action="store_true",
+        help="Use uncompressed point clouds.",
+    )
+    parser.add_argument(
+        "--duration",
+        type=int,
+        default=20,
+        help="Duration in seconds for the sender. Default is 20.",
+    )
+    parser.add_argument(
+        "--all_latencies",
+        action="store_true",
+        help="Don't ignore initial latencies in the analysis.",
     )
     parser.add_argument(
         "--seg_dur",
@@ -127,8 +60,32 @@ def main():
         action="store_true",
         help="Enable verbose output.",
     )
+    parser.add_argument(
+        "--logdir",
+        type=str,
+        default="",
+        help="Directory to store log files. Default: on stdout and stderr",
+    )
+    parser.add_argument(
+        "--debugpy",
+        action="store_true",
+        help="Enable debugpy for remote debugging.",
+    )
     args = parser.parse_args()
 
+    if args.debugpy:
+        import debugpy
+        debugpy.listen(5678)
+        print(f"{sys.argv[0]}: waiting for debugpy attach on 5678", flush=True)
+        debugpy.wait_for_client()
+        print(f"{sys.argv[0]}: debugger attached")        
+    if args.logdir:
+        import os
+        if not os.path.exists(args.logdir):
+            os.makedirs(args.logdir)
+        log_file = os.path.join(args.logdir, "testlatency.stderr.log")
+        sys.stderr = open(log_file, "w")
+        print(f"{sys.argv[0]}: logging to {log_file}", flush=True)
     if args.mode == "server":
         ServerThread(args).run()
     elif args.mode == "sender":
@@ -143,7 +100,14 @@ def main():
             print("testlatency: Starting server and sender threads...", file=sys.stderr)
         server_thread.start()
         sender_thread.start()
-        server_thread.wait_for_mpd(10)
+        ok = server_thread.wait_for_mpd()
+        if not ok:
+            print("testlatency: Server thread did not produce MPD file, aborting...", file=sys.stderr)
+            server_thread.stop()
+            # sender_thread.stop()
+            server_thread.join()
+            sender_thread.join()
+            return 1
         if args.verbose:
             print("testlatency: Starting receiver thread...", file=sys.stderr)
         receiver_thread.start()
@@ -171,14 +135,21 @@ def main():
         if receiver_thread.exit_status != 0:
             print(f"testlatency: Receiver thread exited with exit status code {receiver_thread.exit_status}", file=sys.stderr)
             ok = False
-        if ok:
+        if not ok:
+            print(f"testlatency: One or more threads exited with an error.", file=sys.stderr)
+            return 1
+        analyser = Analyser(receiver_thread.statistics, sender_thread.statistics)
+        results = analyser.analyse(not args.all_latencies)
+        analyser.print(results)
+        if analyser.judge(results):
+            print("testlatency: Latency test passed.")
             return 0
         else:
-            print(f"testlatency: One or more threads exited with an error.", file=sys.stderr)
-            sys.exit(1)
+            print("testlatency: Latency test failed.")
+            return 1
     else:
         print("testlatency: Invalid mode selected. Use --help for more information.", file=sys.stderr)
-        return -1
+        return 2
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

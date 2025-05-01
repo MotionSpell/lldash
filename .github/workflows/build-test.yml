@@ -145,7 +145,7 @@ jobs:
     - name: Run integration tests
       run: |
         source .venv/bin/activate
-        python tests/testlatency/testlatency.py --verbose --seg_dur 1000
+        python tests/testlatency/testlatency.py --duration 30 --seg_dur 1000 --logdir logs
     
     - name: Upload all logs
       if: always()  # for debug purposes  
@@ -236,7 +236,7 @@ jobs:
     - name: Run integration tests
       run: |
         source .venv/bin/activate
-        python tests/testlatency/testlatency.py --verbose --seg_dur 1000
+        python tests/testlatency/testlatency.py --duration 30 --seg_dur 1000 --logdir logs
 
     - name: Upload all logs
       if: always()  # Upload logs even if the test fails for debug purposes
@@ -327,7 +327,7 @@ jobs:
     - name: Run integration tests
       run: |
         source .venv/bin/activate
-        python tests/testlatency/testlatency.py --verbose --seg_dur 1000
+        python tests/testlatency/testlatency.py --duration 30 --seg_dur 1000 --logdir logs
 
 
     - name: Upload all logs
@@ -688,7 +688,7 @@ jobs:
       shell: pwsh
       run: |
         & .\.venv\Scripts\Activate.ps1
-        python tests/testlatency/testlatency.py --verbose --seg_dur 1000
+        python tests/testlatency/testlatency.py --duration 30 --seg_dur 1000 --logdir logs
 
 
     - name: Upload test logs
