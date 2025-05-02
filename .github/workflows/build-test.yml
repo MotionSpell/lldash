@@ -499,7 +499,7 @@ jobs:
         packagePreset: mingw-production
 
     - name: manually run CMake configure, build vcpkg packages, build & test
-      shell: msys {0}
+      shell: msys2 {0}
       env:
         MSYS2_PATH_TYPE: inherit
       run: |
