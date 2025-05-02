@@ -502,11 +502,13 @@ jobs:
       env:
         MSYS2_PATH_TYPE: inherit
       run: |
+        get-command cmake
+        get-command make
+        get-command mingw32-make
         cmake --version
-        cmake --preset mingw-production
-        cmake --build --preset mingw-production
-        cmake --install build
-        cpack --preset mingw-production
+        make --version
+        mingw32-make --version
+        & scripts\buildpackage.ps1
 
 
     - name: Upload vcpkg buildtrees in case of failure
