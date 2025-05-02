@@ -468,6 +468,10 @@ jobs:
         type %GITHUB_PATH%
       shell: cmd
 
+    - name: Update msys2 using our script
+      shell: msys2 {0}
+      run: scripts/install_mingw64_prerequisites.sh
+
     - name: Check msys bash
       shell: pwsh
       run: |
@@ -494,12 +498,10 @@ jobs:
         packagePreset: mingw-production
 
     - name: manually run CMake configure, build vcpkg packages, build & test
-      shell: msys2 {0}
+      shell: pwsh
       env:
         MSYS2_PATH_TYPE: inherit
       run: |
-        which cmake
-        echo "PATH=$PATH"
         cmake --version
         cmake --preset mingw-production
         cmake --build --preset mingw-production
