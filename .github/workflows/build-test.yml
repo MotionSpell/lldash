@@ -482,6 +482,7 @@ jobs:
         bash.exe -c "echo `$PATH"
 
     - name: Install CMake
+      if: false
       uses: lukka/get-cmake@latest
       
     
@@ -498,17 +499,17 @@ jobs:
         packagePreset: mingw-production
 
     - name: manually run CMake configure, build vcpkg packages, build & test
-      shell: pwsh
+      shell: msys {0}
       env:
         MSYS2_PATH_TYPE: inherit
       run: |
-        get-command cmake
-        get-command make
-        get-command mingw32-make
+        which cmake
+        which make
+        which mingw32-make
         cmake --version
         make --version
         mingw32-make --version
-        & scripts\buildpackage.ps1 mingw-production
+        ./scripts/buildpackage.sh mingw-production
 
 
     - name: Upload vcpkg buildtrees in case of failure
