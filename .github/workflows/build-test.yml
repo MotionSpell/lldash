@@ -476,14 +476,14 @@ jobs:
       shell: pwsh
       run: |
         echo $env:PATH
+        Get-Command bash
         bash.exe --version
         bash.exe -c "set"
         bash.exe -c "echo `$PATH"
 
     - name: Install CMake
       uses: lukka/get-cmake@latest
-      with:
-        cmakeVersion: "~3.31.1"
+      
     
     - name: Setup vcpkg
       uses: lukka/run-vcpkg@v11
@@ -508,7 +508,7 @@ jobs:
         cmake --version
         make --version
         mingw32-make --version
-        & scripts\buildpackage.ps1
+        & scripts\buildpackage.ps1 mingw-production
 
 
     - name: Upload vcpkg buildtrees in case of failure
