@@ -3,7 +3,7 @@
 # Installs cwipc, creates a venv in .venv, and installs the cwipc python modules.
 # Adds ./installed/bin to PATH
 curl.exe -L -o cwipc-built.zip https://github.com/cwi-dis/cwipc/releases/download/nightly/cwipc-win10-nightly-built.zip
-Expand-Archive -path .\cwipc-built.zip -Force
+Expand-Archive -path .\cwipc-built.zip -Force -Verbose
 $lldash_dir = Join-Path $PWD installed
 $lldash_bin_dir = Join-Path $lldash_dir bin
 $cwipc_dir = Join-Path $PWD cwipc_built\installed
@@ -15,6 +15,8 @@ python -m venv .venv
 & .\.venv\Scripts\Activate.ps1
 
 "xxxjack path is now $env:Path"
+
+ls
 
 & $cwipc_bin_dir\cwipc_pymodules_install.ps1
 $Env:SIGNALS_SMD_PATH=$lldash_bin_dir
