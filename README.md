@@ -48,7 +48,7 @@ If you get the build working for Linux or Windows on Arm64: please let us know.
   - By default MSYS2 will open a UCRT64 shell, but testing has been done with the MINGW64 shell and toolset.
     - For now we have opted to use MINGW64 and not UCRT64, but we may revisit that choice later.
   - In the MINGW64 shell, run `scripts/install_mingw64_prerequisites.sh`
-  - Add `C:\msys64\mingw64\bin` to your system-wide search path:
+  - Add `C:\msys64\mingw64\bin` and `C:\msys64\usr\bin` to your system-wide search path:
     - Open System Properties, Advanced, Environment Variables
     - Add to `Path` in the System Variables section.
 

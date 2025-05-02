@@ -4,7 +4,7 @@ if ( $args.Count -ne 1) {
     cmake --list-presets
     exit
 }
-
+$makepath=(Get-Command mingw32-make).Path
 $preset=$args[0]
 # Update repo
 git fetch --recurse-submodules
@@ -17,7 +17,7 @@ if (Test-Path .\installed) {
     Remove-Item .\installed -Recurse
 }
 .\vcpkg\bootstrap-vcpkg.bat
-cmake --preset $preset
+cmake --preset $preset -DCMAKE_MAKE_PROGRAM=$makepath
 cmake --build --preset $preset
 cmake --install build
 cpack --preset $preset
