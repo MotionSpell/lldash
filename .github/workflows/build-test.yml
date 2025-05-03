@@ -409,9 +409,6 @@ jobs:
     - name: Get all tags
       shell: bash
       run: |
-        set -x
-        pwd
-        ls -la
         git show-ref --tags
         git log -10
         git describe
@@ -437,67 +434,16 @@ jobs:
       uses: msys2/setup-msys2@v2
       id: msys2
       with:
-        #        update: true
-        #        install: >-
-        #          git
-        #          make
-        #          curl
-        #        pacboy: >-
-        #          toolchain:p
         msystem: MINGW64
         path-type: inherit
       
-    - name: Set MSYS2 path
-      if: false
-      run: |
-        echo "$env:MSYS2_LOCATION\mingw64\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-        echo "$env:MSYS2_LOCATION\usr\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-        echo "MSYSTEM=MINGW64" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-      shell: pwsh
-      env:
-        MSYS2_LOCATION: ${{ steps.msys2.outputs.msys2-location }}
-
-    - name: Update MSYS2 and install dependencies
-      if: false
-      run: |
-        C:\msys64\usr\bin\bash.exe -c "pacman -Syu --noconfirm"
-        C:\msys64\usr\bin\bash.exe -c "pacman -S --noconfirm mingw-w64-x86_64-toolchain mingw-w64-x86_64-cmake mingw-w64-x86_64-ninja mingw-w64-x86_64-pkg-config mingw-w64-x86_64-nasm mingw-w64-x86_64-yasm mingw-w64-x86_64-autotools mingw-w64-x86_64-gcc git make curl mingw-w64-x86_64-libtool mingw-w64-x86_64-python3 mingw-w64-x86_64-python-pip mingw-w64-x86_64-ca-certificates mingw-w64-x86_64-freetype"
-        echo PATH environment variable:
-        echo %PATH%
-        echo GITHUB_PATH file contents:
-        type %GITHUB_PATH%
-      shell: cmd
-
-    - name: Update msys2 using our script
+    - name: Update msys2 using our install_mingw64_prerequisites script
       shell: msys2 {0}
       run: scripts/install_mingw64_prerequisites.sh
-
-    - name: Check msys bash
-      shell: pwsh
-      run: |
-        echo $env:PATH
-        Get-Command bash
-        bash.exe --version
-        bash.exe -c "set"
-        bash.exe -c "echo `$PATH"
-
-    - name: Install CMake
-      if: false
-      uses: lukka/get-cmake@latest
-      
     
     - name: Setup vcpkg
       uses: lukka/run-vcpkg@v11
         
-    - name: CMake configure, build vcpkg packages, build & test
-      if: false
-      uses: lukka/run-cmake@v10
-      with:
-        configurePreset: mingw-production
-        buildPreset: mingw-production
-        testPreset: mingw-production
-        packagePreset: mingw-production
-
     - name: manually run CMake configure, build vcpkg packages, build & test
       shell: msys2 {0}
       env:
@@ -510,7 +456,6 @@ jobs:
         make --version
         mingw32-make --version
         ./scripts/buildpackage.sh mingw-production
-
 
     - name: Upload vcpkg buildtrees in case of failure
       if: ${{ failure() }} 
