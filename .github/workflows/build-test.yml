@@ -16,7 +16,6 @@ env:
 
 jobs:
   linux-build:
-    if: false
     runs-on: ubuntu-latest
     env:
       VCPKG_DEFAULT_TRIPLET: x64-linux-dynamic
@@ -40,36 +39,8 @@ jobs:
           core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
           core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
 
-    - name: Install dependencies
-      run: |
-        sudo apt-get update && \
-        sudo apt-get install -y --no-install-recommends \
-        tzdata \
-        zip \
-        unzip \
-        curl \
-        tar \
-        git \
-        ca-certificates \
-        linux-libc-dev \
-        build-essential \
-        pkg-config \
-        yasm \
-        nasm \
-        autoconf \
-        automake \
-        autoconf-archive \
-        autotools-dev \
-        python3 \
-        python3-jinja2 \
-        gcc \
-        g++ \
-        make \
-        libtool \
-        libtool-bin \
-        astyle \
-        bc \
-        libltdl-dev
+    - name: Install dependencies with install_debian_prerequisites.sh script
+      run: scripts/install_debian_prerequisites.sh
 
     - name: Fix for libcrypto build
       run: |
@@ -157,7 +128,6 @@ jobs:
         retention-days: 5
 
   macos-build:
-    if: false
     runs-on: macos-latest
     env:
       VCPKG_DEFAULT_TRIPLET: arm64-osx-dynamic
@@ -185,11 +155,8 @@ jobs:
           core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
           core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
   
-    - name: Install dependencies
-      run: |
-        brew update
-        brew upgrade
-        brew install nasm
+    - name: Install dependencies with install_homebrew_prerequisites.sh script
+      run: scripts/install_homebrew_prerequisites.sh
 
     - name: Install CMake
       uses: lukka/get-cmake@latest
@@ -249,7 +216,6 @@ jobs:
         retention-days: 5
 
   macos-intel-build:
-    if: false
     runs-on: macos-13
     env:
       VCPKG_DEFAULT_TRIPLET: x64-osx-dynamic
@@ -277,11 +243,8 @@ jobs:
           core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
           core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
 
-    - name: Install dependencies
-      run: |
-        brew update
-        brew upgrade
-        brew install nasm
+    - name: Install dependencies with install_homebrew_prerequisites.sh script
+      run: scripts/install_homebrew_prerequisites.sh
 
     - name: Install CMake
       uses: lukka/get-cmake@latest
