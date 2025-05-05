@@ -12,8 +12,8 @@ on:
       - master
 env:
   CWIPC_RELEASE_TAG: nightly
-  VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
-
+  VCPKG_BINARY_SOURCES: clear;files,${{ github.workspace }}/vcpkg_cache,readwrite
+          
 jobs:
   linux-build:
     runs-on: ubuntu-latest
@@ -32,12 +32,12 @@ jobs:
         echo "SIGNALS_REPO=https://github.com/MotionSpell/signals.git" >> $GITHUB_ENV
         echo "BUILD_DIR=${{ github.workspace }}" >> $GITHUB_ENV
 
-    - name: Export GitHub Actions cache environment variables for vcpkg
-      uses: actions/github-script@v6
+    - name: Restore vcpkg cache
+      uses: actions/cache/restore@v4
       with:
-        script: |
-          core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
-          core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
+        path: ${{ github.workspace }}/vcpkg_cache
+        key: vcpkg-linux-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json') }}
+        restore-keys: vcpkg-linux-
 
     - name: Install dependencies with install_debian_prerequisites.sh script
       run: scripts/install_debian_prerequisites.sh
@@ -64,6 +64,12 @@ jobs:
         buildPreset: linux-production
         testPreset: linux-production
         packagePreset: linux-production
+
+    - name: Save vcpkg cache
+      uses: actions/cache/save@v4
+      with:
+        path: ${{ github.workspace }}/vcpkg_cache
+        key: vcpkg-linux-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json') }}
 
     - name: Upload vcpkg buildtrees in case of failure
       if: ${{ failure() }} 
@@ -148,12 +154,12 @@ jobs:
       run: |
         echo "BUILD_DIR=${{ github.workspace }}" >> $GITHUB_ENV
 
-    - name: Export GitHub Actions cache environment variables for vcpkg
-      uses: actions/github-script@v6
+    - name: Restore vcpkg cache
+      uses: actions/cache/restore@v4
       with:
-        script: |
-          core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
-          core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
+        path: ${{ github.workspace }}/vcpkg_cache
+        key: vcpkg-mac-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json') }}
+        restore-keys: vcpkg-mac-
   
     - name: Install dependencies with install_homebrew_prerequisites.sh script
       run: scripts/install_homebrew_prerequisites.sh
@@ -173,6 +179,12 @@ jobs:
         buildPreset: mac-production
         testPreset: mac-production
         packagePreset: mac-production
+
+    - name: Save vcpkg cache
+      uses: actions/cache/save@v4
+      with:
+        path: ${{ github.workspace }}/vcpkg_cache
+        key: vcpkg-mac-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json') }}
 
     - name: Upload vcpkg buildtrees in case of failure
       if: ${{ failure() }} 
@@ -236,12 +248,12 @@ jobs:
       run: |
         echo "BUILD_DIR=${{ github.workspace }}" >> $GITHUB_ENV
 
-    - name: Export GitHub Actions cache environment variables for vcpkg
-      uses: actions/github-script@v6
+    - name: Restore vcpkg cache
+      uses: actions/cache/restore@v4
       with:
-        script: |
-          core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
-          core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
+        path: ${{ github.workspace }}/vcpkg_cache
+        key: vcpkg-intelmac-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json') }}
+        restore-keys: vcpkg-intelmac-
 
     - name: Install dependencies with install_homebrew_prerequisites.sh script
       run: scripts/install_homebrew_prerequisites.sh
@@ -261,6 +273,12 @@ jobs:
         buildPreset: intelmac-production
         testPreset: intelmac-production
         packagePreset: intelmac-production
+
+    - name: Save vcpkg cache
+      uses: actions/cache/save@v4
+      with:
+        path: ${{ github.workspace }}/vcpkg_cache
+        key: vcpkg-intelmac-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json') }}
 
     - name: Upload vcpkg buildtrees in case of failure
       if: ${{ failure() }} 
@@ -386,12 +404,12 @@ jobs:
         echo "BUILD_DIR=$env:GITHUB_WORKSPACE" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
       shell: pwsh
 
-    - name: Export GitHub Actions cache environment variables for vcpkg
-      uses: actions/github-script@v6
+    - name: Restore vcpkg cache
+      uses: actions/cache/restore@v4
       with:
-        script: |
-          core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
-          core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
+        path: ${{ github.workspace }}/vcpkg_cache
+        key: vcpkg-windows-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json') }}
+        restore-keys: vcpkg-windows-
         
     - name: Setup MSYS2
       uses: msys2/setup-msys2@v2
@@ -419,6 +437,12 @@ jobs:
         make --version
         mingw32-make --version
         ./scripts/buildpackage.sh mingw-production
+
+    - name: Save vcpkg cache
+      uses: actions/cache/save@v4
+      with:
+        path: ${{ github.workspace }}/vcpkg_cache
+        key: vcpkg-windows-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json') }}
 
     - name: Upload vcpkg buildtrees in case of failure
       if: ${{ failure() }} 
