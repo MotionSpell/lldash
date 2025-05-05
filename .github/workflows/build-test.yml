@@ -110,6 +110,7 @@ jobs:
         bash $cwipc_dir/libexec/cwipc/scripts/install-3rdparty-ubuntu2404.sh
 
     - name: Run integration tests
+      timeout-minutes: 10
       run: |
         source .venv/bin/activate
         python tests/testlatency/testlatency.py --duration 30 --seg_dur 1000 --logdir logs
@@ -204,6 +205,7 @@ jobs:
         source tests/setup_test_environment.sh
 
     - name: Run integration tests
+      timeout-minutes: 10
       run: |
         source .venv/bin/activate
         python tests/testlatency/testlatency.py --duration 30 --seg_dur 1000 --logdir logs
@@ -298,6 +300,7 @@ jobs:
         source tests/setup_test_environment.sh
 
     - name: Run integration tests
+      timeout-minutes: 10
       run: |
         source .venv/bin/activate
         python tests/testlatency/testlatency.py --duration 30 --seg_dur 1000 --logdir logs
@@ -613,6 +616,7 @@ jobs:
         & tests\setup_test_environment.ps1
 
     - name: Run integration tests
+      timeout-minutes: 10
       shell: pwsh
       run: |
         & .\.venv\Scripts\Activate.ps1
