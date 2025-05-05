@@ -13,6 +13,8 @@ if [ $(uname) = "Linux" ]; then
     export LD_LIBRARY_PATH=$(pwd)/installed/lib:$LD_LIBRARY_PATH
     export SIGNALS_SMD_PATH=$(pwd)/installed/lib/
     
+    bash installed/libexec/cwipc/scripts/install-3rdparty-ubuntu2404.sh
+
     python3.12 -m venv .venv
     source .venv/bin/activate
     CWIPC_PYTHON=$(which python) cwipc_pymodules_install.sh || true

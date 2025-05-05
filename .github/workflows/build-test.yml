@@ -106,9 +106,7 @@ jobs:
       run: |
         cmake --install build
         source tests/setup_test_environment.sh
-        # Install cwipc dependencies
-        bash $cwipc_dir/libexec/cwipc/scripts/install-3rdparty-ubuntu2404.sh
-
+        
     - name: Run integration tests
       timeout-minutes: 10
       run: |
