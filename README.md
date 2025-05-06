@@ -93,6 +93,42 @@ This will build everything, install into `./installed` and create an installable
 Use the `cmake: select preset` command to select your preset. (control-shift-P or command-shift-P allows you to run the command, or use the CMake sidebar)
 Then use `cmake: configure`, `cmake: build`, `cmake: package`
 
+## Testing your build
+
+There is currently one integration test that creates a full pipeline, runs it for a while and then reports latency and frame loss. If this works it is a good indication that everything has build correctly.
+
+### Windows
+
+Use PowerShell, run
+
+```
+& scripts\setup_test_environment.ps1
+```
+
+This downloads and installs the test prerequisites (mainly `cwipc`) and prepares the Python `venv` to run the tests.
+
+Then run the test with
+
+```
+python .\tests\testlatency\testlatency.py --seg_dur 1000 --duration 30
+```
+
+### Mac, Linux
+
+Run
+
+```
+source scripts/setup_test_environment.sh
+```
+
+This downloads and installs the test prerequisites (mainly `cwipc`) and prepares the Python `venv` to run the tests. Note you must use `source` because `PATH` and some other environment variables are changed.
+
+Then run the test with
+
+```
+python ./tests/testlatency/testlatency.py --seg_dur 1000 --duration 30
+```
+
 ## Dependencies
 
 Ensure you have all the necessary dependencies installed. You can use [`vcpkg`](https://github.com/microsoft/vcpkg) to manage dependencies.
