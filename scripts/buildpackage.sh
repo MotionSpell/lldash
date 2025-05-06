@@ -5,10 +5,7 @@ if [ $# -ne 1 ]; then
     cmake --list-presets
     exit 1
 fi
-if [ "$MSYSTEM" != "" ]; then
-    echo "WARNING: building with MSYS2 Bash is untested. PowerShell is preferred under Windows."
-    sleep 2
-fi
+
 preset=$1
 # Update repo
 git fetch --recurse-submodules
