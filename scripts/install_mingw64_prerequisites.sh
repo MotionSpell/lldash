@@ -5,7 +5,7 @@ pacman --sync --refresh --needed --noconfirm \
     mingw-w64-x86_64-toolchain \
     mingw-w64-x86_64-cmake \
     mingw-w64-x86_64-ninja \
-    mingw-w64-x86_64-pkg-config \
+    mingw-w64-x86_64-pkgconf \
     mingw-w64-x86_64-nasm \
     mingw-w64-x86_64-yasm \
     mingw-w64-x86_64-autotools \
