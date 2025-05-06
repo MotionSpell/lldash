@@ -79,7 +79,8 @@ def main():
         print(f"{sys.argv[0]}: waiting for debugpy attach on 5678", flush=True)
         debugpy.wait_for_client()
         print(f"{sys.argv[0]}: debugger attached")        
-    if args.logdir:
+    if False and args.logdir:
+        # In hindsight it is probably not a good idea to redirect our stderr
         import os
         if not os.path.exists(args.logdir):
             os.makedirs(args.logdir)
