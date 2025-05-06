@@ -27,7 +27,71 @@ The repository includes the following components:
 
 # Build
 
-lldash can be built using CMake with presets and `vcpkg` to manage dependencies. Below are the instructions for building the project.
+lldash can be built using `CMake` with presets and `vcpkg` to manage dependencies. Builds have been tested on Linux, Windows (64 bit Intel) and Mac (Intel or Silicon).
+
+If you get the build working for Linux or Windows on Arm64: please let us know.
+
+## Build Prerequisites
+
+### Windows (Intel 64 bit)
+
+- Install Visual Studio 2022 (community edition is good enough)
+  - Install at least the "Desktop Development with C++" tools.
+  - You only really need the compilers for vcpkg to build some auxiliary tools, but its just as easy to install the whole visual studio.
+- Optionally install Visual Studio Code from https://code.visualstudio.com/
+  - Install the C++ extensions
+  - Install the Python extensions
+  - Install the cmake extensions
+- Install git from https://git-scm.com/downloads/win
+- Install CMake from https://cmake.org/download/ (64 bit version)
+- Install MSYS2 from https://www.msys2.org/
+  - By default MSYS2 will open a UCRT64 shell, but testing has been done with the MINGW64 shell and toolset.
+    - For now we have opted to use MINGW64 and not UCRT64, but we may revisit that choice later.
+  - In the MINGW64 shell, run `scripts/install_mingw64_prerequisites.sh`
+  - Add `C:\msys64\mingw64\bin` and `C:\msys64\usr\bin` to your system-wide search path:
+    - Open System Properties, Advanced, Environment Variables
+    - Add to `Path` in the System Variables section.
+
+### Mac (Intel or Silicon)
+
+- Install `XCode`, or at least the developer tools.
+- Install `Homebrew` from https://brew.sh
+- Run `scripts/install_homebrew_prerequisites.sh`
+
+
+### Linux (Intel)
+
+These instructions have only been tested on Ubuntu 24.04 on Intel 64bit hardware. 
+Please let us know if you get them working on other Linux distributions, or on Arm64 machines.
+
+- Run `scripts/install_debian_prerequisites.sh`
+
+## Building
+
+You can build from the command line or from vscode. The first time you build will take very long (about 30 minutes) because `vcpkg` will have to build all of the dependency packages. These are cached, however, so subsequent builds will be a lot quicker.
+
+Do not try to use the `CMake` GUI, it is known not to work.
+
+Do not try to use another `vcpkg` installation than the one included as a submodule of this repo, it is known not to work.
+
+> Or let us know that it _does_ work by posting an issue on github...
+
+### Windows
+
+In powershell, run `scripts\buildpackage.ps1`. You have to supply the preset you want to build (but these will be listed if you don't supply the argument).
+
+This will build everything, install into `.\installed` and create an installable package.
+
+### Linux, Mac
+
+Run `scripts/buildpackage.sh`. You have to supply the preset you want to build (but these will be listed if you don't supply the argument).
+
+This will build everything, install into `./installed` and create an installable package.
+
+## Building with vscode
+
+Use the `cmake: select preset` command to select your preset. (control-shift-P or command-shift-P allows you to run the command, or use the CMake sidebar)
+Then use `cmake: configure`, `cmake: build`, `cmake: package`
 
 ## Dependencies
 

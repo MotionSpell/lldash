@@ -12,8 +12,8 @@ on:
       - master
 env:
   CWIPC_RELEASE_TAG: nightly
-  VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
-
+  VCPKG_BINARY_SOURCES: clear;files,${{ github.workspace }}/vcpkg_cache,readwrite
+          
 jobs:
   linux-build:
     runs-on: ubuntu-latest
@@ -32,43 +32,15 @@ jobs:
         echo "SIGNALS_REPO=https://github.com/MotionSpell/signals.git" >> $GITHUB_ENV
         echo "BUILD_DIR=${{ github.workspace }}" >> $GITHUB_ENV
 
-    - name: Export GitHub Actions cache environment variables for vcpkg
-      uses: actions/github-script@v6
+    - name: Restore vcpkg cache
+      uses: actions/cache/restore@v4
       with:
-        script: |
-          core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
-          core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
+        path: ${{ github.workspace }}/vcpkg_cache
+        key: vcpkg-linux-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json') }}
+        restore-keys: vcpkg-linux-
 
-    - name: Install dependencies
-      run: |
-        sudo apt-get update && \
-        sudo apt-get install -y --no-install-recommends \
-        tzdata \
-        zip \
-        unzip \
-        curl \
-        tar \
-        git \
-        ca-certificates \
-        linux-libc-dev \
-        build-essential \
-        pkg-config \
-        yasm \
-        nasm \
-        autoconf \
-        automake \
-        autoconf-archive \
-        autotools-dev \
-        python3 \
-        python3-jinja2 \
-        gcc \
-        g++ \
-        make \
-        libtool \
-        libtool-bin \
-        astyle \
-        bc \
-        libltdl-dev
+    - name: Install dependencies with install_debian_prerequisites.sh script
+      run: scripts/install_debian_prerequisites.sh
 
     - name: Fix for libcrypto build
       run: |
@@ -92,6 +64,12 @@ jobs:
         buildPreset: linux-production
         testPreset: linux-production
         packagePreset: linux-production
+
+    - name: Save vcpkg cache
+      uses: actions/cache/save@v4
+      with:
+        path: ${{ github.workspace }}/vcpkg_cache
+        key: vcpkg-linux-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json') }}
 
     - name: Upload vcpkg buildtrees in case of failure
       if: ${{ failure() }} 
@@ -126,23 +104,11 @@ jobs:
 
     - name: Install cwipc and other pipeline test dependencies
       run: |
-        sudo apt-get install -y \
-          libglfw3 \
-          libglu1-mesa \
-          libjpeg8 \
-          liblz4-1 \
-          libopencv-core406t64 \
-          libopencv-imgproc406t64 \
-          libopengl0 \
-          libpcl-common1.14 \
-          libpcl-io1.14 \
-          libturbojpeg
         cmake --install build
         source tests/setup_test_environment.sh
-        # Install cwipc dependencies
-        # bash $cwipc_dir/libexec/cwipc/scripts/install-3rdparty-ubuntu2404.sh
-
+        
     - name: Run integration tests
+      timeout-minutes: 10
       run: |
         source .venv/bin/activate
         python tests/testlatency/testlatency.py --duration 30 --seg_dur 1000 --logdir logs
@@ -176,18 +142,15 @@ jobs:
       run: |
         echo "BUILD_DIR=${{ github.workspace }}" >> $GITHUB_ENV
 
-    - name: Export GitHub Actions cache environment variables for vcpkg
-      uses: actions/github-script@v6
+    - name: Restore vcpkg cache
+      uses: actions/cache/restore@v4
       with:
-        script: |
-          core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
-          core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
+        path: ${{ github.workspace }}/vcpkg_cache
+        key: vcpkg-mac-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json') }}
+        restore-keys: vcpkg-mac-
   
-    - name: Install dependencies
-      run: |
-        brew update
-        brew upgrade
-        brew install nasm
+    - name: Install dependencies with install_homebrew_prerequisites.sh script
+      run: scripts/install_homebrew_prerequisites.sh
 
     - name: Install CMake
       uses: lukka/get-cmake@latest
@@ -204,6 +167,12 @@ jobs:
         buildPreset: mac-production
         testPreset: mac-production
         packagePreset: mac-production
+
+    - name: Save vcpkg cache
+      uses: actions/cache/save@v4
+      with:
+        path: ${{ github.workspace }}/vcpkg_cache
+        key: vcpkg-mac-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json') }}
 
     - name: Upload vcpkg buildtrees in case of failure
       if: ${{ failure() }} 
@@ -234,6 +203,7 @@ jobs:
         source tests/setup_test_environment.sh
 
     - name: Run integration tests
+      timeout-minutes: 10
       run: |
         source .venv/bin/activate
         python tests/testlatency/testlatency.py --duration 30 --seg_dur 1000 --logdir logs
@@ -267,18 +237,15 @@ jobs:
       run: |
         echo "BUILD_DIR=${{ github.workspace }}" >> $GITHUB_ENV
 
-    - name: Export GitHub Actions cache environment variables for vcpkg
-      uses: actions/github-script@v6
+    - name: Restore vcpkg cache
+      uses: actions/cache/restore@v4
       with:
-        script: |
-          core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
-          core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
+        path: ${{ github.workspace }}/vcpkg_cache
+        key: vcpkg-intelmac-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json') }}
+        restore-keys: vcpkg-intelmac-
 
-    - name: Install dependencies
-      run: |
-        brew update
-        brew upgrade
-        brew install nasm
+    - name: Install dependencies with install_homebrew_prerequisites.sh script
+      run: scripts/install_homebrew_prerequisites.sh
 
     - name: Install CMake
       uses: lukka/get-cmake@latest
@@ -295,6 +262,12 @@ jobs:
         buildPreset: intelmac-production
         testPreset: intelmac-production
         packagePreset: intelmac-production
+
+    - name: Save vcpkg cache
+      uses: actions/cache/save@v4
+      with:
+        path: ${{ github.workspace }}/vcpkg_cache
+        key: vcpkg-intelmac-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json') }}
 
     - name: Upload vcpkg buildtrees in case of failure
       if: ${{ failure() }} 
@@ -325,6 +298,7 @@ jobs:
         source tests/setup_test_environment.sh
 
     - name: Run integration tests
+      timeout-minutes: 10
       run: |
         source .venv/bin/activate
         python tests/testlatency/testlatency.py --duration 30 --seg_dur 1000 --logdir logs
@@ -391,7 +365,6 @@ jobs:
         path: ${{ github.workspace }}/Assets/lldash-*.tar.gz
   
   windows-build:
-    if: false
     runs-on: windows-latest
     env:
       VCPKG_DEFAULT_TRIPLET: x64-mingw-dynamic
@@ -407,9 +380,6 @@ jobs:
     - name: Get all tags
       shell: bash
       run: |
-        set -x
-        pwd
-        ls -la
         git show-ref --tags
         git log -10
         git describe
@@ -424,86 +394,45 @@ jobs:
         echo "BUILD_DIR=$env:GITHUB_WORKSPACE" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
       shell: pwsh
 
-    - name: Export GitHub Actions cache environment variables for vcpkg
-      uses: actions/github-script@v6
+    - name: Restore vcpkg cache
+      uses: actions/cache/restore@v4
       with:
-        script: |
-          core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
-          core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
+        path: ${{ github.workspace }}/vcpkg_cache
+        key: vcpkg-windows-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json') }}
+        restore-keys: vcpkg-windows-
         
     - name: Setup MSYS2
       uses: msys2/setup-msys2@v2
       id: msys2
       with:
-        #        update: true
-        #        install: >-
-        #          git
-        #          make
-        #          curl
-        #        pacboy: >-
-        #          toolchain:p
         msystem: MINGW64
         path-type: inherit
       
-    - name: Set MSYS2 path
-      if: false
-      run: |
-        echo "$env:MSYS2_LOCATION\mingw64\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-        echo "$env:MSYS2_LOCATION\usr\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-        echo "MSYSTEM=MINGW64" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-      shell: pwsh
-      env:
-        MSYS2_LOCATION: ${{ steps.msys2.outputs.msys2-location }}
-
-    - name: Update MSYS2 and install dependencies
-      if: false
-      run: |
-        C:\msys64\usr\bin\bash.exe -c "pacman -Syu --noconfirm"
-        C:\msys64\usr\bin\bash.exe -c "pacman -S --noconfirm mingw-w64-x86_64-toolchain mingw-w64-x86_64-cmake mingw-w64-x86_64-ninja mingw-w64-x86_64-pkg-config mingw-w64-x86_64-nasm mingw-w64-x86_64-yasm mingw-w64-x86_64-autotools mingw-w64-x86_64-gcc git make curl mingw-w64-x86_64-libtool mingw-w64-x86_64-python3 mingw-w64-x86_64-python-pip mingw-w64-x86_64-ca-certificates mingw-w64-x86_64-freetype"
-        echo PATH environment variable:
-        echo %PATH%
-        echo GITHUB_PATH file contents:
-        type %GITHUB_PATH%
-      shell: cmd
-
-    - name: Check msys bash
-      shell: pwsh
-      run: |
-        echo $env:PATH
-        bash.exe --version
-        bash.exe -c "set"
-        bash.exe -c "echo `$PATH"
-
-    - name: Install CMake
-      uses: lukka/get-cmake@latest
-      with:
-        cmakeVersion: "~3.31.1"
+    - name: Update msys2 using our install_mingw64_prerequisites script
+      shell: msys2 {0}
+      run: scripts/install_mingw64_prerequisites.sh
     
     - name: Setup vcpkg
       uses: lukka/run-vcpkg@v11
         
-    - name: CMake configure, build vcpkg packages, build & test
-      if: false
-      uses: lukka/run-cmake@v10
-      with:
-        configurePreset: mingw-production
-        buildPreset: mingw-production
-        testPreset: mingw-production
-        packagePreset: mingw-production
-
     - name: manually run CMake configure, build vcpkg packages, build & test
       shell: msys2 {0}
       env:
         MSYS2_PATH_TYPE: inherit
       run: |
         which cmake
-        echo "PATH=$PATH"
+        which make
+        which mingw32-make
         cmake --version
-        cmake --preset mingw-production
-        cmake --build --preset mingw-production
-        cmake --install build
-        cpack --preset mingw-production
+        make --version
+        mingw32-make --version
+        ./scripts/buildpackage.sh mingw-production
 
+    - name: Save vcpkg cache
+      uses: actions/cache/save@v4
+      with:
+        path: ${{ github.workspace }}/vcpkg_cache
+        key: vcpkg-windows-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json') }}
 
     - name: Upload vcpkg buildtrees in case of failure
       if: ${{ failure() }} 
@@ -685,6 +614,7 @@ jobs:
         & tests\setup_test_environment.ps1
 
     - name: Run integration tests
+      timeout-minutes: 10
       shell: pwsh
       run: |
         & .\.venv\Scripts\Activate.ps1
