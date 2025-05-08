@@ -630,6 +630,23 @@ jobs:
           ${{ env.BUILD_DIR }}/logs/**/*
           ${{ env.BUILD_DIR }}/logs/*
         retention-days: 5
+
+    - name: Upload test venv folder in case of failure
+      if: ${{ failure() }} 
+      uses: actions/upload-artifact@v4
+      with:
+        name: windows-test-venv-folder
+        path: ./.venv
+        retention-days: 5
+
+    - name: Upload test installed folder in case of failure
+      if: ${{ failure() }} 
+      uses: actions/upload-artifact@v4
+      with:
+        name: windows-test-installed-folder
+        path: ./installed
+        retention-days: 5
+  
     - name: Create package
       run: cpack --preset mingw-production
 
