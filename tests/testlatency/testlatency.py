@@ -79,14 +79,10 @@ def main():
         print(f"{sys.argv[0]}: waiting for debugpy attach on 5678", flush=True)
         debugpy.wait_for_client()
         print(f"{sys.argv[0]}: debugger attached")        
-    if False and args.logdir:
-        # In hindsight it is probably not a good idea to redirect our stderr
+    if args.logdir:
         import os
         if not os.path.exists(args.logdir):
             os.makedirs(args.logdir)
-        log_file = os.path.join(args.logdir, "testlatency.stderr.log")
-        sys.stderr = open(log_file, "w")
-        print(f"{sys.argv[0]}: logging to {log_file}", flush=True)
     if args.mode == "server":
         ServerThread(args).run()
     elif args.mode == "sender":
