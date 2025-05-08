@@ -14,7 +14,7 @@ $env:Path = $cwipc_bin_dir + ";" + $lldash_bin_dir + ";" + $env:Path
 python -m venv .venv
 & .\.venv\Scripts\Activate.ps1
 
-cwipc_pymodules_install.bat
+cwipc_pymodules_install.ps1
 
 $Env:SIGNALS_SMD_PATH=$lldash_bin_dir
 
