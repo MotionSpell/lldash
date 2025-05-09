@@ -21,6 +21,7 @@ class SenderThread(threading.Thread):
         self.encoder : Optional[cwipc.cwipc_encoder] = None
         self.sender : Optional[cwipc.net.cwipc_rawsink_abstract] = None
         self.statistics : List[SenderStatistics] = []
+        self.stop_requested = False
 
     def init(self):
         npoints = self.args.npoints
@@ -44,6 +45,9 @@ class SenderThread(threading.Thread):
     def is_alive(self):
         return self.alive
     
+    def stop(self):
+        self.stop_requested = True
+
     def close(self):
         self.alive = False
         if self.args.verbose:
@@ -77,7 +81,7 @@ class SenderThread(threading.Thread):
         start_time = time.time()
         num = 0
         self.exit_status = 0
-        while time.time() - start_time < self.args.duration:
+        while time.time() - start_time < self.args.duration and not self.stop_requested:
             ok = self.source.available(wait=True)
             if not ok:
                 print("testlatency: Sender source not available, exiting...", file=sys.stderr)

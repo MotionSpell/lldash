@@ -104,18 +104,15 @@ def main():
         if not ok:
             print("testlatency: Server thread did not produce MPD file in 10 seconds, aborting...", file=sys.stderr)
             server_thread.stop()
-            # sender_thread.stop()
-            server_thread.join()
-            sender_thread.join()
-            return 1
+            sender_thread.stop()
         #
         # Check that the sender and server thread are still alive
         #
         if not sender_thread.is_alive():
-            print("testlatency: Sender thread appears to have crashed", file=sys.stderr)
+            print("testlatency: Sender thread appears to have stopped", file=sys.stderr)
             ok = False
         if not server_thread.is_alive():
-            print("testlatency: Server thread appears to have crashed", file=sys.stderr)
+            print("testlatency: Server thread appears to have stopped", file=sys.stderr)
             ok = False
         #
         # Start the receiver

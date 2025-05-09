@@ -19,6 +19,7 @@ class ReceiverThread(threading.Thread):
         self.source : Optional[cwipc.net.cwipc_rawsource_abstract] = None
         self.decoder : Optional[cwipc.cwipc_decoder] = None
         self.statistics : list[ReceiverStatistics] = []
+        self.stop_requested = False
 
     def init(self):
         url = "http://127.0.0.1:9000/bin2dashSink.mpd"
@@ -30,6 +31,9 @@ class ReceiverThread(threading.Thread):
         
         # self.source.start()
         self.decoder.start()
+
+    def stop(self):
+        self.stop_requested = True
 
     def close(self):
         if self.args.verbose:
@@ -60,7 +64,7 @@ class ReceiverThread(threading.Thread):
         start_time = time.time()
         num = 0
         self.exit_status = 0
-        while self.decoder.available(True):
+        while self.decoder.available(True) and not self.stop_requested:
             pc = self.decoder.get()
             if pc == None:
                 print("testlatency: receiver: No point cloud received, aborting...", file=sys.stderr)
