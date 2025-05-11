@@ -615,6 +615,7 @@ jobs:
       with:
         name: lldash-windows-x86_64
         path: build/package/lldash-*.tar.gz
+  
   windows-test:
     runs-on: windows-latest
     needs:
@@ -624,6 +625,11 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: 'recursive'
+      
+      - name: Install correct Python version
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
       - name: Download Windows package
         uses: actions/download-artifact@v4
         with:
@@ -633,12 +639,14 @@ jobs:
       - name: Install lldash
         shell: bash
         run: |
-          mkdir installed && cd installed && tar xfv ../lldash-windows-*.tar.gz
+          tar xfv lldash-windows-*.tar.gz
+          mv lldash-windows-*/ installed
           ls -l
 
       - name: Install cwipc and other pipeline test dependencies
         shell: pwsh
         run: |
+          python --version
           & tests\setup_test_environment.ps1
 
       - name: Run integration tests
