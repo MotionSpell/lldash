@@ -8,9 +8,9 @@ fi
 
 preset=$1
 # Update repo
-git fetch --recurse-submodules
-git pull
-git submodule update --remote lldash-relay signals lldash-srd-packager lldash-playout
+# git fetch --recurse-submodules
+# git pull
+# git submodule update --remote lldash-relay signals lldash-srd-packager lldash-playout
 rm -rf build installed
 ./vcpkg/bootstrap-vcpkg.sh
 cmake --preset $preset
