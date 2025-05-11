@@ -606,46 +606,6 @@ jobs:
             Where-Object { $_.Name -match "^(lib|msys-|libgcc|libwin|libstdc)" } |
             Sort-Object Name | 
             Format-Table Name, Length, LastWriteTime
-
-    - name: Install cwipc and other pipeline test dependencies
-      shell: pwsh
-      run: |
-        cmake --install build
-        & tests\setup_test_environment.ps1
-
-    - name: Run integration tests
-      timeout-minutes: 10
-      shell: pwsh
-      run: |
-        & .\.venv\Scripts\Activate.ps1
-        python tests/testlatency/testlatency.py --duration 30 --seg_dur 1000 --logdir logs
-
-
-    - name: Upload test logs
-      if: always()
-      uses: actions/upload-artifact@v4
-      with:
-        name: windows-test-logs
-        path: |
-          ${{ env.BUILD_DIR }}/logs/**/*
-          ${{ env.BUILD_DIR }}/logs/*
-        retention-days: 5
-
-    - name: Upload test venv folder in case of failure
-      if: ${{ failure() }} 
-      uses: actions/upload-artifact@v4
-      with:
-        name: windows-test-venv-folder
-        path: ./.venv
-        retention-days: 5
-
-    - name: Upload test installed folder in case of failure
-      if: ${{ failure() }} 
-      uses: actions/upload-artifact@v4
-      with:
-        name: windows-test-installed-folder
-        path: ./installed
-        retention-days: 5
   
     - name: Create package
       run: cpack --preset mingw-production
@@ -655,7 +615,67 @@ jobs:
       with:
         name: lldash-windows-x86_64
         path: build/package/lldash-*.tar.gz
-  
+  windows-test:
+    runs-on: windows-latest
+    needs:
+      - windows-build
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
+      - name: Download Windows package
+        uses: actions/download-artifact@v4
+        with:
+          name: lldash-windows-x86_64
+          path: ${{ github.workspace }}
+
+      - name: Install lldash
+        shell: bash
+        run: |
+          mkdir installed && cd installed && tar xfv ../lldash-windows-*.tar.gz
+          ls -l
+
+      - name: Install cwipc and other pipeline test dependencies
+        shell: pwsh
+        run: |
+          & tests\setup_test_environment.ps1
+
+      - name: Run integration tests
+        timeout-minutes: 10
+        shell: pwsh
+        run: |
+            & .\.venv\Scripts\Activate.ps1
+            python tests/testlatency/testlatency.py --duration 30 --seg_dur 1000 --logdir logs
+
+
+      - name: Upload test logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-test-logs
+          path: |
+            ${{ env.BUILD_DIR }}/logs/**/*
+            ${{ env.BUILD_DIR }}/logs/*
+          retention-days: 5
+
+      - name: Upload test venv folder in case of failure
+        if: ${{ failure() }} 
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-test-venv-folder
+          path: ./.venv
+          retention-days: 5
+
+      - name: Upload test installed folder in case of failure
+        if: ${{ failure() }} 
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-test-installed-folder
+          path: ./installed
+          retention-days: 5
+      
+    
   create-release:
     if: startsWith(github.ref, 'refs/tags/')
     needs:
