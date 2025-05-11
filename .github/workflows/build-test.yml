@@ -648,13 +648,15 @@ jobs:
         run: |
           python --version
           & tests\setup_test_environment.ps1
+          python --version
+          pip freeze
 
       - name: Run integration tests
         timeout-minutes: 10
         shell: pwsh
         run: |
             & .\.venv\Scripts\Activate.ps1
-            python tests/testlatency/testlatency.py --duration 30 --seg_dur 1000 --logdir logs
+            python tests/testlatency/testlatency.py --uncompressed --npoints 30000 --duration 30 --seg_dur 1000 --logdir logs
 
 
       - name: Upload test logs
@@ -672,7 +674,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: windows-test-venv-folder
-          path: ./.venv
+          path: ${{ env.BUILD_DIR }}/.venv/
+          include-hidden-files: true
           retention-days: 5
 
       - name: Upload test installed folder in case of failure
