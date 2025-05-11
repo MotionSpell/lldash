@@ -7,9 +7,9 @@ if ( $args.Count -ne 1) {
 $makepath=(Get-Command mingw32-make).Path
 $preset=$args[0]
 # Update repo
-git fetch --recurse-submodules
-git pull
-git submodule update --remote lldash-relay signals lldash-srd-packager lldash-playout
+# git fetch --recurse-submodules
+# git pull
+# git submodule update --remote lldash-relay signals lldash-srd-packager lldash-playout
 if (Test-Path .\build) {
     Remove-Item .\build -Recurse
 }
