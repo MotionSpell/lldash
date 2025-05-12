@@ -18,6 +18,31 @@
             "type": "debugpy",
             "request": "attach",
             "processId": "${command:pickProcess}"
-        }
+        },
+        {
+            "name": "unit tests",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/signals/build/bin/unittests.exe",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "/tmp",
+            "environment": [ { "name": "SIGNALS_SMD_PATH", "value": "${workspaceFolder}/signals/build/lib" } ],
+            "externalConsole": false,
+            "MIMode": "lldb",
+        },
+        {
+            "name": "bin2dash_app",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/bin/bin2dash_app.exe",
+            "args": [ "-u", "http://127.0.0.1:9000", "/tmp/cwi/" ],
+            "stopAtEntry": false,
+            "cwd": "/tmp",
+            "environment": [ { "name": "SIGNALS_SMD_PATH", "value": "${workspaceFolder}/installed/lib/" } ],
+            //, { "name": "DYLD_LIBRARY_PATH", "value": "${workspaceFolder}/build/vcpkg_installed/arm64-osx-dynamic/lib/" } ],
+            "externalConsole": false,
+            "MIMode": "lldb",
+        },
     ]
 }
