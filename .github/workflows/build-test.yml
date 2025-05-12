@@ -694,7 +694,7 @@ jobs:
       - macos-build
       - macos-intel-build
       - macos-universal-build
-      # - windows-build
+      - windows-build
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -724,7 +724,6 @@ jobs:
           name: lldash-mac-universal
           path: ${{ github.workspace }}/Assets
       - name: Download Windows package
-        if: false
         uses: actions/download-artifact@v4
         with:
           name: lldash-windows-x86_64
