@@ -56,6 +56,12 @@ def main():
         help="Host address for the server.",
     )
     parser.add_argument(
+        "--long-poll",
+        type=int,
+        default="30000",
+        help="long poll timeout the server.",
+    )
+    parser.add_argument(
         "--verbose",
         action="store_true",
         help="Enable verbose output.",
