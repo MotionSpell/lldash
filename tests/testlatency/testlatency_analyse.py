@@ -45,8 +45,9 @@ class Analyser:
             send = self.sender_dict[recv.timestamp]
             latency = recv.receiver_wallclock - send.sender_wallclock
             latencies.append(latency)
-        if ignore_initial_latencies:
+        if ignore_initial_latencies and latencies:
             full_average = statistics.mean(latencies) if latencies else 0
+            first_below_average = len(latencies)
             for first_below_average in range(1, len(latencies)):
                 if latencies[first_below_average] < full_average:
                     break
