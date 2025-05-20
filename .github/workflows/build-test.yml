@@ -14,7 +14,7 @@ env:
   CWIPC_RELEASE_TAG: nightly
   VCPKG_BINARY_SOURCES: clear;files,${{ github.workspace }}/vcpkg_cache,readwrite
   LLDASH_LOGGING: 1
-  TESTLATENCY_ARGS: --uncompressed --npoints 30000 --duration 30 --fps 30 --seg_dur 1000 --long_poll 2000
+  TESTLATENCY_ARGS: --uncompressed --npoints 30000 --duration 30 --fps 30 --seg_dur 1000 --long-poll 2000
   TESTLATENCY_VERBOSE: --verbose
           
 jobs:
