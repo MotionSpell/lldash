@@ -58,7 +58,7 @@ def main():
     parser.add_argument(
         "--long-poll",
         type=int,
-        default="30000",
+        default=0,
         help="long poll timeout the server.",
     )
     parser.add_argument(
