@@ -22,11 +22,14 @@ class ServerThread(threading.Thread):
             serverproc_stdout = open(self.args.logdir + "/testlatency_server.stdout.log", "w")
         if self.args.verbose:
             print("testlatency: server: Starting server...", file=sys.stderr)
+        cmdline = [
+            "evanescent.exe", 
+            "--port", "9000"
+        ]
+        if self.args.long_poll:
+            cmdline += ["--long-poll", str(self.args.long_poll)]
         self.process = subprocess.Popen(
-            [
-                "evanescent.exe", 
-                "--port", "9000"
-            ],
+            cmdline,
             text=True,
             stdout=serverproc_stdout,
             stderr=subprocess.PIPE
