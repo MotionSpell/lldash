@@ -27,8 +27,8 @@ if [ $(uname) = "Linux" ]; then
 
 elif [ $(uname) = "Darwin" ]; then
     brew tap cwi-dis/cwipc
-    brew install cwipc
-    rm -rf .venv
+    # Workaround for issue cwipc#192
+    HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1 brew install cwipc
     python3.12 -m venv .venv
     source .venv/bin/activate
     CWIPC_PYTHON=$(which python) cwipc_pymodules_install.sh || true
