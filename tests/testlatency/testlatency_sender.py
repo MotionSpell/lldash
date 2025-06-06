@@ -14,6 +14,7 @@ SenderStatistics = namedtuple("SenderStatistics", ["timestamp", "sender_wallcloc
 class SenderThread(threading.Thread):
     def __init__(self, args : argparse.Namespace):
         super().__init__()
+        self.name = "testlatency.SenderThread"
         self.args = args
         self.exit_status = -1
         self.alive = True
@@ -27,8 +28,11 @@ class SenderThread(threading.Thread):
         npoints = self.args.npoints
         url = "http://127.0.0.1:9000/"
         nodrop = True
-        
+        if self.args.verbose:
+            print(f"testlatency: sender: creating cwipc_sink_bin2dash({url}, ...)", file=sys.stderr)
         self.sender = cwipc.net.sink_bin2dash.cwipc_sink_bin2dash(url, self.args.verbose, nodrop, seg_dur_in_ms=self.args.seg_dur)
+        if self.args.verbose:
+            print(f"testlatency: sender: created cwipc_sink_bin2dash({url}, ...)", file=sys.stderr)
         if self.args.uncompressed:
             self.encoder = cwipc.net.sink_passthrough.cwipc_sink_passthrough(self.sender, self.args.verbose, nodrop)
         else:
@@ -72,9 +76,9 @@ class SenderThread(threading.Thread):
         self.statistics.append(SenderStatistics(timestamp, now, num, count))
         
     def run(self):
-        self.init()
         if self.args.verbose:
             print("testlatency: Starting sender...", file=sys.stderr)
+        self.init()
         assert self.source
         assert self.encoder
         assert self.sender

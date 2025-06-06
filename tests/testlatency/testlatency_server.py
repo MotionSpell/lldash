@@ -8,6 +8,7 @@ from typing import Optional
 class ServerThread(threading.Thread):
     def __init__(self, args: argparse.Namespace):
         super().__init__()
+        self.name = "testlatency.ServerThread"
         self.args = args
         self.process : Optional[subprocess.Popen[str]] = None
         self.mpd_seen = threading.Semaphore(0)
