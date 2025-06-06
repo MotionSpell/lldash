@@ -3,6 +3,7 @@ import argparse
 import threading
 import subprocess
 from typing import Optional
+import os
 import cwipc
 from testlatency_server import ServerThread
 from testlatency_sender import SenderThread, SenderStatistics
@@ -77,8 +78,15 @@ def main():
         action="store_true",
         help="Enable debugpy for remote debugging.",
     )
+    parser.add_argument(
+        "--pausefordebug",
+        action="store_true",
+        help="Read a line from stdin so you can attach gdb or lldb before starting.",
+    )
     args = parser.parse_args()
-
+    if args.pausefordebug:
+        print(f"{sys.argv[0]}: waiting for debug attach (pid={os.getpid()}), press Enter to continue...", flush=True)
+        input()
     if args.debugpy:
         import debugpy
         debugpy.listen(5678)
@@ -86,7 +94,6 @@ def main():
         debugpy.wait_for_client()
         print(f"{sys.argv[0]}: debugger attached")        
     if args.logdir:
-        import os
         if not os.path.exists(args.logdir):
             os.makedirs(args.logdir)
     if args.mode == "server":
