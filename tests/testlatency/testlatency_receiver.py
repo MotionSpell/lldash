@@ -14,6 +14,7 @@ ReceiverStatistics = namedtuple("ReceiverStatistics", ["timestamp", "receiver_wa
 class ReceiverThread(threading.Thread):
     def __init__(self, args: argparse.Namespace):
         super().__init__()
+        self.name = "testlatency.ReceiverThread"
         self.args = args
         self.exit_status = -1
         self.source : Optional[cwipc.net.cwipc_rawsource_abstract] = None
