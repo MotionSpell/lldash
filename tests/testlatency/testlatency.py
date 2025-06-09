@@ -1,14 +1,11 @@
 import sys
 import argparse
-import threading
-import subprocess
-from typing import Optional
+import time
 import os
-import cwipc
 from testlatency_server import ServerThread
-from testlatency_sender import SenderThread, SenderStatistics
-from testlatency_receiver import ReceiverThread, ReceiverStatistics
-from testlatency_analyse import Analyser, AnalyserResults
+from testlatency_sender import SenderThread
+from testlatency_receiver import ReceiverThread
+from testlatency_analyse import Analyser
 
 def main():
     parser = argparse.ArgumentParser(description="Test latency of CWIPC.")
@@ -109,6 +106,10 @@ def main():
         if args.verbose:
             print("testlatency: Starting server and sender threads...", file=sys.stderr)
         server_thread.start()
+        #
+        # Wait for a short while, so the server has had a chancce to start.
+        #
+        time.sleep(1)
         sender_thread.start()
         #
         # Wait for the MPD to be produced, so we know we can start the receiver.
