@@ -13,9 +13,13 @@ on:
 env:
   CWIPC_RELEASE_TAG: nightly
   VCPKG_BINARY_SOURCES: clear;files,${{ github.workspace }}/vcpkg_cache,readwrite
-  LLDASH_LOGGING: 1
   TESTLATENCY_ARGS: --uncompressed --npoints 30000 --duration 30 --fps 30 --seg_dur 1000 --long-poll 2000
-  TESTLATENCY_VERBOSE: --verbose
+# The following environment variables can be set to run the tests in verbose or debug mode.
+# Only use to find issues that show up in Github Actions but not on developer machines.
+  TESTLATENCY_VERBOSE:
+#  TESTLATENCY_VERBOSE: --verbose
+#  TESTLATENCY_VERBOSE: --verbose --debug
+#  LLDASH_LOGGING: 1
           
 jobs:
   linux-build:
