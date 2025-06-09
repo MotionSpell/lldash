@@ -65,6 +65,11 @@ def main():
         help="Enable verbose output.",
     )
     parser.add_argument(
+        "--debug",
+        action="store_true",
+        help="Enable debug output.",
+    )
+    parser.add_argument(
         "--logdir",
         type=str,
         default="",
@@ -103,7 +108,7 @@ def main():
         server_thread = ServerThread(args)
         sender_thread = SenderThread(args)
         receiver_thread = ReceiverThread(args)
-        if args.verbose:
+        if args.debug:
             print("testlatency: Starting server and sender threads...", file=sys.stderr)
         server_thread.start()
         #
@@ -114,14 +119,11 @@ def main():
         #
         # Wait for the MPD to be produced, so we know we can start the receiver.
         #
-        ok = server_thread.wait_for_mpd(10)
-        if not ok:
-            print("testlatency: Server thread did not produce MPD file in 10 seconds, aborting...", file=sys.stderr)
-            server_thread.stop()
-            sender_thread.stop()
+        time.sleep(1)
         #
         # Check that the sender and server thread are still alive
         #
+        ok = True
         if not sender_thread.is_alive():
             print("testlatency: Sender thread appears to have stopped", file=sys.stderr)
             ok = False
@@ -132,29 +134,29 @@ def main():
         # Start the receiver
         #
         if ok:
-            if args.verbose:
+            if args.debug:
                 print("testlatency: Starting receiver thread...", file=sys.stderr)
             receiver_thread.start()
         else:
             print("testlatency: Skip receiver thread start, stop sender and server threads", file=sys.stderr)
             sender_thread.stop()
             receiver_thread.stop()
-        if args.verbose:
+        if args.debug:
             print("testlatency: Waiting for threads to finish...", file=sys.stderr)
         if sender_thread.is_alive():
             sender_thread.join()
-        if args.verbose:
+        if args.debug:
             print("testlatency: sender thread finished", file=sys.stderr)
         if receiver_thread.is_alive():
             receiver_thread.join()
-        if args.verbose:
+        if args.debug:
             print("testlatency: receiver thread finished", file=sys.stderr)
         if server_thread.is_alive():
-            if args.verbose:
+            if args.debug:
                 print("testlatency: Stopping server thread...", file=sys.stderr)
             server_thread.stop()
             server_thread.join()
-        if args.verbose:
+        if args.debug:
             print("testlatency: server thread finished", file=sys.stderr)
         ok = True
         if server_thread.exit_status != 0:

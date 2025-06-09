@@ -28,22 +28,22 @@ class SenderThread(threading.Thread):
         npoints = self.args.npoints
         url = "http://127.0.0.1:9000/"
         nodrop = True
-        if self.args.verbose:
+        if self.args.debug:
             print(f"testlatency: sender: creating cwipc_sink_bin2dash({url}, ...)", file=sys.stderr)
-        self.sender = cwipc.net.sink_bin2dash.cwipc_sink_bin2dash(url, self.args.verbose, nodrop, seg_dur_in_ms=self.args.seg_dur)
-        if self.args.verbose:
+        self.sender = cwipc.net.sink_bin2dash.cwipc_sink_bin2dash(url, self.args.debug, nodrop, seg_dur_in_ms=self.args.seg_dur)
+        if self.args.debug:
             print(f"testlatency: sender: created cwipc_sink_bin2dash({url}, ...)", file=sys.stderr)
         if self.args.uncompressed:
-            self.encoder = cwipc.net.sink_passthrough.cwipc_sink_passthrough(self.sender, self.args.verbose, nodrop)
+            self.encoder = cwipc.net.sink_passthrough.cwipc_sink_passthrough(self.sender, self.args.debug, nodrop)
         else:
-            self.encoder = cwipc.net.sink_encoder.cwipc_sink_encoder(self.sender, self.args.verbose, nodrop)
+            self.encoder = cwipc.net.sink_encoder.cwipc_sink_encoder(self.sender, self.args.debug, nodrop)
         self.source = cwipc.cwipc_synthetic(self.args.fps, npoints)
         
         self.encoder.set_producer(self)
 
         # self.sender.start()
         self.encoder.start()
-        if self.args.verbose:
+        if self.args.debug:
             print("testlatency: Sender initialized.", file=sys.stderr)
             
     def is_alive(self):
@@ -71,12 +71,12 @@ class SenderThread(threading.Thread):
         
     def report(self, num : int, timestamp : float, count : int):
         now = time.time()
-        if self.args.verbose:
+        if self.args.debug:
             print(f"testlatency: sender: now={now}, timestamp={timestamp}, sender_num={num}, sender_pointcount={count}", file=sys.stderr)
         self.statistics.append(SenderStatistics(timestamp, now, num, count))
         
     def run(self):
-        if self.args.verbose:
+        if self.args.debug:
             print("testlatency: Starting sender...", file=sys.stderr)
         self.init()
         assert self.source
@@ -103,5 +103,5 @@ class SenderThread(threading.Thread):
             print(f"testlatency: sent {num} point clouds in {time.time()-start_time} seconds.", file=sys.stderr)
         self.close()
 
-        if self.args.verbose:
+        if self.args.debug:
             print("testlatency: Sender finished with exit status:", self.exit_status, file=sys.stderr)
