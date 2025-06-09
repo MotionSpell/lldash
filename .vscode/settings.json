@@ -1,0 +1,17 @@
+{
+    "files.associations": {
+        "fstream": "cpp",
+        "ostream": "cpp",
+        "print": "cpp",
+        "*.def": "cpp",
+        "exception": "cpp",
+        "memory_resource": "cpp",
+        "format": "cpp",
+        "iosfwd": "cpp",
+        "new": "cpp",
+        "shared_mutex": "cpp",
+        "sstream": "cpp",
+        "stop_token": "cpp",
+        "streambuf": "cpp"
+    }
+}
