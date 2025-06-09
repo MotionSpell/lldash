@@ -13,7 +13,7 @@ SenderStatistics = namedtuple("SenderStatistics", ["timestamp", "sender_wallcloc
 
 class SenderThread(threading.Thread):
     def __init__(self, args : argparse.Namespace):
-        super().__init__()
+        super().__init__(daemon=True)
         self.name = "testlatency.SenderThread"
         self.args = args
         self.exit_status = -1

@@ -13,7 +13,7 @@ from typing import Optional
 ReceiverStatistics = namedtuple("ReceiverStatistics", ["timestamp", "receiver_wallclock", "receiver_num", "receiver_count"])
 class ReceiverThread(threading.Thread):
     def __init__(self, args: argparse.Namespace):
-        super().__init__()
+        super().__init__(daemon=True)
         self.name = "testlatency.ReceiverThread"
         self.args = args
         self.exit_status = -1
