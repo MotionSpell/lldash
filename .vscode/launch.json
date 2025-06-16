@@ -27,6 +27,18 @@
             "processId": "${command:pickProcess}"
         },
         {
+            "name": "playout",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/installed/bin/example.exe",
+            "args": [ "http://127.0.0.1:9000/vrtogether.mpd" ],
+            "stopAtEntry": false,
+            "cwd": "/tmp",
+            "environment": [ { "name": "SIGNALS_SMD_PATH", "value": "${workspaceFolder}/installed/lib" } ],
+            "externalConsole": false,
+            "MIMode": "lldb",
+        },
+        {
             "name": "unit tests",
             "type": "cppdbg",
             "request": "launch",
