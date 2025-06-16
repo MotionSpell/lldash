@@ -12,6 +12,9 @@
         "shared_mutex": "cpp",
         "sstream": "cpp",
         "stop_token": "cpp",
-        "streambuf": "cpp"
+        "streambuf": "cpp",
+        "future": "cpp",
+        "thread": "cpp",
+        "vector": "cpp"
     }
 }
