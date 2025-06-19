@@ -1,5 +1,24 @@
 {
     "files.associations": {
+<<<<<<< HEAD
         "condition_variable": "cpp"
+=======
+        "fstream": "cpp",
+        "ostream": "cpp",
+        "print": "cpp",
+        "*.def": "cpp",
+        "exception": "cpp",
+        "memory_resource": "cpp",
+        "format": "cpp",
+        "iosfwd": "cpp",
+        "new": "cpp",
+        "shared_mutex": "cpp",
+        "sstream": "cpp",
+        "stop_token": "cpp",
+        "streambuf": "cpp",
+        "future": "cpp",
+        "thread": "cpp",
+        "vector": "cpp"
+>>>>>>> 3d9a96ab537e6dc16610c94f9f0acec43e3107e5
     }
 }

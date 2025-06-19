@@ -13,7 +13,8 @@ from typing import Optional
 ReceiverStatistics = namedtuple("ReceiverStatistics", ["timestamp", "receiver_wallclock", "receiver_num", "receiver_count"])
 class ReceiverThread(threading.Thread):
     def __init__(self, args: argparse.Namespace):
-        super().__init__()
+        super().__init__(daemon=True)
+        self.name = "testlatency.ReceiverThread"
         self.args = args
         self.exit_status = -1
         self.source : Optional[cwipc.net.cwipc_rawsource_abstract] = None
@@ -23,11 +24,11 @@ class ReceiverThread(threading.Thread):
 
     def init(self):
         url = "http://127.0.0.1:9000/bin2dashSink.mpd"
-        self.source = cwipc.net.source_sub.cwipc_source_sub(url, self.args.verbose)
+        self.source = cwipc.net.source_sub.cwipc_source_sub(url, verbose=self.args.debug)
         if self.args.uncompressed:
-            self.decoder = cwipc.net.source_passthrough.cwipc_source_passthrough(self.source, self.args.verbose)
+            self.decoder = cwipc.net.source_passthrough.cwipc_source_passthrough(self.source, verbose=self.args.debug)
         else:
-            self.decoder = cwipc.net.source_decoder.cwipc_source_decoder(self.source, self.args.verbose)
+            self.decoder = cwipc.net.source_decoder.cwipc_source_decoder(self.source, verbose=self.args.debug)
         
         # self.source.start()
         self.decoder.start()
@@ -56,7 +57,7 @@ class ReceiverThread(threading.Thread):
         self.statistics.append(ReceiverStatistics(timestamp, now, num, count))
         
     def run(self):
-        if self.args.verbose:
+        if self.args.debug:
             print("testlatency: Starting receiver...", file=sys.stderr)
         self.init()
         assert self.source

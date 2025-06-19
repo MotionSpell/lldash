@@ -1,13 +1,11 @@
 import sys
 import argparse
-import threading
-import subprocess
-from typing import Optional
-import cwipc
+import time
+import os
 from testlatency_server import ServerThread
-from testlatency_sender import SenderThread, SenderStatistics
-from testlatency_receiver import ReceiverThread, ReceiverStatistics
-from testlatency_analyse import Analyser, AnalyserResults
+from testlatency_sender import SenderThread
+from testlatency_receiver import ReceiverThread
+from testlatency_analyse import Analyser
 
 def main():
     parser = argparse.ArgumentParser(description="Test latency of CWIPC.")
@@ -58,13 +56,18 @@ def main():
     parser.add_argument(
         "--long-poll",
         type=int,
-        default="30000",
+        default=0,
         help="long poll timeout the server.",
     )
     parser.add_argument(
         "--verbose",
         action="store_true",
         help="Enable verbose output.",
+    )
+    parser.add_argument(
+        "--debug",
+        action="store_true",
+        help="Enable debug output.",
     )
     parser.add_argument(
         "--logdir",
@@ -77,8 +80,15 @@ def main():
         action="store_true",
         help="Enable debugpy for remote debugging.",
     )
+    parser.add_argument(
+        "--pausefordebug",
+        action="store_true",
+        help="Read a line from stdin so you can attach gdb or lldb before starting.",
+    )
     args = parser.parse_args()
-
+    if args.pausefordebug:
+        print(f"{sys.argv[0]}: waiting for debug attach (pid={os.getpid()}), press Enter to continue...", flush=True)
+        input()
     if args.debugpy:
         import debugpy
         debugpy.listen(5678)
@@ -86,7 +96,6 @@ def main():
         debugpy.wait_for_client()
         print(f"{sys.argv[0]}: debugger attached")        
     if args.logdir:
-        import os
         if not os.path.exists(args.logdir):
             os.makedirs(args.logdir)
     if args.mode == "server":
@@ -99,21 +108,22 @@ def main():
         server_thread = ServerThread(args)
         sender_thread = SenderThread(args)
         receiver_thread = ReceiverThread(args)
-        if args.verbose:
+        if args.debug:
             print("testlatency: Starting server and sender threads...", file=sys.stderr)
         server_thread.start()
+        #
+        # Wait for a short while, so the server has had a chancce to start.
+        #
+        time.sleep(1)
         sender_thread.start()
         #
         # Wait for the MPD to be produced, so we know we can start the receiver.
         #
-        ok = server_thread.wait_for_mpd(10)
-        if not ok:
-            print("testlatency: Server thread did not produce MPD file in 10 seconds, aborting...", file=sys.stderr)
-            server_thread.stop()
-            sender_thread.stop()
+        time.sleep(1)
         #
         # Check that the sender and server thread are still alive
         #
+        ok = True
         if not sender_thread.is_alive():
             print("testlatency: Sender thread appears to have stopped", file=sys.stderr)
             ok = False
@@ -124,29 +134,29 @@ def main():
         # Start the receiver
         #
         if ok:
-            if args.verbose:
+            if args.debug:
                 print("testlatency: Starting receiver thread...", file=sys.stderr)
             receiver_thread.start()
         else:
             print("testlatency: Skip receiver thread start, stop sender and server threads", file=sys.stderr)
             sender_thread.stop()
             receiver_thread.stop()
-        if args.verbose:
+        if args.debug:
             print("testlatency: Waiting for threads to finish...", file=sys.stderr)
         if sender_thread.is_alive():
             sender_thread.join()
-        if args.verbose:
+        if args.debug:
             print("testlatency: sender thread finished", file=sys.stderr)
         if receiver_thread.is_alive():
             receiver_thread.join()
-        if args.verbose:
+        if args.debug:
             print("testlatency: receiver thread finished", file=sys.stderr)
         if server_thread.is_alive():
-            if args.verbose:
+            if args.debug:
                 print("testlatency: Stopping server thread...", file=sys.stderr)
             server_thread.stop()
             server_thread.join()
-        if args.verbose:
+        if args.debug:
             print("testlatency: server thread finished", file=sys.stderr)
         ok = True
         if server_thread.exit_status != 0:

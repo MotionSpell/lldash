@@ -1,4 +1,5 @@
 # lldash
+[![Build and Test](https://github.com/MotionSpell/lldash/actions/workflows/build-test.yml/badge.svg)](https://github.com/MotionSpell/lldash/actions/workflows/build-test.yml)
 
 Umbrella repository for Motion Spell/CWI Low Latency DASH
 

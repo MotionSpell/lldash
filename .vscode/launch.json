@@ -5,6 +5,7 @@
     "version": "0.2.0",
     "configurations": [
         {
+<<<<<<< HEAD
             "name": "(gdb) Attach",
             "type": "cppdbg",
             "request": "attach",
@@ -22,6 +23,13 @@
                     "ignoreFailures": true
                 }
             ]
+=======
+            "name": "(lldb) Attach",
+            "type": "cppdbg",
+            "request": "attach",
+            "program": "${workspaceFolder}/.venv/bin/python",
+            "MIMode": "lldb"
+>>>>>>> 3d9a96ab537e6dc16610c94f9f0acec43e3107e5
         },
         {
             "name": "Python Debugger: Attach to listening debugpy",
@@ -37,6 +45,18 @@
             "type": "debugpy",
             "request": "attach",
             "processId": "${command:pickProcess}"
+        },
+        {
+            "name": "playout",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/installed/bin/example.exe",
+            "args": [ "http://127.0.0.1:9000/vrtogether.mpd" ],
+            "stopAtEntry": false,
+            "cwd": "/tmp",
+            "environment": [ { "name": "SIGNALS_SMD_PATH", "value": "${workspaceFolder}/installed/lib" } ],
+            "externalConsole": false,
+            "MIMode": "lldb",
         },
         {
             "name": "unit tests",
