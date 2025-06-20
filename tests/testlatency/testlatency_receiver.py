@@ -21,6 +21,7 @@ class ReceiverThread(threading.Thread):
         self.decoder : Optional[cwipc.cwipc_decoder] = None
         self.statistics : list[ReceiverStatistics] = []
         self.stop_requested = False
+        self.last_timestamp : Optional[int] = None
 
     def init(self):
         url = "http://127.0.0.1:9000/bin2dashSink.mpd"
@@ -52,8 +53,12 @@ class ReceiverThread(threading.Thread):
         now = time.time()
         now_ms = int(now * 1000)
         latency = now_ms - timestamp
+        if self.last_timestamp == None:
+            self.last_timestamp = timestamp
+        delta = timestamp - self.last_timestamp
         if self.args.verbose:
-            print(f"testlatency: receiver: now={now}, timestamp={timestamp}, receiver_num={num}, receiver_pointcount={count}, latency={latency}", file=sys.stderr)
+            print(f"testlatency: receiver: now={now}, timestamp={timestamp}, receiver_num={num}, receiver_pointcount={count}, latency={latency}, delta={delta}", file=sys.stderr)
+        self.last_timestamp = timestamp
         self.statistics.append(ReceiverStatistics(timestamp, now, num, count))
         
     def run(self):
