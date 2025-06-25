@@ -27,9 +27,9 @@ Stop-Process -Name "cwipc_view" -Force -ErrorAction SilentlyContinue
 Start-Sleep -Seconds 1
 
 # Verify executable existence
-$EvanescentPath = Join-Path $BuildDir "build\bin\evanescent.exe" 
+$EvanescentPath = Join-Path $BuildDir "build\bin\lldash-relay.exe" 
 if (-not (Test-Path $EvanescentPath)) {
-    Write-Host "ERROR: evanescent.exe not found at $EvanescentPath" -ForegroundColor Red
+    Write-Host "ERROR: lldash-relay.exe not found at $EvanescentPath" -ForegroundColor Red
     exit 1
 }
 
