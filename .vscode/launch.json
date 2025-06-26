@@ -5,7 +5,6 @@
     "version": "0.2.0",
     "configurations": [
         {
-<<<<<<< HEAD
             "name": "(gdb) Attach",
             "type": "cppdbg",
             "request": "attach",
@@ -23,18 +22,19 @@
                     "ignoreFailures": true
                 }
             ]
-=======
+        },
+        {
             "name": "(lldb) Attach",
             "type": "cppdbg",
             "request": "attach",
             "program": "${workspaceFolder}/.venv/bin/python",
             "MIMode": "lldb"
->>>>>>> 3d9a96ab537e6dc16610c94f9f0acec43e3107e5
         },
         {
             "name": "Python Debugger: Attach to listening debugpy",
             "type": "debugpy",
             "request": "attach",
+            "justMyCode": false,
             "connect": {
               "port": 5678
             },
@@ -44,6 +44,7 @@
             "name": "Python Debugger: Attach using Process Id",
             "type": "debugpy",
             "request": "attach",
+            "justMyCode": false,
             "processId": "${command:pickProcess}"
         },
         {
