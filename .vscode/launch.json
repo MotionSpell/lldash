@@ -24,9 +24,17 @@
             ]
         },
         {
+            "name": "(lldb) Attach",
+            "type": "cppdbg",
+            "request": "attach",
+            "program": "${workspaceFolder}/.venv/bin/python",
+            "MIMode": "lldb"
+        },
+        {
             "name": "Python Debugger: Attach to listening debugpy",
             "type": "debugpy",
             "request": "attach",
+            "justMyCode": false,
             "connect": {
               "port": 5678
             },
@@ -36,6 +44,7 @@
             "name": "Python Debugger: Attach using Process Id",
             "type": "debugpy",
             "request": "attach",
+            "justMyCode": false,
             "processId": "${command:pickProcess}"
         },
         {

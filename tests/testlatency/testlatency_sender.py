@@ -71,7 +71,7 @@ class SenderThread(threading.Thread):
         
     def report(self, num : int, timestamp : float, count : int):
         now = time.time()
-        if self.args.debug:
+        if self.args.verbose:
             print(f"testlatency: sender: now={now}, timestamp={timestamp}, sender_num={num}, sender_pointcount={count}", file=sys.stderr)
         self.statistics.append(SenderStatistics(timestamp, now, num, count))
         

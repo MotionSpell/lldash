@@ -16,8 +16,8 @@ env:
   TESTLATENCY_ARGS: --uncompressed --npoints 30000 --duration 30 --fps 30 --seg_dur 1000 --long-poll 2000
 # The following environment variables can be set to run the tests in verbose or debug mode.
 # Only use to find issues that show up in Github Actions but not on developer machines.
-  TESTLATENCY_VERBOSE:
-#  TESTLATENCY_VERBOSE: --verbose
+#  TESTLATENCY_VERBOSE:
+  TESTLATENCY_VERBOSE: --verbose
 #  TESTLATENCY_VERBOSE: --verbose --debug
 #  LLDASH_LOGGING: 1
           
