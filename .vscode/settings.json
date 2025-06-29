@@ -1,8 +1,6 @@
 {
     "files.associations": {
-<<<<<<< HEAD
-        "condition_variable": "cpp"
-=======
+        "condition_variable": "cpp",
         "fstream": "cpp",
         "ostream": "cpp",
         "print": "cpp",
@@ -18,7 +16,18 @@
         "streambuf": "cpp",
         "future": "cpp",
         "thread": "cpp",
-        "vector": "cpp"
->>>>>>> 3d9a96ab537e6dc16610c94f9f0acec43e3107e5
+        "vector": "cpp",
+        "cstdio": "cpp",
+        "cstring": "cpp",
+        "memory": "cpp",
+        "functional": "cpp",
+        "string": "cpp",
+        "stdexcept": "cpp",
+        "chrono": "cpp",
+        "cstddef": "cpp",
+        "ctime": "cpp",
+        "mutex": "cpp",
+        "map": "cpp",
+        "atomic": "cpp"
     }
 }

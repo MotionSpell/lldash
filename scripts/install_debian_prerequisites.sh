@@ -24,6 +24,6 @@ sudo apt-get install -y --no-install-recommends \
     make \
     libtool \
     libtool-bin \
-    astyle \
+    clang-format \
     bc \
     libltdl-dev
