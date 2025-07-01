@@ -6,7 +6,7 @@
 if [ $(uname) = "Linux" ]; then
     sudo apt install -y python3.12-venv
     
-    curl -L -o cwipc-built.tar.gz https://github.com/cwi-dis/cwipc/releases/download/nightly/cwipc-ubuntu2404-nightly-built.tar.gz
+    curl -L -o cwipc-built.tar.gz https://github.com/cwi-dis/cwipc/releases/download/lldash-api-test-1/cwipc-ubuntu2404-lldash-api-test-1-built.tar.gz
     (cd installed && tar xfv ../cwipc-built.tar.gz)
     
     export PATH=$(pwd)/installed/bin:$PATH
