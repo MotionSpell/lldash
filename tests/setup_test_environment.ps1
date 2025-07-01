@@ -2,7 +2,7 @@
 # Use with "source", don't run normally.
 # Installs cwipc, creates a venv in .venv, and installs the cwipc python modules.
 # Adds ./installed/bin to PATH
-curl.exe -L -o cwipc-built.zip https://github.com/cwi-dis/cwipc/releases/download/lldash-api-test-1/cwipc-win10-lldash-api-test-1-built.zip
+curl.exe -L -o cwipc-built.zip https://github.com/cwi-dis/cwipc/releases/download/lldash-api-test-2/cwipc-win10-lldash-api-test-2-built.zip
 Expand-Archive -path .\cwipc-built.zip -Force
 $lldash_dir = Join-Path $PWD installed
 $lldash_bin_dir = Join-Path $lldash_dir bin
