@@ -8,6 +8,7 @@
     "libjpeg-turbo",
     "freetype",
     "nghttp2",
-    "openssl"
+    "openssl",
+    "rapidjson"
   ]
 }
