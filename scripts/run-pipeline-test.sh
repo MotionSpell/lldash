@@ -91,7 +91,7 @@ TIMEOUT=60
 MPD_START_TIME=$(date +%s.%N)
 
 while [ $(echo "$(date +%s.%N) - $MPD_START_TIME < $TIMEOUT" | bc) -eq 1 ]; do
-    if grep -q "Added.*bin2dashSink.mpd" $EVANESCENT_OUTPUT 2>/dev/null; then
+    if grep -q "Added.*cwpic_lldpkg.mpd" $EVANESCENT_OUTPUT 2>/dev/null; then
         MPD_READY=true
         ELAPSED=$(echo "$(date +%s.%N) - $MPD_START_TIME" | bc)
         echo "MPD file is ready after ${ELAPSED} seconds"
