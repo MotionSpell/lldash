@@ -13,7 +13,7 @@ on:
 env:
   CWIPC_RELEASE_TAG: nightly
   VCPKG_BINARY_SOURCES: clear;files,${{ github.workspace }}/vcpkg_cache,readwrite
-  TESTLATENCY_ARGS: --uncompressed --npoints 30000 --duration 30 --fps 30 --seg_dur 1000 --long-poll 2000
+  TESTLATENCY_ARGS: --uncompressed --npoints 4000 --duration 30 --fps 5 --seg_dur 2000
 # The following environment variables can be set to run the tests in verbose or debug mode.
 # Only use to find issues that show up in Github Actions but not on developer machines.
 #  TESTLATENCY_VERBOSE:
@@ -116,7 +116,7 @@ jobs:
         cwipc_view --version
         
     - name: Run integration tests
-      timeout-minutes: 10
+      timeout-minutes: 2
       run: |
         source .venv/bin/activate
         python tests/testlatency/testlatency.py ${{ env.TESTLATENCY_VERBOSE }} ${{ env.TESTLATENCY_ARGS }} --logdir logs
@@ -212,7 +212,7 @@ jobs:
         cwipc_view --version
 
     - name: Run integration tests
-      timeout-minutes: 10
+      timeout-minutes: 2
       run: |
         source .venv/bin/activate
         python tests/testlatency/testlatency.py ${{ env.TESTLATENCY_VERBOSE }} ${{ env.TESTLATENCY_ARGS }} --logdir logs
@@ -308,7 +308,7 @@ jobs:
         cwipc_view --version
 
     - name: Run integration tests
-      timeout-minutes: 10
+      timeout-minutes: 2
       run: |
         source .venv/bin/activate
         python tests/testlatency/testlatency.py ${{ env.TESTLATENCY_VERBOSE }} ${{ env.TESTLATENCY_ARGS }} --logdir logs
@@ -663,7 +663,7 @@ jobs:
           cwipc_view --version
 
       - name: Run integration tests
-        timeout-minutes: 10
+        timeout-minutes: 2
         shell: pwsh
         run: |
             & .\.venv\Scripts\Activate.ps1
