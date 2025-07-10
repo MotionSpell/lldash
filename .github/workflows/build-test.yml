@@ -113,6 +113,7 @@ jobs:
       run: |
         cmake --install build
         source tests/setup_test_environment.sh
+        cwipc_view --version
         
     - name: Run integration tests
       timeout-minutes: 10
@@ -208,6 +209,7 @@ jobs:
         cmake --install build
         brew install python@3.12
         source tests/setup_test_environment.sh
+        cwipc_view --version
 
     - name: Run integration tests
       timeout-minutes: 10
@@ -303,6 +305,7 @@ jobs:
         cmake --install build
         brew install python@3.12
         source tests/setup_test_environment.sh
+        cwipc_view --version
 
     - name: Run integration tests
       timeout-minutes: 10
@@ -657,6 +660,7 @@ jobs:
           & tests\setup_test_environment.ps1
           python --version
           pip freeze
+          cwipc_view --version
 
       - name: Run integration tests
         timeout-minutes: 10
