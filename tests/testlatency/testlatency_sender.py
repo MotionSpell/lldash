@@ -26,7 +26,7 @@ class SenderThread(threading.Thread):
 
     def init(self):
         npoints = self.args.npoints
-        url = "http://127.0.0.1:9000/"
+        url = "http://127.0.0.1:9000/lldash_testlatency.mpd"
         nodrop = True
         if self.args.debug:
             print(f"testlatency: sender: creating cwipc_sink_lldpkg({url}, ...)", file=sys.stderr)

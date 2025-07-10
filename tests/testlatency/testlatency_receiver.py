@@ -24,7 +24,7 @@ class ReceiverThread(threading.Thread):
         self.last_timestamp : Optional[int] = None
 
     def init(self):
-        url = "http://127.0.0.1:9000/cwpic_lldpkg.mpd"
+        url = "http://127.0.0.1:9000/lldash_testlatency.mpd"
         self.source = cwipc.net.source_lldplay.cwipc_source_lldplay(url, verbose=self.args.debug)
         if self.args.uncompressed:
             self.decoder = cwipc.net.source_passthrough.cwipc_source_passthrough(self.source, verbose=self.args.debug)
