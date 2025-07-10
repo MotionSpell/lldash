@@ -73,6 +73,7 @@ jobs:
         packagePreset: linux-production
 
     - name: Save vcpkg cache
+      if: always()
       uses: actions/cache/save@v4
       with:
         path: ${{ github.workspace }}/vcpkg_cache
@@ -177,6 +178,7 @@ jobs:
         packagePreset: mac-production
 
     - name: Save vcpkg cache
+      if: always()
       uses: actions/cache/save@v4
       with:
         path: ${{ github.workspace }}/vcpkg_cache
@@ -273,6 +275,7 @@ jobs:
         packagePreset: intelmac-production
 
     - name: Save vcpkg cache
+      if: always()
       uses: actions/cache/save@v4
       with:
         path: ${{ github.workspace }}/vcpkg_cache
@@ -439,6 +442,7 @@ jobs:
         ./scripts/buildpackage.sh mingw-production
 
     - name: Save vcpkg cache
+      if: always()
       uses: actions/cache/save@v4
       with:
         path: ${{ github.workspace }}/vcpkg_cache
