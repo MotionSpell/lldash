@@ -18,7 +18,7 @@ class ReceiverThread(threading.Thread):
             [
                 "cwipc_view", 
                 "--nodisplay", 
-                "--sub", "http://127.0.0.1:9000/bin2dashSink.mpd"
+                "--sub", "http://127.0.0.1:9000/cwpic_lldpkg.mpd"
             ],
             check=True,
         )

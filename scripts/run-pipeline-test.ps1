@@ -27,9 +27,9 @@ Stop-Process -Name "cwipc_view" -Force -ErrorAction SilentlyContinue
 Start-Sleep -Seconds 1
 
 # Verify executable existence
-$EvanescentPath = Join-Path $BuildDir "build\bin\evanescent.exe" 
+$EvanescentPath = Join-Path $BuildDir "build\bin\lldash-relay.exe" 
 if (-not (Test-Path $EvanescentPath)) {
-    Write-Host "ERROR: evanescent.exe not found at $EvanescentPath" -ForegroundColor Red
+    Write-Host "ERROR: lldash-relay.exe not found at $EvanescentPath" -ForegroundColor Red
     exit 1
 }
 
@@ -58,7 +58,7 @@ Set-Location "$BuildDir"
 `$env:PYTHONUNBUFFERED = "1"
 `$env:SIGNALS_SMD_PATH = "$BuildDir\build\bin"
 `$env:PATH = "$BuildDir\build\bin;$BuildDir\cwipc\install\bin;$BuildDir\build\vcpkg_installed\x64-mingw-dynamic\bin;$BuildDir\build\vcpkg_installed\x64-mingw-dynamic\lib;C:\msys64\mingw64\bin;`$env:PATH"
-& cwipc_view.exe --retimestamp --verbose --nodisplay --sub http://127.0.0.1:9000/bin2dashSink.mpd *> "$ClientOutput" 2>&1
+& cwipc_view.exe --retimestamp --verbose --nodisplay --sub http://127.0.0.1:9000/cwpic_lldpkg.mpd *> "$ClientOutput" 2>&1
 "@ | Out-File -FilePath $ClientScript -Encoding utf8
 
 # Step 1: Launch evanescent server in background

@@ -5,7 +5,7 @@ import time
 from typing import Optional
 from collections import namedtuple
 import cwipc
-import cwipc.net.sink_bin2dash
+import cwipc.net.sink_lldpkg
 import cwipc.net.sink_encoder
 import cwipc.net.sink_passthrough
 
@@ -26,13 +26,13 @@ class SenderThread(threading.Thread):
 
     def init(self):
         npoints = self.args.npoints
-        url = "http://127.0.0.1:9000/"
+        url = "http://127.0.0.1:9000/lldash_testlatency.mpd"
         nodrop = True
         if self.args.debug:
-            print(f"testlatency: sender: creating cwipc_sink_bin2dash({url}, ...)", file=sys.stderr)
-        self.sender = cwipc.net.sink_bin2dash.cwipc_sink_bin2dash(url, self.args.debug, nodrop, seg_dur_in_ms=self.args.seg_dur)
+            print(f"testlatency: sender: creating cwipc_sink_lldpkg({url}, ...)", file=sys.stderr)
+        self.sender = cwipc.net.sink_lldpkg.cwipc_sink_lldpkg(url, self.args.debug, nodrop, seg_dur_in_ms=self.args.seg_dur)
         if self.args.debug:
-            print(f"testlatency: sender: created cwipc_sink_bin2dash({url}, ...)", file=sys.stderr)
+            print(f"testlatency: sender: created cwipc_sink_lldpkg({url}, ...)", file=sys.stderr)
         if self.args.uncompressed:
             self.encoder = cwipc.net.sink_passthrough.cwipc_sink_passthrough(self.sender, self.args.debug, nodrop)
         else:

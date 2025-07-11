@@ -63,8 +63,8 @@ echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
 echo "DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH"
 echo "SIGNALS_SMD_PATH=$SIGNALS_SMD_PATH"
 echo "EVANESCENT_PATH=$EVANESCENT_PATH"
-echo "evanescent: $EVANESCENT_PATH/evanescent.exe"
-ls -l $EVANESCENT_PATH/evanescent.exe
+echo "evanescent: $EVANESCENT_PATH/lldash-relay.exe"
+ls -l $EVANESCENT_PATH/lldash-relay.exe
 x_cwipc_forward=$(which cwipc_forward)
 x_cwipc_view=$(which cwipc_view)
 echo "cwipc_forward: $x_cwipc_forward"
@@ -75,7 +75,7 @@ echo "============== PIPELINE TEST =============="
 
 # Start evanescent server
 echo "Starting evanescent server..."
-${EVANESCENT_PATH}/evanescent.exe --port 9000 > $EVANESCENT_OUTPUT 2>&1 &
+${EVANESCENT_PATH}/lldash-relay.exe --port 9000 > $EVANESCENT_OUTPUT 2>&1 &
 SERVER_PID=$!
 sleep 2
 
@@ -91,7 +91,7 @@ TIMEOUT=60
 MPD_START_TIME=$(date +%s.%N)
 
 while [ $(echo "$(date +%s.%N) - $MPD_START_TIME < $TIMEOUT" | bc) -eq 1 ]; do
-    if grep -q "Added.*bin2dashSink.mpd" $EVANESCENT_OUTPUT 2>/dev/null; then
+    if grep -q "Added.*cwpic_lldpkg.mpd" $EVANESCENT_OUTPUT 2>/dev/null; then
         MPD_READY=true
         ELAPSED=$(echo "$(date +%s.%N) - $MPD_START_TIME" | bc)
         echo "MPD file is ready after ${ELAPSED} seconds"

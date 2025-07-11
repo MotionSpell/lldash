@@ -23,7 +23,7 @@ class ServerThread(threading.Thread):
         if self.args.debug:
             print("testlatency: server: Starting server...", file=sys.stderr)
         cmdline = [
-            "evanescent.exe", 
+            "lldash-relay.exe", 
             "--port", "9000"
         ]
         if self.args.long_poll:
