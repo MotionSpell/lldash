@@ -60,6 +60,20 @@ def main():
         help="long poll timeout the server.",
     )
     parser.add_argument(
+        "--sender-delay",
+        type=float,
+        default=1,
+        metavar="S",
+        help="Wait S seconds after starting the server before starting the sender (default: 1)"
+    )
+    parser.add_argument(
+        "--receiver-delay",
+        type=float,
+        default=1,
+        metavar="S",
+        help="Wait S seconds after starting the sender before starting the receiver (default: 1)"
+    )
+    parser.add_argument(
         "--verbose",
         action="store_true",
         help="Enable verbose output.",
@@ -114,12 +128,12 @@ def main():
         #
         # Wait for a short while, so the server has had a chancce to start.
         #
-        time.sleep(1)
+        time.sleep(args.sender_delay)
         sender_thread.start()
         #
-        # Wait for the MPD to be produced, so we know we can start the receiver.
+        # Wait another short while, so we know we can start the receiver.
         #
-        time.sleep(1)
+        time.sleep(args.receiver_delay)
         #
         # Check that the sender and server thread are still alive
         #
