@@ -20,7 +20,7 @@ class ServerThread(threading.Thread):
         if self.args.logdir:
             serverproc_stderr = open(self.args.logdir + "/testlatency_server.stderr.log", "w")
             serverproc_stdout = open(self.args.logdir + "/testlatency_server.stdout.log", "w")
-        if self.args.debug:
+        if self.args.verbose:
             print("testlatency: server: Starting server...", file=sys.stderr)
         cmdline = [
             "lldash-relay.exe", 
@@ -36,7 +36,7 @@ class ServerThread(threading.Thread):
         )
 
         self.exit_status = self.process.wait()
-        if self.args.debug:
+        if self.args.verbose:
             print("testlatency: server: Server finished with exit status:", self.exit_status, file=sys.stderr)
         if self.did_terminate:
             # Expected exit status for SIGTERM, or 1 on Windows.
@@ -45,5 +45,7 @@ class ServerThread(threading.Thread):
     def stop(self):
         if self.process:
             self.did_terminate = True
+            if self.args.verbose:
+                print("testlatency: server: Killing server...", file=sys.stderr)
             self.process.terminate()
             
