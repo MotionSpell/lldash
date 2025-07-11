@@ -117,7 +117,6 @@ jobs:
         cwipc_view --version
         
     - name: Run integration tests
-      if: false
       timeout-minutes: 2
       run: |
         source .venv/bin/activate
