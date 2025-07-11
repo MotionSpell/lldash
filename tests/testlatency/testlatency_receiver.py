@@ -70,7 +70,9 @@ class ReceiverThread(threading.Thread):
         start_time = time.time()
         num = 0
         self.exit_status = 0
-        while self.decoder.available(True) and not self.stop_requested:
+        while not self.decoder.eof() and not self.stop_requested:
+            if not self.decoder.available(True):
+                continue
             pc = self.decoder.get()
             if pc == None:
                 print("testlatency: receiver: No point cloud received, aborting...", file=sys.stderr)
