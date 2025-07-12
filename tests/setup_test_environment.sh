@@ -27,8 +27,13 @@ if [ $(uname) = "Linux" ]; then
 
 elif [ $(uname) = "Darwin" ]; then
     brew tap cwi-dis/cwipc
+    # Workaround for git-lfs issue with brew install --head:
+    GIT_LFS_WTD="$(git --exec-path)/git-lfs"
+    if [ ! -f ${GIT_LFS_WTD} ]; then
+        ln -s "$(which git-lfs)" ${GIT_LFS_WTD}
+    fi
     # Workaround for issue cwipc#192
-    HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1 brew install cwipc
+    HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1 brew install --head cwipc
     python3.12 -m venv .venv
     source .venv/bin/activate
     CWIPC_PYTHON=$(which python) cwipc_pymodules_install.sh || true
