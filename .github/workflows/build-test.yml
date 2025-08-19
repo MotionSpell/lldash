@@ -13,7 +13,11 @@ on:
       - master
 env:
   CWIPC_RELEASE_TAG: nightly
-  VCPKG_BINARY_SOURCES: clear;files,${{ github.workspace }}/vcpkg_cache,readwrite
+  USERNAME: MotionSpell
+  VCPKG_EXE: ${{ github.workspace }}/vcpkg/vcpkg
+  FEED_URL: https://nuget.pkg.github.com/MotionSpell/index.json
+  VCPKG_BINARY_SOURCES: clear;nuget,https://nuget.pkg.github.com/MotionSpell/index.json,readwrite
+# VCPKG_INSTALL_OPTIONS: --debug
   TESTLATENCY_ARGS: --uncompressed --npoints 4000 --duration 30 --fps 5 --seg_dur 2000
 # The following environment variables can be set to run the tests in verbose or debug mode.
 # Only use to find issues that show up in Github Actions but not on developer machines.
@@ -40,12 +44,27 @@ jobs:
         echo "SIGNALS_REPO=https://github.com/MotionSpell/signals.git" >> $GITHUB_ENV
         echo "BUILD_DIR=${{ github.workspace }}" >> $GITHUB_ENV
 
-    - name: Restore vcpkg cache
-      uses: actions/cache/restore@v4
-      with:
-        path: ${{ github.workspace }}/vcpkg_cache
-        key: vcpkg-linux-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json') }}
-        restore-keys: vcpkg-linux-
+    - name: Bootstrap vcpkg
+      shell: bash
+      run: ${{ github.workspace }}/vcpkg/bootstrap-vcpkg.sh
+
+    - name: Install mono for vcpkg
+      shell: bash
+      run: apt install mono-complete
+
+    - name: Add NuGet Sources for vcpkg
+      shell: bash
+      run: |
+        mono `${{ env.VCPKG_EXE }} fetch nuget | tail -n 1` \
+          sources add \
+          -Source "${{ env.FEED_URL }}" \
+          -StorePasswordInClearText \
+          -Name GitHubPackages \
+          -UserName "${{ env.USERNAME }}" \
+          -Password "${{ secrets.GH_PACKAGES_TOKEN }}"
+        mono `${{ env.VCPKG_EXE }} fetch nuget | tail -n 1` \
+          setapikey "${{ secrets.GH_PACKAGES_TOKEN }}" \
+          -Source "${{ env.FEED_URL }}"
 
     - name: Install dependencies with install_debian_prerequisites.sh script
       run: scripts/install_debian_prerequisites.sh
@@ -72,13 +91,6 @@ jobs:
         buildPreset: linux-production
         testPreset: linux-production
         packagePreset: linux-production
-
-    - name: Save vcpkg cache
-      if: always()
-      uses: actions/cache/save@v4
-      with:
-        path: ${{ github.workspace }}/vcpkg_cache
-        key: vcpkg-linux-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json') }}
 
     - name: Upload vcpkg buildtrees in case of failure
       if: ${{ failure() }} 
@@ -152,12 +164,27 @@ jobs:
       run: |
         echo "BUILD_DIR=${{ github.workspace }}" >> $GITHUB_ENV
 
-    - name: Restore vcpkg cache
-      uses: actions/cache/restore@v4
-      with:
-        path: ${{ github.workspace }}/vcpkg_cache
-        key: vcpkg-mac-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json') }}
-        restore-keys: vcpkg-mac-
+    - name: Bootstrap vcpkg
+      shell: bash
+      run: ${{ github.workspace }}/vcpkg/bootstrap-vcpkg.sh
+
+    - name: Install nuget and mono for vcpkg
+      shell: bash
+      run: brew install mono nuget
+
+    - name: Add NuGet Sources for vcpkg
+      shell: bash
+      run: |
+        mono `${{ env.VCPKG_EXE }} fetch nuget | tail -n 1` \
+          sources add \
+          -Source "${{ env.FEED_URL }}" \
+          -StorePasswordInClearText \
+          -Name GitHubPackages \
+          -UserName "${{ env.USERNAME }}" \
+          -Password "${{ secrets.GH_PACKAGES_TOKEN }}"
+        mono `${{ env.VCPKG_EXE }} fetch nuget | tail -n 1` \
+          setapikey "${{ secrets.GH_PACKAGES_TOKEN }}" \
+          -Source "${{ env.FEED_URL }}"
   
     - name: Install dependencies with install_homebrew_prerequisites.sh script
       run: scripts/install_homebrew_prerequisites.sh
@@ -177,13 +204,6 @@ jobs:
         buildPreset: mac-production
         testPreset: mac-production
         packagePreset: mac-production
-
-    - name: Save vcpkg cache
-      if: always()
-      uses: actions/cache/save@v4
-      with:
-        path: ${{ github.workspace }}/vcpkg_cache
-        key: vcpkg-mac-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json') }}
 
     - name: Upload vcpkg buildtrees in case of failure
       if: ${{ failure() }} 
@@ -249,12 +269,27 @@ jobs:
       run: |
         echo "BUILD_DIR=${{ github.workspace }}" >> $GITHUB_ENV
 
-    - name: Restore vcpkg cache
-      uses: actions/cache/restore@v4
-      with:
-        path: ${{ github.workspace }}/vcpkg_cache
-        key: vcpkg-intelmac-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json') }}
-        restore-keys: vcpkg-intelmac-
+    - name: Bootstrap vcpkg
+      shell: bash
+      run: ${{ github.workspace }}/vcpkg/bootstrap-vcpkg.sh
+
+    - name: Install nuget and mono for vcpkg
+      shell: bash
+      run: brew install mono nuget
+
+    - name: Add NuGet Sources for vcpkg
+      shell: bash
+      run: |
+        mono `${{ env.VCPKG_EXE }} fetch nuget | tail -n 1` \
+          sources add \
+          -Source "${{ env.FEED_URL }}" \
+          -StorePasswordInClearText \
+          -Name GitHubPackages \
+          -UserName "${{ env.USERNAME }}" \
+          -Password "${{ secrets.GH_PACKAGES_TOKEN }}"
+        mono `${{ env.VCPKG_EXE }} fetch nuget | tail -n 1` \
+          setapikey "${{ secrets.GH_PACKAGES_TOKEN }}" \
+          -Source "${{ env.FEED_URL }}"
 
     - name: Install dependencies with install_homebrew_prerequisites.sh script
       run: scripts/install_homebrew_prerequisites.sh
@@ -274,13 +309,6 @@ jobs:
         buildPreset: intelmac-production
         testPreset: intelmac-production
         packagePreset: intelmac-production
-
-    - name: Save vcpkg cache
-      if: always()
-      uses: actions/cache/save@v4
-      with:
-        path: ${{ github.workspace }}/vcpkg_cache
-        key: vcpkg-intelmac-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json') }}
 
     - name: Upload vcpkg buildtrees in case of failure
       if: ${{ failure() }} 
@@ -408,13 +436,24 @@ jobs:
         echo "BUILD_DIR=$env:GITHUB_WORKSPACE" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
       shell: pwsh
 
-    - name: Restore vcpkg cache
-      uses: actions/cache/restore@v4
-      with:
-        path: ${{ github.workspace }}/vcpkg_cache
-        key: vcpkg-windows-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json') }}
-        restore-keys: vcpkg-windows-
-        
+    - name: Bootstrap vcpkg
+      shell: pwsh
+      run: ${{ github.workspace }}/vcpkg/bootstrap-vcpkg.bat
+
+    - name: Add NuGet sources for vcpkg
+      shell: pwsh
+      run: |
+        .$(${{ env.VCPKG_EXE }} fetch nuget) `
+          sources add `
+          -Source "${{ env.FEED_URL }}" `
+          -StorePasswordInClearText `
+          -Name GitHubPackages `
+          -UserName "${{ env.USERNAME }}" `
+          -Password "${{ secrets.GH_PACKAGES_TOKEN }}"
+        .$(${{ env.VCPKG_EXE }} fetch nuget) `
+          setapikey "${{ secrets.GH_PACKAGES_TOKEN }}" `
+          -Source "${{ env.FEED_URL }}"
+
     - name: Setup MSYS2
       uses: msys2/setup-msys2@v2
       id: msys2
@@ -441,13 +480,6 @@ jobs:
         make --version
         mingw32-make --version
         ./scripts/buildpackage.sh mingw-production
-
-    - name: Save vcpkg cache
-      if: always()
-      uses: actions/cache/save@v4
-      with:
-        path: ${{ github.workspace }}/vcpkg_cache
-        key: vcpkg-windows-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json') }}
 
     - name: Upload vcpkg buildtrees in case of failure
       if: ${{ failure() }} 
