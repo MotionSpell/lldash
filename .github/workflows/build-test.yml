@@ -272,9 +272,9 @@ jobs:
       shell: bash
       run: ${{ github.workspace }}/vcpkg/bootstrap-vcpkg.sh
 
-    - name: Install nuget and mono for vcpkg
+    - name: Install nuget for vcpkg
       shell: bash
-      run: brew install mono nuget
+      run: brew install nuget
 
     - name: Add NuGet Sources for vcpkg
       shell: bash
