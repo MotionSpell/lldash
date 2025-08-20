@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - master
-      - 67-nuget-vcpkg-caching
     tags:
       - v*
       - exp*
