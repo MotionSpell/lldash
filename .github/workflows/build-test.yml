@@ -49,7 +49,7 @@ jobs:
 
     - name: Install mono for vcpkg
       shell: bash
-      run: apt install mono-complete
+      run: sudo apt install mono-complete
 
     - name: Add NuGet Sources for vcpkg
       shell: bash
