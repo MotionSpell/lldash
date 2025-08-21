@@ -274,6 +274,7 @@ jobs:
       run: ${{ github.workspace }}/vcpkg/bootstrap-vcpkg.sh
 
     - name: Install nuget for vcpkg
+      if: false # Let's see if nuget is installed already, you never know.
       shell: bash
       run: brew install nuget
 
