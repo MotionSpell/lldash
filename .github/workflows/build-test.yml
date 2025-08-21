@@ -194,6 +194,7 @@ jobs:
         cmakeVersion: "~3.31.1"
     
     - name: Setup vcpkg
+      if: false # Testing if nuget caching works when vcpkg is executed by cmake.
       uses: lukka/run-vcpkg@v11
         
     - name: CMake configure, build vcpkg packages, build & test
@@ -299,6 +300,7 @@ jobs:
         cmakeVersion: "~3.31.1"
     
     - name: Setup vcpkg
+      if: false # Testing if nuget caching works when vcpkg is executed by cmake.
       uses: lukka/run-vcpkg@v11
         
     - name: CMake configure, build vcpkg packages, build & test
