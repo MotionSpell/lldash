@@ -21,16 +21,17 @@ lldash is a comprehensive repository that includes various components for Low La
 
 The repository includes the following components:
 
-- **signals**: A modern C++ framework to build modular applications.
 - **lldash-relay**: A low-latency HTTP server for relaying DASH streams.
 - **lldash-playout**: A component for receiving compressed video from the network.
 - **lldash-srd-packager**: A component for packaging point clouds and TVMs into DASH streams.
+
+These components rely on **signals**, a modern C++ framework to build modular applications.
 
 # Build
 
 lldash can be built using `CMake` with presets and `vcpkg` to manage dependencies. Builds have been tested on Linux, Windows (64 bit Intel) and Mac (Intel or Silicon).
 
-If you get the build working for Linux or Windows on Arm64: please let us know.
+If you get the build working for Linux or Windows on arm64: please let us know.
 
 ## Build Prerequisites
 
@@ -58,7 +59,6 @@ If you get the build working for Linux or Windows on Arm64: please let us know.
 - Install `XCode`, or at least the developer tools.
 - Install `Homebrew` from https://brew.sh
 - Run `scripts/install_homebrew_prerequisites.sh`
-
 
 ### Linux (Intel)
 
@@ -103,7 +103,7 @@ There is currently one integration test that creates a full pipeline, runs it fo
 Use PowerShell, run
 
 ```
-& scripts\setup_test_environment.ps1
+& tests\setup_test_environment.ps1
 ```
 
 This downloads and installs the test prerequisites (mainly `cwipc`) and prepares the Python `venv` to run the tests.
@@ -119,7 +119,7 @@ python .\tests\testlatency\testlatency.py --seg_dur 1000 --duration 30
 Run
 
 ```
-source scripts/setup_test_environment.sh
+source tests/setup_test_environment.sh
 ```
 
 This downloads and installs the test prerequisites (mainly `cwipc`) and prepares the Python `venv` to run the tests. Note you must use `source` because `PATH` and some other environment variables are changed.
@@ -196,6 +196,4 @@ We welcome contributions to improve lldash. Please read the contributing guideli
 
 # License
 
-
-
-
+BSD-3 "New", see LICENSE file.
