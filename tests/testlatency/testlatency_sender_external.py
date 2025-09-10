@@ -23,6 +23,8 @@ class SenderThread(threading.Thread):
         ]
         if self.args.seg_dur > 0:
             cmd_line += ["--seg_dur", str(self.args.seg_dur)]
+        if self.args.timeshift_buffer_ms > 0:
+            cmd_line += ["--timeshift_buffer_ms", str(self.args.timeshift_buffer_ms)]
         result = subprocess.run(
             cmd_line,
             check=True
