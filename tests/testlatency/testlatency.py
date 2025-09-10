@@ -48,6 +48,12 @@ def main():
         help="Segment duration in milliseconds. Default is leave to lldash-srd-packager.",
     )
     parser.add_argument(
+        "--timeshift_buffer_ms",
+        type=int,
+        default=0,
+        help="Time shift buffer in milliseconds. Default is 0 (=infinite: segments won't be deleted).",
+    )
+    parser.add_argument(
         "--server_host",
         type=str,
         default="localhost",
