@@ -269,14 +269,13 @@ jobs:
       run: |
         echo "BUILD_DIR=${{ github.workspace }}" >> $GITHUB_ENV
 
+    - name: Install mono for vcpkg
+      shell: bash
+      run: brew install mono
+
     - name: Bootstrap vcpkg
       shell: bash
       run: ${{ github.workspace }}/vcpkg/bootstrap-vcpkg.sh
-
-    - name: Install nuget for vcpkg
-      if: false # Let's see if nuget is installed already, you never know.
-      shell: bash
-      run: brew install nuget
 
     - name: Add NuGet Sources for vcpkg
       shell: bash
