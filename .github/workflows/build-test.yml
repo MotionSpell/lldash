@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - master
-      - 89-improve-vcpkg-caching
     tags:
       - v*
       - exp*
