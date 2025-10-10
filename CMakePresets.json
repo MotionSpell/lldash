@@ -12,8 +12,7 @@
 		"description" : "Build with vcpkg to install required dependencies",
   		"binaryDir": "${sourceDir}/build",
       	"cacheVariables": {
-        	"CMAKE_TOOLCHAIN_FILE": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake",
-			"VCPKG_INSTALL_OPTIONS": "--debug"
+        	"CMAKE_TOOLCHAIN_FILE": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake"
       	},
   		"hidden": true
   	},	
