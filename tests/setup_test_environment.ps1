@@ -2,6 +2,7 @@
 # Use with "source", don't run normally.
 # Installs cwipc, creates a venv in .venv, and installs the cwipc python modules.
 # Adds ./installed/bin to PATH
+Remove-Item .\cwipc-built -Recurse -Force
 curl.exe -L -o cwipc-built.zip https://github.com/cwi-dis/cwipc/releases/download/nightly/cwipc-win10-nightly-built.zip
 Expand-Archive -path .\cwipc-built.zip -Force
 $lldash_dir = Join-Path $PWD installed
