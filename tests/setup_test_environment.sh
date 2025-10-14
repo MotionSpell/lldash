@@ -33,6 +33,8 @@ elif [ $(uname) = "Darwin" ]; then
         ln -s "$(which git-lfs)" ${GIT_LFS_WTD}
     fi
     # Workaround for issue cwipc#192
+    brew install libomp
+    brew link --force libomp
     HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1 brew install --head cwipc
     python3.12 -m venv .venv
     source .venv/bin/activate
