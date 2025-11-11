@@ -1,10 +1,19 @@
 import sys
-from collections import namedtuple
+from typing import NamedTuple
 import statistics
 from testlatency_receiver import ReceiverStatistics
 from testlatency_sender import SenderStatistics
 
-AnalyserResults = namedtuple("AnalyserResults", ["count_total", "count_lost_initial", "count_lost_running", "latency_ignored_count", "latency_min", "latency_max", "latency_avg", "latency_stddev"])
+class AnalyserResults(NamedTuple):
+    count_total : int
+    count_lost_initial : int
+    count_lost_running : int
+    latency_ignored_count : int
+    latency_min : float
+    latency_max : float
+    latency_avg : float
+    latency_stddev : float
+    
 class Analyser:
     def __init__(self, receiver_statistics: list[ReceiverStatistics], sender_statistics: list[SenderStatistics]):
         self.receiver_statistics = receiver_statistics

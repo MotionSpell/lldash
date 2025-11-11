@@ -2,16 +2,22 @@ import argparse
 import threading
 import sys
 import time
-from typing import Optional
-from collections import namedtuple
+from typing import Optional, NamedTuple, List
 import cwipc
+from cwipc.net.abstract import cwipc_sink_abstract, cwipc_rawsink_abstract
 import cwipc.net.sink_lldpkg
 import cwipc.net.sink_encoder
 import cwipc.net.sink_passthrough
 
-SenderStatistics = namedtuple("SenderStatistics", ["timestamp", "sender_wallclock", "sender_num", "sender_count"])
+
+class SenderStatistics(NamedTuple):
+    timestamp : float
+    sender_wallclock : float
+    sender_num : int
+    sender_count : int
 
 class SenderThread(threading.Thread):
+
     def __init__(self, args : argparse.Namespace):
         super().__init__(daemon=True)
         self.name = "testlatency.SenderThread"
@@ -19,8 +25,8 @@ class SenderThread(threading.Thread):
         self.exit_status = -1
         self.alive = True
         self.source : Optional[cwipc.cwipc_tiledsource_wrapper] = None
-        self.encoder : Optional[cwipc.cwipc_encoder] = None
-        self.sender : Optional[cwipc.net.cwipc_rawsink_abstract] = None
+        self.encoder : Optional[cwipc_sink_abstract] = None
+        self.sender : Optional[cwipc_rawsink_abstract] = None
         self.statistics : List[SenderStatistics] = []
         self.stop_requested = False
 
@@ -55,18 +61,19 @@ class SenderThread(threading.Thread):
     def close(self):
         self.alive = False
         if self.args.verbose:
-            self.encoder.statistics()
-            self.sender.statistics()
+            if self.encoder:
+                self.encoder.statistics()
+            if self.sender:
+                self.sender.statistics()
         # self.source.stop()
         # self.sender.stop()
-        self.encoder.stop()
-        
-        
-        self.source.free()
-        self.source = None
-        # self.encoder.free()
+        if self.encoder:
+            self.encoder.stop()
+            # self.encoder.free()
         self.encoder = None
-        self.sender.free()
+        if self.source:
+            self.source.free()
+        self.source = None
         self.sender = None
         
     def report(self, num : int, timestamp : float, count : int):

@@ -2,7 +2,6 @@ import threading
 import argparse
 import subprocess
 import sys
-import time
 from typing import Optional
 
 class ServerThread(threading.Thread):
