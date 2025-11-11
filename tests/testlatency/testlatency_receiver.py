@@ -44,7 +44,8 @@ class ReceiverThread(threading.Thread):
         # self.source.stop()
         self.decoder.stop()
         
-        self.source.free()
+        if hasattr(self.source, 'free'):
+            self.source.free()
         self.source = None
         self.decoder.free()
         self.decoder = None
