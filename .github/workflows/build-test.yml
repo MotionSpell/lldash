@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - 95-test-tiling-multiquality
     tags:
       - v*
       - exp*
@@ -16,12 +17,12 @@ env:
   VCPKG_EXE: ${{ github.workspace }}/vcpkg/vcpkg
   FEED_URL: https://nuget.pkg.github.com/MotionSpell/index.json
   VCPKG_BINARY_SOURCES: clear;nuget,https://nuget.pkg.github.com/MotionSpell/index.json,readwrite
-  TESTLATENCY_ARGS: --uncompressed --npoints 4000 --duration 30 --fps 5 --seg_dur 2000
+  TESTLATENCY_ARGS: --uncompressed --npoints 4000 --duration 30 --fps 5 --seg_dur 2000 --print-latencies
 # The following environment variables can be set to run the tests in verbose or debug mode.
 # Only use to find issues that show up in Github Actions but not on developer machines.
-#  TESTLATENCY_VERBOSE:
+  TESTLATENCY_VERBOSE:
 #  TESTLATENCY_VERBOSE: --verbose
-  TESTLATENCY_VERBOSE: --verbose --debug
+#  TESTLATENCY_VERBOSE: --verbose --debug
 #  LLDASH_LOGGING: 1
           
 jobs:
