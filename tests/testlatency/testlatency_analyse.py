@@ -51,7 +51,7 @@ class Analyser:
             for first_below_average in range(1, len(latencies)):
                 if latencies[first_below_average] < full_average:
                     break
-            latencies = latencies[first_below_average:]
+            latencies = latencies[first_below_average:-1]
         else:
             first_below_average = 0
         latency_min = min(latencies) if latencies else 0
