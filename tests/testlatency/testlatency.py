@@ -39,7 +39,12 @@ def main():
     parser.add_argument(
         "--all_latencies",
         action="store_true",
-        help="Don't ignore initial latencies in the analysis.",
+        help="Don't ignore initial and final latencies in the analysis.",
+    )
+    parser.add_argument(
+        "--print-latencies",
+        action="store_true",
+        help="Print all receiver latencies"
     )
     parser.add_argument(
         "--seg_dur",
@@ -188,6 +193,12 @@ def main():
         analyser = Analyser(receiver_thread.statistics, sender_thread.statistics)
         results = analyser.analyse(not args.all_latencies)
         analyser.print(results)
+        if args.print_latencies:
+            print(f"testlatency: all_receiver_latencies = [")
+            for rs in receiver_thread.statistics:
+                latency = rs.receiver_wallclock - (rs.timestamp / 1000.0)
+                print(f"\t{latency:.3f},")
+            print(f"]")
         if ok and analyser.judge(results):
             print("testlatency: Latency test passed.")
             return 0
