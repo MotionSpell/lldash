@@ -87,8 +87,9 @@ class ReceiverThread(threading.Thread):
                 continue
             pc = self.decoder.get()
             if pc == None:
-                print("testlatency: receiver: No point cloud received, aborting...", file=sys.stderr)
-                self.exit_status = -1
+                if not self.decoder.eof():
+                    print("testlatency: receiver: No point cloud received but not eof(), aborting...", file=sys.stderr)
+                    self.exit_status = -1
                 break
             self.report(num, pc.timestamp(), pc.count())
             num += 1
