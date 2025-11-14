@@ -50,6 +50,17 @@ def main():
         help="Override/append encoder parameter (jpeg quality)"
     )
     parser.add_argument(
+        "--switch-initial",
+        action="store_true",
+        help="Switch receiver quality immedeately after starting playback"
+    )
+    parser.add_argument(
+        "--switch-interval",
+        type=float,
+        metavar="S",
+        help="Switch receiver quality every S seconds"
+    )
+    parser.add_argument(
         "--synchronizer", 
         action="store_true", 
         help="Use a synchronizer on the receiver side. Automatic when tiled streams are used."
