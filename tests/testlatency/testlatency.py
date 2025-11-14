@@ -49,7 +49,11 @@ def main():
         metavar="N", 
         help="Override/append encoder parameter (jpeg quality)"
     )
-
+    parser.add_argument(
+        "--synchronizer", 
+        action="store_true", 
+        help="Use a synchronizer on the receiver side. Automatic when tiled streams are used."
+    )
     parser.add_argument(
         "--duration",
         type=int,

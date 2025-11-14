@@ -9,7 +9,8 @@ from cwipc.net.abstract import cwipc_rawsource_abstract, cwipc_source_abstract
 import cwipc.net.source_passthrough
 import cwipc.net.source_lldplay
 import cwipc.net.source_decoder
-from typing import Optional, NamedTuple
+import cwipc.net.source_synchronizer
+from typing import Optional, NamedTuple, List
 
 class ReceiverStatistics(NamedTuple):
     timestamp : int
@@ -22,44 +23,46 @@ class ReceiverThread(threading.Thread):
         self.name = "testlatency.ReceiverThread"
         self.args = args
         self.exit_status = -1
-        self.source : Optional[cwipc_rawsource_abstract] = None
-        self.decoder : Optional[cwipc_source_abstract] = None
+        self.needs_synchronizer = self.args.tiled or self.args.synchronizer
+        self.pc_source : Optional[cwipc_source_abstract] = None
         self.statistics : list[ReceiverStatistics] = []
         self.stop_requested = False
         self.last_timestamp : Optional[int] = None
 
     def init(self):
         url = "http://127.0.0.1:9000/lldash_testlatency.mpd"
-        self.source = cwipc.net.source_lldplay.cwipc_source_lldplay(url, verbose=self.args.debug)
         if self.args.uncompressed:
-            self.decoder = cwipc.net.source_passthrough.cwipc_source_passthrough(self.source, verbose=self.args.debug)
+            decoder_factory = cwipc.net.source_passthrough.cwipc_source_passthrough
         else:
-            self.decoder = cwipc.net.source_decoder.cwipc_source_decoder(self.source, verbose=self.args.debug)
+            decoder_factory = cwipc.net.source_decoder.cwipc_source_decoder
         
-        assert self.decoder
-        if hasattr(self.decoder, 'start'):
-            self.decoder.start()
+        if self.needs_synchronizer:
+            raw_multisource = cwipc.net.source_lldplay.cwipc_multisource_lldplay(url, verbose=self.args.debug)
+            n_tile = raw_multisource.get_tile_count()
+            if self.args.verbose:
+                print(f"testlatency: receiver: multisource has {n_tile} tiles", file=sys.stderr)
+            decoders : List[cwipc_source_abstract] = []
+            for i in range(n_tile):
+                raw_source = raw_multisource.get_tile_source(i)
+                decoder = decoder_factory(raw_source, verbose=self.args.debug)
+                decoders.append(decoder)
+            self.pc_source = cwipc.net.source_synchronizer.cwipc_source_synchronizer(raw_source, decoders, verbose=self.args.debug)
         else:
-            self.source.start()
+            raw_source = cwipc.net.source_lldplay.cwipc_source_lldplay(url, verbose=self.args.debug)
+            self.pc_source = decoder_factory(raw_source, verbose=self.args.debug)
+        assert self.pc_source
+        self.pc_source.start()
 
     def stop(self):
         self.stop_requested = True
 
     def close(self):
         if self.args.verbose:
-            assert self.source
-            self.source.statistics()
-            if hasattr(self.decoder, 'statistics'):
-                self.decoder.statistics()
-        # self.source.stop()
-        if self.decoder and hasattr(self.decoder, 'stop'):
-            self.decoder.stop()
-        
-        if self.source and hasattr(self.source, 'free'):
-            self.source.free()
-        self.source = None
-        self.decoder.free()
-        self.decoder = None
+            self.pc_source.statistics()
+        if self.pc_source:
+            self.pc_source.stop()
+            self.pc_source.free()
+            self.pc_source = None
 
     def report(self, num : int, timestamp_ms : int, count : int):
         now = time.time()
@@ -77,17 +80,16 @@ class ReceiverThread(threading.Thread):
         if self.args.debug:
             print("testlatency: Starting receiver...", file=sys.stderr)
         self.init()
-        assert self.source
-        assert self.decoder
+        assert self.pc_source
         start_time = time.time()
         num = 0
         self.exit_status = 0
-        while not self.decoder.eof() and not self.stop_requested:
-            if not self.decoder.available(True):
+        while not self.pc_source.eof() and not self.stop_requested:
+            if not self.pc_source.available(True):
                 continue
-            pc = self.decoder.get()
+            pc = self.pc_source.get()
             if pc == None:
-                if not self.decoder.eof():
+                if not self.pc_source.eof():
                     print("testlatency: receiver: No point cloud received but not eof(), aborting...", file=sys.stderr)
                     self.exit_status = -1
                 break
