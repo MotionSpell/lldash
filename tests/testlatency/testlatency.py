@@ -31,6 +31,26 @@ def main():
         help="Use uncompressed point clouds.",
     )
     parser.add_argument(
+        "--tiled", 
+        action="store_true", 
+        help="Use tiled streams"
+    )
+    parser.add_argument(
+        "--octree_bits", 
+        action="append", 
+        type=int, 
+        metavar="N", 
+        help="Override/append encoder parameter (depth of octree)"
+    )
+    parser.add_argument(
+        "--jpeg_quality", 
+        action="append", 
+        type=int, 
+        metavar="N", 
+        help="Override/append encoder parameter (jpeg quality)"
+    )
+
+    parser.add_argument(
         "--duration",
         type=int,
         default=20,

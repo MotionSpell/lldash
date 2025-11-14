@@ -31,7 +31,14 @@ class SenderThread(threading.Thread):
         self.stop_requested = False
 
     def init(self):
+        #
+        # Create source
+        #
         npoints = self.args.npoints
+        self.source = cwipc.cwipc_synthetic(self.args.fps, npoints)
+        #
+        # Create sender
+        #
         url = "http://127.0.0.1:9000/lldash_testlatency.mpd"
         nodrop = True
         if self.args.debug:
@@ -39,13 +46,41 @@ class SenderThread(threading.Thread):
         self.sender = cwipc.net.sink_lldpkg.cwipc_sink_lldpkg(url, self.args.debug, nodrop, seg_dur_in_ms=self.args.seg_dur)
         if self.args.debug:
             print(f"testlatency: sender: created cwipc_sink_lldpkg({url}, ...)", file=sys.stderr)
-        if self.args.uncompressed:
-            self.encoder = cwipc.net.sink_passthrough.cwipc_sink_passthrough(self.sender, self.args.debug, nodrop)
-        else:
-            self.encoder = cwipc.net.sink_encoder.cwipc_sink_encoder(self.sender, self.args.debug, nodrop)
-        self.source = cwipc.cwipc_synthetic(self.args.fps, npoints)
+
+        #
+        # Determine encoder parameters
+        #
+        octree_bits = self.args.octree_bits
+        jpeg_quality = self.args.jpeg_quality
+        tiledescriptions : Optional[List[dict]] = None
+        if self.args.tiled:
+            assert hasattr(self.source, 'maxtile')
+            tilecount = self.source.maxtile() # type: ignore
+            td = [self.source.get_tileinfo_dict(i) for i in range(tilecount)] # type: ignore
+            tiledescriptions = filter(lambda e: e['cameraMask'] != 0, td)
+            tiledescriptions = list(tiledescriptions)
+        n_tiles = len(tiledescriptions) if tiledescriptions else 1
+        n_quality = len(jpeg_quality) if jpeg_quality and type(jpeg_quality) == list else 1
+        n_octree_bits = len(octree_bits) if octree_bits and type(octree_bits) == list else 1
+        n_streams = n_tiles * n_quality * n_octree_bits
+        if self.args.verbose:
+            print(f"test_latency: sender: {n_streams} streams")
         
+        #
+        # Find encoder factory
+        #
+        if self.args.uncompressed:
+            encoder_factory = cwipc.net.sink_passthrough.cwipc_sink_passthrough
+        else:
+            encoder_factory = cwipc.net.sink_encoder.cwipc_sink_encoder
+        
+        self.encoder = encoder_factory(self.sender, self.args.debug, nodrop)
         self.encoder.set_producer(self)
+        #
+        # Set encoder parameter sets
+        #
+        if octree_bits or jpeg_quality or tiledescriptions:
+            self.encoder.set_encoder_params(octree_bits=octree_bits, jpeg_quality=jpeg_quality, tiles=tiledescriptions)
 
         # self.sender.start()
         self.encoder.start()
