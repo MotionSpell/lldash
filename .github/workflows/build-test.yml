@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - master
-      - 95-test-tiling-multiquality
     tags:
       - v*
       - exp*
