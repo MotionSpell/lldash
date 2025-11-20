@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.99.8] - 2025-11-20
+
+- Various changes to test scripts
+- Various changes to CI/CD builds
+- All vcpkg packages updated to new versions
+
 ## [0.99.7] - 2025-08-21
 
 - Cleanup of sources (#58, #85)
