@@ -11,6 +11,8 @@ on:
   pull_request:
     branches:
       - master
+permissions:
+  packages: write
 env:
   CWIPC_RELEASE_TAG: nightly
   USERNAME: MotionSpell
@@ -60,9 +62,9 @@ jobs:
           -StorePasswordInClearText \
           -Name GitHubPackages \
           -UserName "${{ env.USERNAME }}" \
-          -Password "${{ secrets.GH_PACKAGES_TOKEN }}"
+          -Password "${{ github.token }}"
         mono `${{ env.VCPKG_EXE }} fetch nuget | tail -n 1` \
-          setapikey "${{ secrets.GH_PACKAGES_TOKEN }}" \
+          setapikey "${{ github.token }}" \
           -Source "${{ env.FEED_URL }}"
 
     - name: Install dependencies with install_debian_prerequisites.sh script
@@ -180,9 +182,9 @@ jobs:
           -StorePasswordInClearText \
           -Name GitHubPackages \
           -UserName "${{ env.USERNAME }}" \
-          -Password "${{ secrets.GH_PACKAGES_TOKEN }}"
+          -Password "${{ github.token }}"
         mono `${{ env.VCPKG_EXE }} fetch nuget | tail -n 1` \
-          setapikey "${{ secrets.GH_PACKAGES_TOKEN }}" \
+          setapikey "${{ github.token }}" \
           -Source "${{ env.FEED_URL }}"
   
     - name: Install dependencies with install_homebrew_prerequisites.sh script
@@ -286,9 +288,9 @@ jobs:
           -StorePasswordInClearText \
           -Name GitHubPackages \
           -UserName "${{ env.USERNAME }}" \
-          -Password "${{ secrets.GH_PACKAGES_TOKEN }}"
+          -Password "${{ github.token }}"
         mono `${{ env.VCPKG_EXE }} fetch nuget | tail -n 1` \
-          setapikey "${{ secrets.GH_PACKAGES_TOKEN }}" \
+          setapikey "${{ github.token }}" \
           -Source "${{ env.FEED_URL }}"
 
     - name: Install dependencies with install_homebrew_prerequisites.sh script
@@ -450,9 +452,9 @@ jobs:
           -StorePasswordInClearText `
           -Name GitHubPackages `
           -UserName "${{ env.USERNAME }}" `
-          -Password "${{ secrets.GH_PACKAGES_TOKEN }}"
+          -Password "${{ github.token }}"
         .$(${{ env.VCPKG_EXE }} fetch nuget) `
-          setapikey "${{ secrets.GH_PACKAGES_TOKEN }}" `
+          setapikey "${{ github.token }}" `
           -Source "${{ env.FEED_URL }}"
 
     - name: Setup MSYS2
