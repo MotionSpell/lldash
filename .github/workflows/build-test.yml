@@ -3,6 +3,7 @@ name: Build and Test
 on:
   push:
     branches:
+      - 91-token-caching
       - master
     tags:
       - v*
