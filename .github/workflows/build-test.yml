@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - 104-cwipc-v80
     tags:
       - v*
       - exp*
