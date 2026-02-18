@@ -446,6 +446,7 @@ jobs:
     - name: Add NuGet sources for vcpkg
       shell: pwsh
       run: |
+        ${{ env.VCPKG_EXE }} fetch nuget
         .$(${{ env.VCPKG_EXE }} fetch nuget) `
           sources add `
           -Source "${{ env.FEED_URL }}" `
