@@ -36,6 +36,9 @@ class SenderThread(threading.Thread):
         #
         npoints = self.args.npoints
         self.source = cwipc.cwipc_synthetic(self.args.fps, npoints)
+        ok = self.source.start()
+        if not ok:
+            print(f"testlatency: could not start() synthetic point cloud source")
         #
         # Create sender
         #
@@ -104,10 +107,7 @@ class SenderThread(threading.Thread):
         # self.sender.stop()
         if self.encoder:
             self.encoder.stop()
-            # self.encoder.free()
         self.encoder = None
-        if self.source:
-            self.source.free()
         self.source = None
         self.sender = None
         

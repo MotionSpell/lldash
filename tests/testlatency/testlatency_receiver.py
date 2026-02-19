@@ -5,7 +5,7 @@ import sys
 import time
 from collections import namedtuple
 import cwipc
-from cwipc.net.abstract import cwipc_rawmultisource_abstract, cwipc_source_abstract
+from cwipc.net.abstract import cwipc_activerawmultisource_abstract, cwipc_source_abstract
 import cwipc.net.source_passthrough
 import cwipc.net.source_lldplay
 import cwipc.net.source_decoder
@@ -25,7 +25,7 @@ class ReceiverThread(threading.Thread):
         self.exit_status = -1
         self.needs_synchronizer = self.args.tiled or self.args.synchronizer
         self.pc_source : Optional[cwipc_source_abstract] = None
-        self.raw_multisource : Optional[cwipc_rawmultisource_abstract] = None
+        self.raw_multisource : Optional[cwipc_activerawmultisource_abstract] = None
         self.statistics : List[ReceiverStatistics] = []
         self.n_tile : int = 1
         self.n_quality : int = 1
@@ -74,7 +74,6 @@ class ReceiverThread(threading.Thread):
             self.pc_source.statistics()
         if self.pc_source:
             self.pc_source.stop()
-            self.pc_source.free()
             self.pc_source = None
 
     def report(self, num : int, timestamp_ms : int, count : int):
