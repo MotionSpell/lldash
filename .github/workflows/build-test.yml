@@ -116,11 +116,12 @@ jobs:
         path: build/package/lldash-*.tar.gz
 
     - name: download cwipc
+      if: false
       uses: robinraju/release-downloader@v1
       with:
         repository: cwi-dis/cwipc
         tag: ${{ env.CWIPC_RELEASE_TAG }}
-        fileName: cwipc-ubuntu2404-*-built.tar.gz
+        fileName: cwipc-ubuntu2404-amd64-built-*.tar.gz
         out-file-path: cwipc-installed
         extract: true
 
