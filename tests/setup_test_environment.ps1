@@ -7,7 +7,7 @@ $cwipc_version_tag = "v8.0a1"
 If (Test-Path .\cwipc-built) {
     Remove-Item .\cwipc-built -Recurse -Force
 }
-curl.exe -L -o cwipc-built.zip https://github.com/cwi-dis/cwipc/releases/download/nightly/cwipc-windows-intel-built-$cwipc_version_tag.zip
+curl.exe -L -o cwipc-built.zip https://github.com/cwi-dis/cwipc/releases/download/$cwipc_version_tag/cwipc-windows-intel-built-$cwipc_version_tag.zip
 Expand-Archive -path .\cwipc-built.zip -Force
 $lldash_dir = Join-Path $PWD installed
 $lldash_bin_dir = Join-Path $lldash_dir bin
