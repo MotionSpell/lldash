@@ -6,7 +6,7 @@ cwipc_version_tag=v8.0a1
 if [ $(uname) = "Linux" ]; then
     sudo apt install -y python3.12-venv
     
-    curl -L -o cwipc-built.tar.gz https://github.com/cwi-dis/cwipc/releases/download/${cwipc_version_tag}/cwipc-ubuntu2404-built-${cwipc_version_tag}.tar.gz
+    curl -L -o cwipc-built.tar.gz https://github.com/cwi-dis/cwipc/releases/download/${cwipc_version_tag}/cwipc-ubuntu2404-amd64-built-${cwipc_version_tag}.tar.gz
     (cd installed && tar xfv ../cwipc-built.tar.gz)
     
     export PATH=$(pwd)/installed/bin:$PATH
