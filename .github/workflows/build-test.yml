@@ -708,6 +708,8 @@ jobs:
       - name: Run integration tests
         timeout-minutes: 2
         shell: pwsh
+        env: 
+          CWIPC_LOGGING: DEBUG
         run: |
             & .\.venv\Scripts\Activate.ps1
             python tests/testlatency/testlatency.py ${{ env.TESTLATENCY_VERBOSE }} ${{ env.TESTLATENCY_ARGS }} --logdir logs
