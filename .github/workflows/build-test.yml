@@ -712,7 +712,7 @@ jobs:
           CWIPC_LOGGING: DEBUG
         run: |
             & .\.venv\Scripts\Activate.ps1
-            python tests/testlatency/testlatency.py ${{ env.TESTLATENCY_VERBOSE }} ${{ env.TESTLATENCY_ARGS }} --logdir logs
+            python tests/testlatency/testlatency.py ${{ env.TESTLATENCY_VERBOSE }} ${{ env.TESTLATENCY_ARGS }} --debug
 
 
       - name: Upload test logs
