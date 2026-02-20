@@ -2,7 +2,7 @@ import argparse
 import threading
 import sys
 import time
-from typing import Optional, NamedTuple, List
+from typing import Optional, NamedTuple, List, Dict, Any
 import cwipc
 from cwipc.net.abstract import cwipc_sink_abstract, cwipc_rawsink_abstract
 import cwipc.net.sink_lldpkg
@@ -24,7 +24,7 @@ class SenderThread(threading.Thread):
         self.args = args
         self.exit_status = -1
         self.alive = True
-        self.source : Optional[cwipc.cwipc_tiledsource_wrapper] = None
+        self.source : Optional[cwipc.cwipc_activesource_wrapper] = None
         self.encoder : Optional[cwipc_sink_abstract] = None
         self.sender : Optional[cwipc_rawsink_abstract] = None
         self.statistics : List[SenderStatistics] = []
@@ -55,7 +55,7 @@ class SenderThread(threading.Thread):
         #
         octree_bits = self.args.octree_bits
         jpeg_quality = self.args.jpeg_quality
-        tiledescriptions : Optional[List[dict]] = None
+        tiledescriptions : Optional[List[Dict[str, Any]]] = None
         if self.args.tiled:
             assert hasattr(self.source, 'maxtile')
             tilecount = self.source.maxtile() # type: ignore
