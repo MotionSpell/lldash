@@ -14,7 +14,6 @@ on:
 permissions:
   packages: write
 env:
-  CWIPC_RELEASE_TAG: nightly
   USERNAME: MotionSpell
   VCPKG_EXE: ${{ github.workspace }}/vcpkg/vcpkg
   FEED_URL: https://nuget.pkg.github.com/MotionSpell/index.json
@@ -114,16 +113,6 @@ jobs:
       with:
         name: lldash-linux-x86_64
         path: build/package/lldash-*.tar.gz
-
-    - name: download cwipc
-      if: false
-      uses: robinraju/release-downloader@v1
-      with:
-        repository: cwi-dis/cwipc
-        tag: ${{ env.CWIPC_RELEASE_TAG }}
-        fileName: cwipc-ubuntu2404-amd64-built-*.tar.gz
-        out-file-path: cwipc-installed
-        extract: true
 
     - name: Install cwipc and other pipeline test dependencies
       run: |
