@@ -5,7 +5,8 @@
 If (Test-Path .\cwipc-built) {
     Remove-Item .\cwipc-built -Recurse -Force
 }
-curl.exe -L -o cwipc-built.zip https://github.com/cwi-dis/cwipc/releases/download/nightly/cwipc-win10-nightly-built.zip
+$cwipc_tag = "v7.7.5"
+curl.exe -L -o cwipc-built.zip https://github.com/cwi-dis/cwipc/releases/download/$cwipc_tag/cwipc-win10-$cwipc_tag-built.zip
 Expand-Archive -path .\cwipc-built.zip -Force
 $lldash_dir = Join-Path $PWD installed
 $lldash_bin_dir = Join-Path $lldash_dir bin

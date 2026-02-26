@@ -2,11 +2,11 @@
 # Use with "source", don't run normally.
 # Installs cwipc, creates a venv in .venv, and installs the cwipc python modules.
 # Adds ./installed/bin to PATH
-
+cwipc_tag="v7.7.5"
 if [ $(uname) = "Linux" ]; then
     sudo apt install -y python3.12-venv
     
-    curl -L -o cwipc-built.tar.gz https://github.com/cwi-dis/cwipc/releases/download/nightly/cwipc-ubuntu2404-nightly-built.tar.gz
+    curl -L -o cwipc-built.tar.gz https://github.com/cwi-dis/cwipc/releases/download/$cwipc_tag/cwipc-ubuntu2404-$cwipc_tag-built.tar.gz
     (cd installed && tar xfv ../cwipc-built.tar.gz)
     
     export PATH=$(pwd)/installed/bin:$PATH
