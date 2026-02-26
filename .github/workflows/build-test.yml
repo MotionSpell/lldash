@@ -13,7 +13,7 @@ on:
 permissions:
   packages: write
 env:
-  CWIPC_RELEASE_TAG: nightly
+  CWIPC_RELEASE_TAG: v7.7.5
   USERNAME: MotionSpell
   VCPKG_EXE: ${{ github.workspace }}/vcpkg/vcpkg
   FEED_URL: https://nuget.pkg.github.com/MotionSpell/index.json
