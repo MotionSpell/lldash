@@ -10,10 +10,6 @@ if [ $(uname) = "Linux" ]; then
     (cd installed && tar xfv ../cwipc-built.tar.gz)
     
     bash installed/libexec/cwipc/scripts/install-3rdparty-ubuntu2404.sh
-
-    python3.12 -m venv .venv
-    source .venv/bin/activate
-    CWIPC_PYTHON=$(which python) cwipc_pymodules_install.sh || true
     
 elif [ $(uname) = "Darwin"  ]; then
     brew install libomp
@@ -21,10 +17,6 @@ elif [ $(uname) = "Darwin"  ]; then
     mkdir -p installed
     curl -L -o cwipc-built.tar.gz https://github.com/cwi-dis/cwipc/releases/download/${cwipc_version_tag}/cwipc-macos-$(arch)-built-${cwipc_version_tag}.tar.gz
     (cd installed && tar xfv ../cwipc-built.tar.gz)
-    
-    python3.12 -m venv .venv
-    source .venv/bin/activate
-    CWIPC_PYTHON=$(which python) cwipc_pymodules_install.sh || true
 elif false; then
     brew tap cwi-dis/cwipc
     # Workaround for git-lfs issue with brew install --head:
@@ -36,12 +28,18 @@ elif false; then
     brew install libomp
     brew link --force libomp
     HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1 brew install --head cwipc
-    python3.12 -m venv .venv
-    source .venv/bin/activate
-    CWIPC_PYTHON=$(which python) cwipc_pymodules_install.sh || true
 else
     echo "Unsupported OS"
 fi
+
+export PATH=$(pwd)/installed/bin:$PATH
+export LD_LIBRARY_PATH=$(pwd)/installed/lib:$LD_LIBRARY_PATH
+export DYLD_LIBRARY_PATH=$(pwd)/installed/lib:$DYLD_LIBRARY_PATH
+export SIGNALS_SMD_PATH=$(pwd)/installed/lib/
+
+python3.12 -m venv .venv
+source .venv/bin/activate
+CWIPC_PYTHON=$(which python) cwipc_pymodules_install.sh || true
 
 if [ "${GITHUB_ACTIONS:-false}" = true ]; then
     # GitHub actions
@@ -50,7 +48,3 @@ if [ "${GITHUB_ACTIONS:-false}" = true ]; then
     echo "DYLD_LIBRARY_PATH=$(pwd)/installed/lib:$DYLD_LIBRARY_PATH" >> $GITHUB_ENV
     echo "SIGNALS_SMD_PATH=$(pwd)/installed/lib/" >> $GITHUB_ENV
 fi
-export PATH=$(pwd)/installed/bin:$PATH
-export LD_LIBRARY_PATH=$(pwd)/installed/lib:$LD_LIBRARY_PATH
-export DYLD_LIBRARY_PATH=$(pwd)/installed/lib:$DYLD_LIBRARY_PATH
-export SIGNALS_SMD_PATH=$(pwd)/installed/lib/
