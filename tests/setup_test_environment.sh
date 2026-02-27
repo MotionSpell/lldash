@@ -2,16 +2,12 @@
 # Use with "source", don't run normally.
 # Installs cwipc, creates a venv in .venv, and installs the cwipc python modules.
 # Adds ./installed/bin to PATH
-cwipc_version_tag=v8.0a1
+cwipc_version_tag=v8.0a3
 if [ $(uname) = "Linux" ]; then
     sudo apt install -y python3.12-venv
     
     curl -L -o cwipc-built.tar.gz https://github.com/cwi-dis/cwipc/releases/download/${cwipc_version_tag}/cwipc-ubuntu2404-amd64-built-${cwipc_version_tag}.tar.gz
     (cd installed && tar xfv ../cwipc-built.tar.gz)
-    
-    export PATH=$(pwd)/installed/bin:$PATH
-    export LD_LIBRARY_PATH=$(pwd)/installed/lib:$LD_LIBRARY_PATH
-    export SIGNALS_SMD_PATH=$(pwd)/installed/lib/
     
     bash installed/libexec/cwipc/scripts/install-3rdparty-ubuntu2404.sh
 
@@ -19,13 +15,17 @@ if [ $(uname) = "Linux" ]; then
     source .venv/bin/activate
     CWIPC_PYTHON=$(which python) cwipc_pymodules_install.sh || true
     
-    if [ "${GITHUB_ACTIONS:-false}" = true ]; then
-        echo "$(pwd)/installed/bin" >> $GITHUB_PATH
-        echo "LD_LIBRARY_PATH=$(pwd)/installed/lib:$LD_LIBRARY_PATH" >> $GITHUB_ENV
-        echo "SIGNALS_SMD_PATH=$(pwd)/installed/lib/" >> $GITHUB_ENV
-    fi
-
-elif [ $(uname) = "Darwin" ]; then
+elif [ $(uname) = "Darwin"  ]; then
+    brew install libomp
+    brew link --force libomp
+    mkdir -p installed
+    curl -L -o cwipc-built.tar.gz https://github.com/cwi-dis/cwipc/releases/download/${cwipc_version_tag}/cwipc-macos-$(arch)-built-${cwipc_version_tag}.tar.gz
+    (cd installed && tar xfv ../cwipc-built.tar.gz)
+    
+    python3.12 -m venv .venv
+    source .venv/bin/activate
+    CWIPC_PYTHON=$(which python) cwipc_pymodules_install.sh || true
+elif false; then
     brew tap cwi-dis/cwipc
     # Workaround for git-lfs issue with brew install --head:
     GIT_LFS_WTD="$(git --exec-path)/git-lfs"
@@ -39,14 +39,6 @@ elif [ $(uname) = "Darwin" ]; then
     python3.12 -m venv .venv
     source .venv/bin/activate
     CWIPC_PYTHON=$(which python) cwipc_pymodules_install.sh || true
-    export PATH=$(pwd)/installed/bin:$PATH
-    export DYLD_LIBRARY_PATH=$(pwd)/installed/lib:$DYLD_LIBRARY_PATH
-    export SIGNALS_SMD_PATH=$(pwd)/installed/lib/
-    if [ "${GITHUB_ACTIONS:-false}" = true ]; then
-        echo "$(pwd)/installed/bin" >> $GITHUB_PATH
-        echo "DYLD_LIBRARY_PATH=$(pwd)/installed/lib:$DYLD_LIBRARY_PATH" >> $GITHUB_ENV
-        echo "SIGNALS_SMD_PATH=$(pwd)/installed/lib/" >> $GITHUB_ENV
-    fi
 else
     echo "Unsupported OS"
 fi
@@ -54,8 +46,11 @@ fi
 if [ "${GITHUB_ACTIONS:-false}" = true ]; then
     # GitHub actions
     echo $(pwd)/installed/bin >> $GITHUB_PATH
-    echo "DYLD_LIBRARY_PATH=$(pwd)/installed/lib" >> $GITHUB_ENV
-    export PATH=$(pwd)/installed/bin:$PATH
-    export LD_LIBRARY_PATH=$(pwd)/installed/lib:$LD_LIBRARY_PATH
-    export SIGNALS_SMD_PATH=$(pwd)/installed/lib/
+    echo "LD_LIBRARY_PATH=$(pwd)/installed/lib:$LD_LIBRARY_PATH" >> $GITHUB_ENV
+    echo "DYLD_LIBRARY_PATH=$(pwd)/installed/lib:$DYLD_LIBRARY_PATH" >> $GITHUB_ENV
+    echo "SIGNALS_SMD_PATH=$(pwd)/installed/lib/" >> $GITHUB_ENV
 fi
+export PATH=$(pwd)/installed/bin:$PATH
+export LD_LIBRARY_PATH=$(pwd)/installed/lib:$LD_LIBRARY_PATH
+export DYLD_LIBRARY_PATH=$(pwd)/installed/lib:$DYLD_LIBRARY_PATH
+export SIGNALS_SMD_PATH=$(pwd)/installed/lib/

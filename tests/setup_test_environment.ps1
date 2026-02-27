@@ -2,7 +2,7 @@
 # Use with "source", don't run normally.
 # Installs cwipc, creates a venv in .venv, and installs the cwipc python modules.
 # Adds ./installed/bin to PATH
-$cwipc_version_tag = "v8.0a1"
+$cwipc_version_tag = "v8.0a3"
 
 If (Test-Path .\cwipc-built) {
     Remove-Item .\cwipc-built -Recurse -Force
