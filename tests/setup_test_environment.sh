@@ -12,11 +12,10 @@ if [ $(uname) = "Linux" ]; then
     bash installed/libexec/cwipc/scripts/install-3rdparty-ubuntu2404.sh
     
 elif [ $(uname) = "Darwin"  ]; then
-    brew install libomp
-    brew link --force libomp
     mkdir -p installed
     curl -L -o cwipc-built.tar.gz https://github.com/cwi-dis/cwipc/releases/download/${cwipc_version_tag}/cwipc-macos-$(arch)-built-${cwipc_version_tag}.tar.gz
     (cd installed && tar xfv ../cwipc-built.tar.gz)
+    bash installed/libexec/cwipc/scripts/install-3rdparty-macos.sh
 elif false; then
     brew tap cwi-dis/cwipc
     # Workaround for git-lfs issue with brew install --head:
