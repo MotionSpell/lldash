@@ -119,6 +119,10 @@ jobs:
     needs:
       - linux-intel-build
     steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        submodules: 'recursive'
     - name: Download intel linux package
       uses: actions/download-artifact@v4
       with:
@@ -241,6 +245,10 @@ jobs:
     needs:
       - macos-arm64-build
     steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        submodules: 'recursive'
     - name: Download arm64 mac package
       uses: actions/download-artifact@v4
       with:
@@ -364,6 +372,10 @@ jobs:
     needs:
       - macos-intel-build
     steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        submodules: 'recursive'
     - name: Download intel mac package
       uses: actions/download-artifact@v4
       with:
