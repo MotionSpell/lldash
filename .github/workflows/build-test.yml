@@ -251,8 +251,8 @@ jobs:
     - name: Install lldash
       shell: bash
       run: |
-        tar xfv lldash-mac-*.tar.gz
-        mv lldash-mac-*/ installed
+        tar xfv lldash-darwin-*.tar.gz
+        mv lldash-darwin-*/ installed
         ls -l
 
     - name: Install cwipc and other pipeline test dependencies
@@ -375,8 +375,8 @@ jobs:
     - name: Install lldash
       shell: bash
       run: |
-        tar xfv lldash-mac-*.tar.gz
-        mv lldash-mac-*/ installed
+        tar xfv lldash-darwin-*.tar.gz
+        mv lldash-darwin-*/ installed
         ls -l
     - name: Install cwipc and other pipeline test dependencies
       run: |
