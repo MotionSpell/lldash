@@ -134,7 +134,6 @@ jobs:
 
     - name: Install cwipc and other pipeline test dependencies
       run: |
-        cmake --install build
         source tests/setup_test_environment.sh
         cwipc_view --version
         
@@ -257,7 +256,6 @@ jobs:
 
     - name: Install cwipc and other pipeline test dependencies
       run: |
-        cmake --install build
         brew install python@3.12
         source tests/setup_test_environment.sh
         cwipc_view --version
@@ -380,7 +378,6 @@ jobs:
         ls -l
     - name: Install cwipc and other pipeline test dependencies
       run: |
-        cmake --install build
         brew install python@3.12 || true
         source tests/setup_test_environment.sh
         cwipc_view --version
