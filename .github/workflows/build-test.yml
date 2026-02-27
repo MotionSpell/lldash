@@ -24,7 +24,9 @@ env:
   TESTLATENCY_VERBOSE:
 #  TESTLATENCY_VERBOSE: --verbose
 #  TESTLATENCY_VERBOSE: --verbose --debug
-#  LLDASH_LOGGING: 1
+  LLDASH_LOGGING: 1
+  CWIPC_LOGGING: DEBUG
+
           
 jobs:
   linux-intel-build:
