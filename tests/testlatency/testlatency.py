@@ -2,6 +2,7 @@ import sys
 import argparse
 import time
 import os
+import cwipc
 from testlatency_server import ServerThread
 from testlatency_sender import SenderThread
 from testlatency_receiver import ReceiverThread
@@ -245,4 +246,9 @@ def main():
         return 2
 
 if __name__ == "__main__":
-    sys.exit(main())
+    rv = 1
+    try:
+        rv = main()
+    finally:
+        cwipc.cwipc_dangling_allocations(True)
+    sys.exit(rv)
