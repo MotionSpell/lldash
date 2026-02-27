@@ -27,7 +27,7 @@ env:
 #  LLDASH_LOGGING: 1
           
 jobs:
-  linux-build:
+  linux-intel-build:
     runs-on: ubuntu-latest
     env:
       VCPKG_DEFAULT_TRIPLET: x64-linux-dynamic
@@ -96,7 +96,7 @@ jobs:
       if: ${{ failure() }} 
       uses: actions/upload-artifact@v4
       with:
-        name: linux-buildtrees
+        name: linux-intel-buildtrees
         path: ./vcpkg/buildtrees
         retention-days: 5
     
@@ -104,7 +104,7 @@ jobs:
       if: ${{ failure() }} 
       uses: actions/upload-artifact@v4
       with:
-        name: linux-build-folder
+        name: linux-intel-build-folder
         path: ./build
         retention-days: 5
 
@@ -113,6 +113,24 @@ jobs:
       with:
         name: lldash-linux-x86_64
         path: build/package/lldash-*.tar.gz
+
+  linux-intel-test:
+    runs-on: ubuntu-latest
+    needs:
+      - linux-intel-build
+    steps:
+    - name: Download intel linux package
+      uses: actions/download-artifact@v4
+      with:
+        name: lldash-linux-x86_64
+        path: ${{ github.workspace }}
+
+    - name: Install lldash
+      shell: bash
+      run: |
+        tar xfv lldash-linux-*.tar.gz
+        mv lldash-linux-*/ installed
+        ls -l
 
     - name: Install cwipc and other pipeline test dependencies
       run: |
@@ -134,7 +152,7 @@ jobs:
         path: ${{ env.BUILD_DIR }}/logs/**/*
         retention-days: 5
 
-  macos-build:
+  macos-arm64-build:
     runs-on: macos-latest
     env:
       VCPKG_DEFAULT_TRIPLET: arm64-osx-dynamic
@@ -218,7 +236,25 @@ jobs:
       with:
         name: lldash-mac-arm64
         path: build/package/lldash-*.tar.gz
-    
+
+  macos-arm64-test:
+    runs-on: macos-latest
+    needs:
+      - macos-arm64-build
+    steps:
+    - name: Download arm64 mac package
+      uses: actions/download-artifact@v4
+      with:
+        name: lldash-mac-arm64
+        path: ${{ github.workspace }}
+
+    - name: Install lldash
+      shell: bash
+      run: |
+        tar xfv lldash-mac-*.tar.gz
+        mv lldash-mac-*/ installed
+        ls -l
+
     - name: Install cwipc and other pipeline test dependencies
       run: |
         cmake --install build
@@ -236,7 +272,7 @@ jobs:
       if: always()  # Upload logs even if the test fails for debug purposes
       uses: actions/upload-artifact@v4
       with:
-        name: mac-test-logs
+        name: mac-arm64-test-logs
         path: ${{ env.BUILD_DIR }}/logs/**/*
         retention-days: 5
 
@@ -325,6 +361,23 @@ jobs:
         name: lldash-mac-x86_64
         path: build/package/lldash-*.tar.gz
 
+  macos-intel-test:
+    runs-on: macos-15-intel
+    needs:
+      - macos-intel-build
+    steps:
+    - name: Download intel mac package
+      uses: actions/download-artifact@v4
+      with:
+        name: lldash-mac-x86_64
+        path: ${{ github.workspace }}
+
+    - name: Install lldash
+      shell: bash
+      run: |
+        tar xfv lldash-mac-*.tar.gz
+        mv lldash-mac-*/ installed
+        ls -l
     - name: Install cwipc and other pipeline test dependencies
       run: |
         cmake --install build
@@ -350,7 +403,7 @@ jobs:
   macos-universal-build:
     runs-on: macos-latest
     needs:
-      - macos-build
+      - macos-arm64-build
       - macos-intel-build
     steps:
     - name: Checkout code
@@ -399,7 +452,7 @@ jobs:
         name: lldash-mac-universal
         path: ${{ github.workspace }}/Assets/lldash-*.tar.gz
   
-  windows-build:
+  windows-intel-build:
     runs-on: windows-latest
     env:
       VCPKG_DEFAULT_TRIPLET: x64-mingw-dynamic
@@ -488,167 +541,10 @@ jobs:
       if: ${{ failure() }} 
       uses: actions/upload-artifact@v4
       with:
-        name: windows-build-folder
+        name: windows-intel-build-folder
         path: ./build
         retention-days: 5
 
-    # xxxjack I wonder why this is needed: exactly this same logic should be included in the CMake install process...
-    # xxxjack unless I am mistaken and forgot to copy it over from cwipc....
-    # xxxjack anyway, this should be done in cmake.
-    - name: Analyze library dependencies and fix paths
-      if: false
-      shell: pwsh
-      run: |
-        Write-Host "===== ANALYZING LIBRARY DEPENDENCIES =====" -ForegroundColor Cyan
-        
-        # Function to analyze DLL dependencies
-        function Get-DllDependencies {
-            param(
-                [Parameter(Mandatory=$true)]
-                [string]$FilePath
-            )
-            
-            if (-not (Test-Path $FilePath)) {
-                Write-Host "File not found: $FilePath" -ForegroundColor Red
-                return
-            }
-            
-            Write-Host "Analyzing dependencies for: $FilePath" -ForegroundColor Yellow
-            
-            # Use objdump from MSYS2/MinGW to list dependencies
-            $output = & "C:\msys64\mingw64\bin\objdump.exe" -p $FilePath | Select-String "DLL Name"
-            
-            $missingDeps = @()
-            Write-Host "Dependencies:" -ForegroundColor Green
-            $output | ForEach-Object {
-                $dllName = $_.ToString().Trim() -replace "DLL Name: ", ""
-                Write-Host "  - $dllName"
-                
-                # Skip Windows system DLLs
-                if ($dllName -match "^(ntdll|KERNEL32|KERNELBASE|msvcrt|bcrypt|ADVAPI32|RPCRT4|CRYPT32|ucrtbase|WS2_32|USER32|GDI32|ole32|SHELL32|SHLWAPI)\.dll$") {
-                    Write-Host "    🔵 System DLL" -ForegroundColor Blue
-                    return
-                }
-                
-                # Try to locate each dependency
-                $found = $false
-                $searchPaths = @(
-                    "${{ github.workspace }}\build\bin",
-                    "${{ github.workspace }}\build\vcpkg_installed\x64-mingw-dynamic\bin",
-                    "${{ github.workspace }}\build\vcpkg_installed\x64-mingw-dynamic\lib",
-                    "C:\msys64\mingw64\bin"
-                )
-                
-                $foundPath = ""
-                foreach ($path in $searchPaths) {
-                    $fullPath = Join-Path $path $dllName
-                    if (Test-Path $fullPath) {
-                        $foundPath = $fullPath
-                        $found = $true
-                        Write-Host "    ✅ Found at: $fullPath" -ForegroundColor Green
-                        break
-                    }
-                }
-                
-                if (-not $found) {
-                    Write-Host "    ❌ NOT FOUND in search paths" -ForegroundColor Red
-                    $missingDeps += $dllName
-                } else {
-                    # Copy dependency to build/bin to ensure it's available
-                    $targetPath = Join-Path "${{ github.workspace }}\build\bin" $dllName
-                    if ((-not (Test-Path $targetPath)) -and $foundPath -ne $targetPath) {
-                        Copy-Item $foundPath $targetPath
-                        Write-Host "    📋 Copied to build/bin directory" -ForegroundColor Cyan
-                    }
-                }
-            }
-            
-            return $missingDeps
-        }
-        
-        # Collect all missing dependencies
-        $missingDependencies = @()
-        
-        # Check key libraries
-        $libraries = @(
-            "${{ github.workspace }}\build\bin\bin2dash.so",
-            "${{ github.workspace }}\build\bin\signals-unity-bridge.so"
-        )
-        
-        foreach ($lib in $libraries) {
-            $missingDeps = Get-DllDependencies -FilePath $lib
-            $missingDependencies += $missingDeps
-            Write-Host ""
-        }
-        
-        # Analyze missing dependencies (if any)
-        if ($missingDependencies.Count -gt 0) {
-            Write-Host "⚠️ Missing dependencies:" -ForegroundColor Yellow
-            $missingDependencies | Sort-Object -Unique | ForEach-Object {
-                Write-Host "  - $_" -ForegroundColor Red
-            }
-            
-            # Search for missing dependencies in the MSYS2 environment
-            Write-Host "Searching MSYS2 for missing packages..." -ForegroundColor Cyan
-            foreach ($dep in ($missingDependencies | Sort-Object -Unique)) {
-                $output = & "C:\msys64\usr\bin\pacman.exe" -Fy $dep 2>$null
-                if ($output) {
-                    Write-Host "Found package for $dep in pacman database" -ForegroundColor Green
-                    $output | Out-String | Write-Host
-                }
-            }
-        } else {
-            Write-Host "✅ All dependencies found!" -ForegroundColor Green
-        }
-        
-        # Copy required MSYS2 runtime DLLs to ensure they're available
-        Write-Host "Copying MSYS2 runtime libraries to build/bin..." -ForegroundColor Cyan
-        $msys2RuntimeDlls = @(
-            "libgcc_s_seh-1.dll",
-            "libwinpthread-1.dll",
-            "libstdc++-6.dll"
-        )
-        
-        foreach ($dll in $msys2RuntimeDlls) {
-            $sourcePath = "C:\msys64\mingw64\bin\$dll"
-            $targetPath = "${{ github.workspace }}\build\bin\$dll"
-            
-            if (Test-Path $sourcePath) {
-                Copy-Item -Path $sourcePath -Destination $targetPath -Force
-                Write-Host "Copied $dll to build/bin" -ForegroundColor Green
-            } else {
-                Write-Host "⚠️ Could not find $dll in MSYS2" -ForegroundColor Yellow
-            }
-        }
-        
-        # Copy vcpkg dependencies
-        Write-Host "Copying vcpkg libraries to build/bin..." -ForegroundColor Cyan
-        $vcpkgBinDir = "${{ github.workspace }}\build\vcpkg_installed\x64-mingw-dynamic\bin"
-        if (Test-Path $vcpkgBinDir) {
-            $dllCount = 0
-            foreach ($dll in (Get-ChildItem -Path $vcpkgBinDir -Filter "*.dll")) {
-                $targetPath = Join-Path "${{ github.workspace }}\build\bin" $dll.Name
-                if (-not (Test-Path $targetPath)) {
-                    Copy-Item $dll.FullName $targetPath -Force
-                    $dllCount++
-                }
-            }
-            Write-Host "✅ Copied $dllCount DLLs from vcpkg to build/bin" -ForegroundColor Green
-        } else {
-            Write-Host "❌ vcpkg bin directory not found: $vcpkgBinDir" -ForegroundColor Red
-        }
-        
-        # Ensure SIGNALS_SMD_PATH is properly set
-        $env:SIGNALS_SMD_PATH = "${{ github.workspace }}\build\bin"
-        Write-Host "SIGNALS_SMD_PATH set to: $env:SIGNALS_SMD_PATH" -ForegroundColor Cyan
-        
-        # List DLLs in build/bin after copying
-        Write-Host "Contents of build/bin after copying dependencies:" -ForegroundColor Yellow
-        Get-ChildItem -Path "${{ github.workspace }}\build\bin\*.dll" | 
-            Where-Object { $_.Name -match "^(lib|msys-|libgcc|libwin|libstdc)" } |
-            Sort-Object Name | 
-            Format-Table Name, Length, LastWriteTime
-  
     - name: Create package
       run: cpack --preset mingw-production
 
@@ -658,10 +554,10 @@ jobs:
         name: lldash-windows-x86_64
         path: build/package/lldash-*.tar.gz
   
-  windows-test:
+  windows-intel-test:
     runs-on: windows-latest
     needs:
-      - windows-build
+      - windows-intel-build
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -708,7 +604,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: windows-test-logs
+          name: windows-intel-test-logs
           path: |
             ${{ env.BUILD_DIR }}/logs/**/*
             ${{ env.BUILD_DIR }}/logs/*
@@ -718,7 +614,7 @@ jobs:
         if: ${{ failure() }} 
         uses: actions/upload-artifact@v4
         with:
-          name: windows-test-venv-folder
+          name: windows-intel-test-venv-folder
           path: ${{ env.BUILD_DIR }}/.venv/
           include-hidden-files: true
           retention-days: 5
@@ -727,7 +623,7 @@ jobs:
         if: ${{ failure() }} 
         uses: actions/upload-artifact@v4
         with:
-          name: windows-test-installed-folder
+          name: windows-intel-test-installed-folder
           path: ./installed
           retention-days: 5
       
@@ -735,11 +631,11 @@ jobs:
   create-release:
     if: startsWith(github.ref, 'refs/tags/')
     needs:
-      - linux-build
-      - macos-build
+      - linux-intel-build
+      - macos-arm64-build
       - macos-intel-build
       - macos-universal-build
-      - windows-build
+      - windows-intel-build
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
