@@ -25,7 +25,6 @@ env:
 #  TESTLATENCY_VERBOSE: --verbose
 #  TESTLATENCY_VERBOSE: --verbose --debug
   LLDASH_LOGGING: 1
-  CWIPC_LOGGING: DEBUG
 
           
 jobs:
@@ -569,8 +568,6 @@ jobs:
     runs-on: windows-latest
     needs:
       - windows-intel-build
-    env:
-      CWIPC_LOGGING: DEBUG
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -606,11 +603,9 @@ jobs:
       - name: Run integration tests
         timeout-minutes: 2
         shell: pwsh
-        env: 
-          CWIPC_LOGGING: DEBUG
         run: |
             & .\.venv\Scripts\Activate.ps1
-            python tests/testlatency/testlatency.py ${{ env.TESTLATENCY_VERBOSE }} ${{ env.TESTLATENCY_ARGS }} --debug
+            python tests/testlatency/testlatency.py ${{ env.TESTLATENCY_VERBOSE }} ${{ env.TESTLATENCY_ARGS }}
 
 
       - name: Upload test logs
