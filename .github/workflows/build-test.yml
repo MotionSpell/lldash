@@ -555,6 +555,8 @@ jobs:
     runs-on: windows-latest
     needs:
       - windows-intel-build
+    env:
+      CWIPC_LOGGING: DEBUG
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
