@@ -2,7 +2,7 @@
 # Use with "source", don't run normally.
 # Installs cwipc, creates a venv in .venv, and installs the cwipc python modules.
 # Adds ./installed/bin to PATH
-cwipc_version_tag=v8.0a3
+cwipc_version_tag=v8.0.0
 if [ $(uname) = "Linux" ]; then
     sudo apt install -y python3.12-venv
     
