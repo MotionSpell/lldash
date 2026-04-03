@@ -43,7 +43,7 @@ class SenderThread(threading.Thread):
         nodrop = True
         if self.args.debug:
             print(f"testlatency: sender: creating cwipc_sink_lldpkg({url}, ...)", file=sys.stderr)
-        self.sender = cwipc.net.sink_lldpkg.cwipc_sink_lldpkg(url, self.args.debug, nodrop, seg_dur_in_ms=self.args.seg_dur)
+        self.sender = cwipc.net.sink_lldpkg.cwipc_sink_lldpkg(url, self.args.debug, nodrop, seg_dur_in_ms=self.args.seg_dur, timeshift_buffer_depth_in_ms=self.args.timeshift_buffer_ms)
         if self.args.debug:
             print(f"testlatency: sender: created cwipc_sink_lldpkg({url}, ...)", file=sys.stderr)
 
